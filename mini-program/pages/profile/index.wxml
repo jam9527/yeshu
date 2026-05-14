@@ -1,0 +1,71 @@
+<view class="container">
+  <!-- 用户信息区域 -->
+  <view class="user-section">
+    <view class="avatar-wrap">
+      <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="handleEditAvatar" wx:if="{{userInfo}}">
+        <image
+          src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
+          mode="aspectFill"
+          class="avatar-img"
+        />
+        <view class="avatar-overlay">
+          <text class="avatar-edit-icon">✎</text>
+        </view>
+      </button>
+      <view class="avatar-btn" wx:else bindtap="handleEditAvatar">
+        <image
+          src="{{userInfo.avatarUrl || '/assets/images/default-avatar.png'}}"
+          mode="aspectFill"
+          class="avatar-img"
+        />
+      </view>
+    </view>
+    <view class="user-info" bindtap="handleEditNickname">
+      <text class="nickname">{{userInfo.nickname || '点击设置昵称'}}</text>
+      <text class="edit-hint">点击编辑资料 ›</text>
+    </view>
+    <text class="user-arrow">›</text>
+  </view>
+
+  <!-- 我的订单（突出的大按钮） -->
+  <view class="order-section" bindtap="goTo" data-url="/pages/my-reservations/index" data-need-login="true">
+    <view class="order-icon">
+      <text class="order-icon-text">📋</text>
+    </view>
+    <view class="order-info">
+      <text class="order-title">我的订单</text>
+      <text class="order-desc">查看预约记录与核销状态</text>
+    </view>
+    <view class="order-badge-wrap" wx:if="{{unreadCount > 0}}">
+      <text class="order-badge">{{unreadCount > 99 ? '99+' : unreadCount}}</text>
+    </view>
+    <text class="order-arrow">›</text>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view
+      class="menu-item"
+      wx:for="{{menuList}}"
+      wx:key="title"
+      data-url="{{item.url}}"
+      data-need-login="{{item.needLogin}}"
+      bindtap="goTo"
+      wx:if="{{item.show}}"
+    >
+      <view class="menu-icon-circle" style="background: {{item.iconColor}}20; color: {{item.iconColor}}">
+        <text class="menu-icon-text">{{item.icon}}</text>
+      </view>
+      <view class="menu-right">
+        <text class="menu-title">{{item.title}}</text>
+        <text class="menu-desc" wx:if="{{item.desc}}">{{item.desc}}</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <button class="logout-btn" wx:if="{{userInfo}}" bindtap="handleLogout">
+    退出登录
+  </button>
+</view>

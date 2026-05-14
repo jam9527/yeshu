@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build output
+backend/dist/
+admin-panel/dist/
+mini-program/pages/**/*.js
+mini-program/pages-verifier/**/*.js
+mini-program/app.js
+mini-program/utils/**/*.js
+mini-program/config.js
+
+# Environment
+.env
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# MySQL data (local Docker volume)
+mysql-data/
+
+# Uploads (local files)
+backend/uploads/*
+
+# Claude memory
+.claude/
+
+# Project docs (original source files)
+*.docx
+*.xlsx
+项目需求.docx
+椰树集团参观预约小程序.xlsx
+
+# Ignore all PNGs except mini-program tab bar icons
+*.png
+!mini-program/assets/icons/*.png

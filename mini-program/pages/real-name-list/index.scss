@@ -1,0 +1,180 @@
+@import '../../app';
+
+.container {
+  padding: 16px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #eee;
+  border-top-color: $ys-red;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.list {
+  padding-bottom: 80px;
+}
+
+.record-item {
+  position: relative;
+  padding: 16px;
+}
+
+.record-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.record-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.record-tag {
+  font-size: 11px;
+  color: #52c41a;
+  background: #f0fff0;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #b7eb8f;
+}
+
+.record-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.verify-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
+
+  &.verified {
+    color: #52c41a;
+    background: #f0fff0;
+    border: 1px solid #b7eb8f;
+  }
+
+  &.unverified {
+    color: #faad14;
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+  }
+}
+
+.record-idcard,
+.record-address {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.record-idcard .label,
+.record-address .label {
+  color: #999;
+  width: 64px;
+  flex-shrink: 0;
+}
+
+.record-idcard .value {
+  color: #333;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.record-address .value {
+  color: #333;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+  color: $ys-red;
+  padding: 4px 12px;
+  border: 1px solid $ys-red;
+  border-radius: 4px;
+}
+
+.delete-btn-active {
+  opacity: 0.6;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0 40px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #999;
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px 24px;
+  background: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.add-btn {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  background: $ys-red;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.add-btn::after {
+  border: none;
+}

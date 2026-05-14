@@ -1,0 +1,147 @@
+<!-- 扫一扫核销 -->
+<view class="container">
+  <!-- 顶部品牌区 -->
+  <view class="header-bar">
+    <text class="header-title">扫一扫核销</text>
+  </view>
+
+  <!-- 扫码界面 -->
+  <view wx:if="{{scanning}}" class="scan-frame">
+    <view class="scan-overlay">
+      <view class="scan-area">
+        <view class="scan-corner tl"></view>
+        <view class="scan-corner tr"></view>
+        <view class="scan-corner bl"></view>
+        <view class="scan-corner br"></view>
+        <view class="scan-line"></view>
+      </view>
+    </view>
+    <text class="scan-hint">将二维码对准扫描区域</text>
+  </view>
+
+  <!-- 核销结果 -->
+  <view wx:elif="{{result}}" class="result-section">
+    <view class="result-card">
+      <!-- 有效头部 -->
+      <view class="result-header success">
+        <text class="result-icon">✅</text>
+        <text class="result-status">核销码有效</text>
+      </view>
+
+      <!-- 预约信息 -->
+      <view class="result-body">
+        <view class="info-row">
+          <text class="info-label">预约编号</text>
+          <text class="info-value">{{result.reservationNo || '—'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">预约类型</text>
+          <text class="info-value">{{result.type === 'TEAM' ? '团队预约' : '个人预约'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">参观日期</text>
+          <text class="info-value">{{result.reservationDate || '—'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">参观场次</text>
+          <text class="info-value">{{result.sessionLabel || '—'}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">人数</text>
+          <text class="info-value">{{result.visitorCount || 1}}人</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">状态</text>
+          <text class="info-value badge" wx:if="{{result.isVerified}}">已核销</text>
+          <text class="info-value badge pending" wx:else>待核销</text>
+        </view>
+      </view>
+
+      <!-- 个人预约 - 参观人明细 -->
+      <view class="visitor-section" wx:if="{{result.type === 'PERSONAL' && result.visitors && result.visitors.length > 0}}">
+        <view class="visitor-header">参观人信息</view>
+        <view
+          class="visitor-item"
+          wx:for="{{result.visitors}}"
+          wx:key="id"
+          wx:for-index="vIdx"
+        >
+          <text class="visitor-index">#{{vIdx + 1}}</text>
+          <view class="visitor-info">
+            <text class="visitor-name">{{item.name}}</text>
+            <text class="visitor-idcard">{{item.idCard || '—'}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 团队预约 - 团队信息 -->
+      <view class="team-section" wx:if="{{result.type === 'TEAM' && result.teamInfo}}">
+        <view class="visitor-header">团队信息</view>
+        <view class="team-row">
+          <text class="team-label">联系人</text>
+          <text class="team-value">{{result.teamInfo.contactName || '—'}}</text>
+        </view>
+        <view class="team-row">
+          <text class="team-label">联系电话</text>
+          <text class="team-value">{{result.teamInfo.contactPhone || '—'}}</text>
+        </view>
+        <view class="team-row" wx:if="{{result.teamInfo.orgName}}">
+          <text class="team-label">单位名称</text>
+          <text class="team-value">{{result.teamInfo.orgName}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="result-actions">
+        <button
+          wx:if="{{!result.isVerified}}"
+          class="btn-confirm"
+          bindtap="confirmVerify"
+        >确认核销</button>
+        <button
+          wx:if="{{result.isVerified}}"
+          class="btn-disabled"
+          disabled
+        >已核销</button>
+        <button class="btn-reset" bindtap="reset">重新扫描</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 错误提示 -->
+  <view wx:elif="{{error}}" class="result-section">
+    <view class="result-card">
+      <view class="result-header error">
+        <text class="result-icon">❌</text>
+        <text class="result-status">核销失败</text>
+      </view>
+      <view class="error-msg">
+        <text>{{error}}</text>
+      </view>
+      <view class="result-actions">
+        <button class="btn-reset" bindtap="reset">重新扫描</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 初始等待 -->
+  <view wx:else class="init-state">
+    <text class="init-icon">📷</text>
+    <text class="init-text">准备中...</text>
+  </view>
+
+  <!-- 开发模式手动输入 -->
+  <view class="dev-section" wx:if="{{showDevInput}}">
+    <view class="dev-box">
+      <text class="dev-title">🔧 开发模式 - 手动核销</text>
+      <input class="dev-input" placeholder="输入核销码（qrCode）" bindinput="onDevInput" value="{{devQrCode}}" />
+      <button class="dev-btn" bindtap="devSubmit">确认核销</button>
+      <button class="dev-btn-cancel" bindtap="toggleDevInput">取消</button>
+    </view>
+  </view>
+
+  <!-- 开发模式入口（仅调试环境可点击） -->
+  <view class="dev-toggle" bindtap="toggleDevInput">
+    <text>开发模式</text>
+  </view>
+</view>

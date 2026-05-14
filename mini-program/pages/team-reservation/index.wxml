@@ -1,0 +1,259 @@
+<view class="container">
+  <!-- ===== 预约须知弹窗 ===== -->
+  <view class="notice-mask" wx:if="{{showNotice}}"></view>
+  <view class="notice-popup" wx:if="{{showNotice}}">
+    <view class="notice-popup-header">
+      <text class="notice-popup-title">团队预约须知</text>
+    </view>
+    <scroll-view class="notice-popup-body" scroll-y>
+      <rich-text nodes="{{noticeContent}}"></rich-text>
+    </scroll-view>
+    <view class="notice-popup-footer">
+      <button class="btn-primary notice-btn" bindtap="agreeNotice">我已阅读并同意</button>
+    </view>
+  </view>
+
+  <view wx:if="{{agreed}}">
+
+  <!-- 步骤指示器 -->
+  <view class="step-indicator">
+    <view class="step-item {{currentStep >= 1 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 1 ? 'active' : ''}}">1</view>
+      <text class="step-label">选择日期</text>
+    </view>
+    <view class="step-line {{currentStep >= 2 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 2 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 2 ? 'active' : ''}}">2</view>
+      <text class="step-label">选择场次</text>
+    </view>
+    <view class="step-line {{currentStep >= 3 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 3 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 3 ? 'active' : ''}}">3</view>
+      <text class="step-label">填写资料</text>
+    </view>
+  </view>
+
+  <!-- 团队预约提示 -->
+  <view class="notice-bar">
+    <text class="notice-icon">!</text>
+    <text class="notice-text">团队预约需管理员审核，请如实填写信息。预约人数不得少于10人。</text>
+  </view>
+
+  <!-- 步骤 1: 选择日期 -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <view class="page-title">选择参观日期</view>
+    <view class="loading-tip" wx:if="{{loading}}">加载中...</view>
+    <view class="date-grid" wx:if="{{!loading}}">
+      <view
+        class="date-card {{selectedDate && selectedDate.id === item.id ? 'selected' : ''}} {{!item.isAvailable ? 'unavailable' : ''}}"
+        wx:for="{{dates}}"
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="selectDate"
+      >
+        <text class="date-weekday">{{item.date}}</text>
+        <text class="date-value">{{item.date}}</text>
+        <text class="date-quota" wx:if="{{item.isAvailable && item.remainingQuota > 0}}">余 {{item.remainingQuota}} 位</text>
+        <text class="date-quota full" wx:elif="{{item.isAvailable && item.remainingQuota <= 0}}">已满</text>
+        <text class="date-quota closed" wx:else>已关闭</text>
+      </view>
+    </view>
+    <view class="empty-state" wx:if="{{!loading && dates.length === 0}}">
+      <text class="empty-text">暂无可预约日期</text>
+    </view>
+  </view>
+
+  <!-- 步骤 2: 选择场次 -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="page-title">选择参观场次</view>
+    <view class="selected-date-info">已选日期：{{selectedDate.date}}</view>
+
+    <view
+      class="session-card {{selectedSession && selectedSession.type === item.type ? 'selected' : ''}}"
+      wx:for="{{sessions}}"
+      wx:key="type"
+      data-index="{{index}}"
+      bindtap="selectSession"
+    >
+      <view class="session-left">
+        <view class="session-icon {{item.type === 'AM' ? 'am' : 'pm'}}">
+          {{item.type === 'AM' ? '上午' : '下午'}}
+        </view>
+      </view>
+      <view class="session-info">
+        <text class="session-label">{{item.label}}</text>
+        <text class="session-time">{{item.startTime}} - {{item.endTime}}</text>
+        <text class="session-quota">名额 {{item.remaining}} 位</text>
+      </view>
+      <view class="session-arrow">›</view>
+    </view>
+
+    <view class="step-back" bindtap="prevStep">
+      <text>‹ 返回选择日期</text>
+    </view>
+  </view>
+
+  <!-- 步骤 3: 填写资料 -->
+  <view class="step-content" wx:if="{{currentStep === 3}}">
+    <view class="page-title">填写团队资料</view>
+    <view class="selected-summary">
+      {{selectedDate.date}} · {{selectedSession.label}} ({{selectedSession.startTime}}-{{selectedSession.endTime}})
+    </view>
+
+    <!-- 人数（团队预约固定10人） -->
+    <view class="form-section">
+      <view class="form-group">
+        <text class="form-label">参观人数</text>
+        <view class="count-display">
+          <text class="count-number">10</text>
+          <text class="count-unit">人</text>
+        </view>
+        <text class="count-tip">团队预约人数固定为10人</text>
+      </view>
+    </view>
+
+    <!-- 联系人信息 -->
+    <view class="form-section">
+      <view class="section-title">联系人信息</view>
+
+      <view class="form-group">
+        <text class="form-label">联系人姓名 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          value="{{contactName}}"
+          placeholder="请输入联系人姓名"
+          data-field="contactName"
+          bindinput="onContactInput"
+        />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">联系电话 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="number"
+          value="{{contactPhone}}"
+          placeholder="请输入手机号码"
+          data-field="contactPhone"
+          bindinput="onContactInput"
+        />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">证件类型 <text class="required">*</text></text>
+        <picker
+          mode="selector"
+          range="{{idCardTypes}}"
+          range-key="label"
+          value="{{idCardTypeIndex}}"
+          bindchange="onIdCardTypeChange"
+        >
+          <view class="picker-display">
+            <text>{{idCardTypeLabel || '请选择证件类型'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">证件号 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          value="{{contactIdCard}}"
+          placeholder="请输入联系人证件号"
+          data-field="contactIdCard"
+          bindinput="onContactInput"
+        />
+      </view>
+    </view>
+
+    <!-- 单位信息 -->
+    <view class="form-section">
+      <view class="section-title">单位信息</view>
+
+      <view class="form-group">
+        <text class="form-label">团队类型 <text class="required">*</text></text>
+        <picker
+          mode="selector"
+          range="{{teamTypes}}"
+          range-key="label"
+          value="{{teamTypeIndex}}"
+          bindchange="onTeamTypeChange"
+        >
+          <view class="picker-display">
+            <text>{{teamTypeLabel || '请选择团队类型'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">单位名称 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          value="{{orgName}}"
+          placeholder="请输入单位全称"
+          data-field="orgName"
+          bindinput="onOrgInput"
+        />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">统一社会信用代码</text>
+        <input
+          class="form-input"
+          value="{{orgCode}}"
+          placeholder="选填"
+          data-field="orgCode"
+          bindinput="onOrgInput"
+        />
+      </view>
+    </view>
+
+    <!-- 申请表模板下载 -->
+    <view class="form-section" wx:if="{{templateInfo}}">
+      <view class="section-title">申请表模板</view>
+      <view class="template-download" bindtap="downloadTemplate">
+        <view class="template-icon">
+          <text class="template-icon-text">DOC</text>
+        </view>
+        <view class="template-info">
+          <text class="template-name">{{templateInfo.name}}</text>
+          <text class="template-desc">点击下载申请表模板，填写后上传</text>
+        </view>
+        <text class="template-arrow">↓</text>
+      </view>
+    </view>
+
+    <!-- 附件上传 -->
+    <view class="form-section">
+      <view class="section-title">附件上传</view>
+      <view class="file-upload-area">
+        <view class="file-list" wx:if="{{files.length > 0}}">
+          <view class="file-item" wx:for="{{files}}" wx:key="*this" data-index="{{index}}" bindtap="removeFile">
+            <text class="file-name">文件 {{index + 1}}</text>
+            <text class="file-remove">删除</text>
+          </view>
+        </view>
+        <view class="file-upload-btn" bindtap="chooseFile">
+          <text class="file-upload-icon">+</text>
+          <text class="file-upload-text">从微信聊天选择文件</text>
+        </view>
+        <text class="file-upload-hint">支持从群聊、好友消息中选择文件上传，选填</text>
+      </view>
+    </view>
+
+    <view class="step-back" bindtap="prevStep">
+      <text>‹ 返回选择场次</text>
+    </view>
+
+    <button
+      class="btn-primary submit-btn"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="submit"
+    >提交预约</button>
+  </view>
+
+  </view>
+</view>

@@ -1,0 +1,283 @@
+<view class="container">
+  <!-- ===== 预约须知弹窗（带5s倒计时） ===== -->
+  <view class="notice-mask" wx:if="{{showNotice}}"></view>
+  <view class="notice-popup" wx:if="{{showNotice}}">
+    <view class="notice-popup-header">
+      <text class="notice-popup-title">预约须知</text>
+    </view>
+    <scroll-view class="notice-popup-body" scroll-y>
+      <rich-text nodes="{{noticeContent}}"></rich-text>
+    </scroll-view>
+    <view class="notice-popup-footer">
+      <button
+        class="btn-primary notice-btn {{countdown > 0 ? 'disabled' : ''}}"
+        disabled="{{countdown > 0}}"
+        bindtap="agreeNotice"
+      >{{countdown > 0 ? '请仔细阅读（' + countdown + 's）' : '我已阅读并同意'}}</button>
+    </view>
+  </view>
+
+  <view wx:if="{{agreed}}">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title-main">个人预约</text>
+    <text class="page-title-sub">本集团实行全员在线实名制预约</text>
+  </view>
+
+  <!-- ===== 步骤指示器 ===== -->
+  <view class="step-indicator">
+    <view class="step-item {{currentStep >= 1 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 1 ? 'active' : ''}}">1</view>
+      <text class="step-label">选择日期</text>
+    </view>
+    <view class="step-line {{currentStep >= 2 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 2 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 2 ? 'active' : ''}}">2</view>
+      <text class="step-label">选择场次</text>
+    </view>
+    <view class="step-line {{currentStep >= 3 ? 'active' : ''}}"></view>
+    <view class="step-item {{currentStep >= 3 ? 'active' : ''}}">
+      <view class="step-circle {{currentStep >= 3 ? 'active' : ''}}">3</view>
+      <text class="step-label">填写信息</text>
+    </view>
+  </view>
+
+  <!-- ===== 步骤 1: 选择日期（日历视图） ===== -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <view class="section-title">选择参观日期</view>
+
+    <view class="loading-tip" wx:if="{{loading}}">加载中...</view>
+
+    <view class="calendar-card" wx:if="{{!loading}}">
+      <!-- 月份标题 + 导航 -->
+      <view class="calendar-header">
+        <view class="calendar-nav" bindtap="prevMonth">‹</view>
+        <text class="calendar-month">{{currentMonthLabel}}</text>
+        <view class="calendar-nav" bindtap="nextMonth">›</view>
+      </view>
+
+      <!-- 星期行 -->
+      <view class="calendar-weekdays">
+        <text class="weekday">日</text>
+        <text class="weekday">一</text>
+        <text class="weekday">二</text>
+        <text class="weekday">三</text>
+        <text class="weekday">四</text>
+        <text class="weekday">五</text>
+        <text class="weekday">六</text>
+      </view>
+
+      <!-- 日期网格 -->
+      <view class="calendar-grid">
+        <view
+          wx:for="{{calendarDays}}"
+          wx:key="dateStr"
+          class="calendar-cell {{item.status}}"
+          data-index="{{index}}"
+          bindtap="selectDate"
+          wx:if="{{item.status !== 'empty'}}"
+        >
+          <text class="cell-day">{{item.day}}</text>
+          <text class="cell-status">
+            {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
+          </text>
+        </view>
+        <view
+          wx:for="{{calendarDays}}"
+          wx:key="dateStr"
+          class="calendar-cell empty"
+          wx:if="{{item.status === 'empty'}}"
+        >
+        </view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{!loading && calendarDays.length === 0}}">
+      <text class="empty-text">暂无可预约日期</text>
+    </view>
+
+    <!-- 预约须知 -->
+    <view class="notice-section">
+      <view class="notice-title">购票须知</view>
+      <view class="notice-item">
+        <text class="notice-label">（一）预约须知</text>
+        <text class="notice-text">为方便您预约门票并顺利参观，请在预约前仔细阅读本须知。</text>
+      </view>
+      <view class="notice-item">
+        <text class="notice-label">1.预约方式：</text>
+        <text class="notice-text">本集团实行线上预约订票，不接受现场预约。观众可提前3天（比如：周四参观，周一开放预约）9:00开始预约。通过"椰树集团"微信公众号、小程序、官网进行预约。</text>
+      </view>
+      <view class="notice-item">
+        <text class="notice-label">2.实名预约：</text>
+        <text class="notice-text">本集团实行全员在线实名制预约，每人一张门票（尚未办理实体居民身份证件的儿童，须使用身份证件号码实名预约）。中国大陆公民须录入本人第二代居民身份证信息，港澳台同胞须录入港澳台通行证/居住证信息。</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 步骤 2: 选择场次 ===== -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="section-title">选择参观场次</view>
+    <view class="selected-date-info">已选日期：{{selectedDate.date}}</view>
+
+    <view
+      class="session-card {{selectedSession && selectedSession.type === item.type ? 'selected' : ''}} {{item.remaining <= 0 ? 'full' : ''}}"
+      wx:for="{{sessions}}"
+      wx:key="type"
+      data-index="{{index}}"
+      bindtap="selectSession"
+    >
+      <view class="session-left">
+        <view class="session-icon {{item.type === 'AM' ? 'am' : 'pm'}}">
+          {{item.type === 'AM' ? '上午' : '下午'}}
+        </view>
+      </view>
+      <view class="session-info">
+        <text class="session-label">{{item.label}}</text>
+        <text class="session-time">{{item.startTime}} - {{item.endTime}}</text>
+        <text class="session-quota" wx:if="{{item.remaining > 0}}">剩余名额 {{item.remaining}} 位</text>
+        <text class="session-quota full" wx:if="{{item.remaining <= 0}}">已约满</text>
+      </view>
+      <view class="session-arrow">›</view>
+    </view>
+
+    <view class="step-back" bindtap="prevStep">
+      <text>‹ 返回选择日期</text>
+    </view>
+  </view>
+
+  <!-- ===== 步骤 3: 填写信息 ===== -->
+  <view class="step-content" wx:if="{{currentStep === 3}}">
+    <view class="section-title">填写参观人信息</view>
+    <view class="selected-summary">
+      {{selectedDate.date}} · {{selectedSession.label}} ({{selectedSession.startTime}}-{{selectedSession.endTime}})
+    </view>
+
+    <!-- 实名核验未通过警告 -->
+    <view class="real-name-warning" wx:if="{{realNameBlocked}}">
+      <text class="warning-icon">⚠️</text>
+      <text class="warning-text">您的身份核验未通过，请先完成实名认证</text>
+      <view class="warning-btn" bindtap="goToRealName">去认证</view>
+    </view>
+
+    <view class="count-section">
+      <text class="count-label">参观人数</text>
+      <view class="count-stepper">
+        <view
+          class="stepper-btn {{visitorCount <= 1 ? 'disabled' : ''}}"
+          data-value="{{visitorCount - 1}}"
+          bindtap="onVisitorCountChange"
+        >−</view>
+        <text class="stepper-value">{{visitorCount}}</text>
+        <view
+          class="stepper-btn {{visitorCount >= 5 ? 'disabled' : ''}}"
+          data-value="{{visitorCount + 1}}"
+          bindtap="onVisitorCountChange"
+        >+</view>
+      </view>
+    </view>
+
+    <view class="visitors-section">
+      <view class="visitor-card" wx:for="{{visitors}}" wx:for-index="vIndex" wx:key="vIndex">
+        <view class="visitor-header">
+          <text class="visitor-number">参观人 {{vIndex + 1}}</text>
+          <view
+            class="real-name-btn"
+            data-index="{{vIndex}}"
+            bindtap="openRealNamePicker"
+            wx:if="{{realNames.length > 0}}"
+          >
+            选择实名
+          </view>
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">姓名</text>
+          <input
+            class="form-input"
+            placeholder="请输入姓名"
+            value="{{item.name}}"
+            data-index="{{vIndex}}"
+            data-field="name"
+            bindinput="onVisitorInput"
+          />
+        </view>
+
+        <view class="form-group">
+          <text class="form-label">身份证号</text>
+          <input
+            class="form-input"
+            placeholder="请输入身份证号"
+            value="{{item.idCard}}"
+            data-index="{{vIndex}}"
+            data-field="idCard"
+            bindinput="onVisitorInput"
+          />
+        </view>
+
+        <view class="form-row">
+          <view class="form-group half">
+            <text class="form-label">省份</text>
+            <picker
+              mode="selector"
+              range="{{provinces}}"
+              value="{{0}}"
+              data-index="{{vIndex}}"
+              bindchange="onProvinceChange"
+            >
+              <view class="form-input picker-value {{item.province ? 'has-value' : ''}}">{{item.province || '请选择省份'}}</view>
+            </picker>
+          </view>
+          <view class="form-group half">
+            <text class="form-label">城市</text>
+            <picker
+              mode="selector"
+              range="{{pickerCities[vIndex] || []}}"
+              value="{{0}}"
+              data-index="{{vIndex}}"
+              bindchange="onCityChange"
+            >
+              <view class="form-input picker-value {{item.city ? 'has-value' : ''}}">{{item.city || '请选择城市'}}</view>
+            </picker>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="step-back" bindtap="prevStep">
+      <text>‹ 返回选择场次</text>
+    </view>
+
+    <button
+      class="btn-primary submit-btn"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+      bindtap="submit"
+    >提交预约</button>
+  </view>
+
+  <!-- ===== 实名选择半屏弹窗 ===== -->
+  <view class="real-name-mask" wx:if="{{showRealNamePicker}}" bindtap="closeRealNamePicker"></view>
+  <view class="real-name-picker {{showRealNamePicker ? 'show' : ''}}">
+    <view class="picker-header">
+      <text class="picker-title">选择实名信息</text>
+      <text class="picker-close" bindtap="closeRealNamePicker">关闭</text>
+    </view>
+    <scroll-view class="picker-list" scroll-y>
+      <view
+        class="picker-item"
+        wx:for="{{realNames}}"
+        wx:key="id"
+        data-index="{{index}}"
+        bindtap="selectRealName"
+      >
+        <text class="picker-name">{{item.name}}</text>
+        <text class="picker-idcard">{{item.idCard}}</text>
+      </view>
+      <view class="empty-state" wx:if="{{realNames.length === 0}}">
+        <text class="empty-text">暂无实名信息，请手动填写</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  </view>
+</view>

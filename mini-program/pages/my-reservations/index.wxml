@@ -1,0 +1,120 @@
+<view class="container">
+  <!-- 状态标签页 -->
+  <scroll-view class="status-tabs" scroll-x show-scrollbar="{{false}}">
+    <view
+      class="tab-item {{statusFilter === item.value ? 'active' : ''}}"
+      wx:for="{{statusTabs}}"
+      wx:key="value"
+      data-value="{{item.value}}"
+      bindtap="onStatusTab"
+    >
+      <text class="tab-label">{{item.label}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 类型筛选 -->
+  <view class="type-tabs">
+    <view
+      class="type-tab {{typeFilter === item.value ? 'active' : ''}}"
+      wx:for="{{typeTabs}}"
+      wx:key="value"
+      data-value="{{item.value}}"
+      bindtap="onTypeTab"
+    >
+      <text>{{item.label}}</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-tip" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 预约列表 -->
+  <scroll-view
+    class="reservation-list"
+    scroll-y
+    wx:if="{{!loading}}"
+    bindscrolltolower="loadMore"
+  >
+    <view
+      class="reservation-card"
+      wx:for="{{records}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <!-- 卡片头部 -->
+      <view class="card-header">
+        <text class="card-no">预约单号：{{item.reservationNo}}</text>
+        <view class="status-badge status-{{item.status}}">
+          <text>{{item.statusLabel}}</text>
+        </view>
+      </view>
+
+      <!-- 卡片信息 -->
+      <view class="card-body">
+        <view class="info-row">
+          <text class="info-label">参观日期</text>
+          <text class="info-value">{{item.date}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">参观场次</text>
+          <text class="info-value">{{item.sessionLabel}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">预约类型</text>
+          <text class="info-value">{{item.typeLabel}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">参观人数</text>
+          <text class="info-value">{{item.visitorCount}} 人</text>
+        </view>
+        <view class="info-row" wx:if="{{item.contactName}}">
+          <text class="info-label">联系人</text>
+          <text class="info-value">{{item.contactName}}</text>
+        </view>
+      </view>
+
+      <!-- 卡片操作 -->
+      <view class="card-actions">
+        <view
+          wx:if="{{canShowQrCode(item.status)}}"
+          class="action-btn qr-btn"
+          data-id="{{item.id}}"
+          catchtap="viewQrCode"
+        >
+          查看核销码
+        </view>
+        <view
+          wx:if="{{canCancel(item.status)}}"
+          class="action-btn cancel-btn"
+          data-id="{{item.id}}"
+          catchtap="cancelReservation"
+        >
+          取消预约
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{loadingMore}}">
+      <text>加载更多...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view class="load-more" wx:if="{{!hasMore && records.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+  </scroll-view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && records.length === 0}}">
+    <view class="empty-icon">📋</view>
+    <text class="empty-text">暂无预约记录</text>
+    <text class="empty-desc">去首页开始预约参观吧</text>
+    <view class="empty-action" bindtap="goHome">
+      返回首页
+    </view>
+  </view>
+</view>

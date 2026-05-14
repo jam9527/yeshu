@@ -1,0 +1,95 @@
+<view class="container">
+  <view class="page-title">推广中心</view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 非推广员 - 申请提示 -->
+  <view wx:elif="{{!isPromoter}}" class="apply-card card">
+    <text class="apply-icon">📢</text>
+    <text class="apply-title">成为推广员</text>
+    <text class="apply-desc">分享椰树集团活动给好友，邀请他们预约参观，获取推广奖励！</text>
+    <button class="apply-btn" bindtap="applyPromoter">申请成为推广员</button>
+  </view>
+
+  <!-- 推广员面板 -->
+  <view wx:else class="promoter-panel">
+    <!-- 时间筛选 -->
+    <view class="date-filter">
+      <picker mode="date" value="{{startDate}}" bindchange="onStartDateChange">
+        <view class="date-picker">{{startDate || '开始日期'}}</view>
+      </picker>
+      <text class="date-sep">至</text>
+      <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+        <view class="date-picker">{{endDate || '结束日期'}}</view>
+      </picker>
+      <view wx:if="{{startDate || endDate}}" class="reset-btn" bindtap="resetDateFilter">重置</view>
+    </view>
+
+    <!-- 统计卡片 -->
+    <view class="stats-row">
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalClicks || 0}}</text>
+        <text class="stat-label">分享次数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalRegisters || 0}}</text>
+        <text class="stat-label">注册人数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalReservations || 0}}</text>
+        <text class="stat-label">预约数</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalVerified || 0}}</text>
+        <text class="stat-label">核销数</text>
+      </view>
+    </view>
+
+    <!-- 分享小程序（代替海报） -->
+    <button class="share-btn" open-type="share">
+      <text>分享小程序给好友</text>
+    </button>
+
+    <!-- 推广记录 -->
+    <view class="records-section">
+      <view class="section-title-sm">推广记录</view>
+
+      <view wx:if="{{records.length === 0}}" class="empty-records">
+        <text>暂无推广记录</text>
+      </view>
+
+      <view wx:else class="records-list">
+        <view
+          class="card record-item"
+          wx:for="{{records}}"
+          wx:for-item="record"
+          wx:key="id"
+        >
+          <view class="record-top">
+            <text class="record-user">{{record.visitorUserId ? '已注册用户' : '未注册'}}</text>
+            <text class="record-status {{record.verified ? 'verified' : record.reservationId ? 'pending' : ''}}">
+              {{record.verified ? '已核销' : record.reservationId ? '已预约' : '仅点击'}}
+            </text>
+          </view>
+          <view class="record-time">{{record.clickedAt ? record.clickedAt.slice(0, 19).replace('T', ' ') : ''}}</view>
+        </view>
+
+        <!-- 加载更多 -->
+        <view
+          wx:if="{{hasMore}}"
+          class="load-more"
+          bindtap="loadMore"
+        >
+          <text>加载更多</text>
+        </view>
+        <view wx:elif="{{records.length > 0}}" class="no-more">
+          <text>没有更多了</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

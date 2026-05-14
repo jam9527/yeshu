@@ -1,0 +1,201 @@
+@charset "UTF-8";
+/* 我的预约 - 列表样式 */
+.container {
+  min-height: 100vh;
+}
+
+/* ===== 状态标签页 ===== */
+.status-tabs {
+  display: flex;
+  white-space: nowrap;
+  background: #fff;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  display: inline-block;
+  padding: 6px 18px;
+  margin: 0 4px;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #666;
+  background: #f5f5f5;
+}
+.tab-item:first-child {
+  margin-left: 12px;
+}
+.tab-item:last-child {
+  margin-right: 12px;
+}
+.tab-item.active {
+  background: #e60012;
+  color: #fff;
+  font-weight: bold;
+}
+.tab-item:active {
+  opacity: 0.8;
+}
+
+.tab-label {
+  font-size: 13px;
+}
+
+/* ===== 预约列表 ===== */
+.reservation-list {
+  padding: 12px 0;
+  height: calc(100vh - 100px);
+}
+
+.reservation-card {
+  background: #fff;
+  border-radius: 12px;
+  margin: 0 16px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+.reservation-card:active {
+  opacity: 0.9;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.card-no {
+  font-size: 12px;
+  color: #999;
+}
+
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  /* 状态色彩映射 */
+}
+.status-badge.status-approving {
+  background: #fff8e1;
+  color: #f5a623;
+}
+.status-badge.status-approved {
+  background: #e8f5e9;
+  color: #4caf50;
+}
+.status-badge.status-verified {
+  background: #e3f2fd;
+  color: #005bac;
+}
+.status-badge.status-cancelled {
+  background: #f5f5f5;
+  color: #999;
+}
+.status-badge.status-rejected {
+  background: #ffebee;
+  color: #e60012;
+}
+
+.card-body {
+  padding: 12px 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #999;
+}
+
+.info-value {
+  font-size: 13px;
+  color: #000000;
+  font-weight: 500;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 14px;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.action-btn.cancel-btn {
+  border: 1px solid #ddd;
+  color: #999;
+  background: #fff;
+}
+.action-btn.cancel-btn:active {
+  background: #f5f5f5;
+}
+
+/* ===== 加载更多 ===== */
+.load-more {
+  text-align: center;
+  padding: 16px 0;
+}
+.load-more text {
+  font-size: 12px;
+  color: #ccc;
+}
+
+/* ===== 加载中 ===== */
+.loading-tip {
+  text-align: center;
+  padding: 80px 0;
+  font-size: 14px;
+  color: #999;
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 16px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-action {
+  padding: 8px 28px;
+  border: 1px solid #e60012;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #e60012;
+}
+.empty-action:active {
+  background: #fff5f5;
+}

@@ -1,0 +1,67 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/login/index",
+    "pages/personal-reservation/index",
+    "pages/team-reservation/index",
+    "pages/reservation-detail/index",
+    "pages/quick-check/index",
+    "pages/exhibitions/index",
+    "pages/exhibition-detail/index",
+    "pages/activities/index",
+    "pages/activity-detail/index",
+    "pages/profile/index",
+    "pages/my-reservations/index",
+    "pages/real-name-list/index",
+    "pages/real-name-edit/index",
+    "pages/promotion-center/index",
+    "pages/faq/index",
+    "pages/feedback/index",
+    "pages/promotion-apply/index"
+  ],
+  "subPackages": [
+    {
+      "root": "pages-verifier/",
+      "pages": [
+        "verifier-home/index",
+        "scan/index",
+        "verification-record/index"
+      ]
+    }
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#000000",
+    "navigationBarTitleText": "椰树集团",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f6fa"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#e60012",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/quick-check/index",
+        "text": "快捷检票",
+        "iconPath": "assets/icons/quick-check.png",
+        "selectedIconPath": "assets/icons/quick-check-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "assets/icons/profile.png",
+        "selectedIconPath": "assets/icons/profile-active.png"
+      }
+    ]
+  },
+  "requiredPrivateInfos": [],
+  "usingComponents": {},
+  "sitemapLocation": "sitemap.json"
+}

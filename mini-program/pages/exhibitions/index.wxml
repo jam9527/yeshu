@@ -1,0 +1,32 @@
+<!-- 展厅导览 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-title">展厅导览</view>
+
+  <!-- 展厅网格 -->
+  <view class="exhibition-grid" wx:if="{{!loading && exhibitions.length > 0}}">
+    <view
+      class="exhibition-card"
+      wx:for="{{exhibitions}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <image class="card-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      <view class="card-body">
+        <text class="card-name">{{item.name}}</text>
+        <text class="card-desc">{{item.description}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:elif="{{!loading && exhibitions.length === 0}}">
+    <text class="empty-text">暂无展厅信息</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>

@@ -1,0 +1,327 @@
+/* ===== 首页 - DIY 组件渲染 ===== */
+$ys-black: #000000;
+$ys-dark: #0d0d0d;
+$ys-yellow: #ffd700;
+$ys-red: #e60012;
+$ys-blue: #005bac;
+$ys-gray: #1a1a1a;
+$ys-gray-light: #2a2a2a;
+$ys-text: #e0e0e0;
+$ys-text-dim: #888;
+
+.container {
+  padding-bottom: 32px;
+  background: $ys-black;
+  min-height: 100vh;
+}
+
+/* ===== 空状态引导 ===== */
+.diy-empty-guide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 40px;
+}
+.diy-empty-guide-content {
+  text-align: center;
+}
+.diy-empty-guide-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: $ys-yellow;
+  display: block;
+  letter-spacing: 4px;
+}
+.diy-empty-guide-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  display: block;
+  margin-top: 8px;
+  letter-spacing: 6px;
+}
+.diy-empty-guide-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.2);
+  display: block;
+  margin-top: 24px;
+}
+
+/* ===== 轮播图 ===== */
+.diy-swiper {
+  width: 100%;
+}
+.diy-swiper-img {
+  width: 100%;
+  height: 100%;
+}
+.diy-swiper-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0a0a0a 100%);
+}
+.diy-swiper-placeholder-title {
+  color: $ys-yellow;
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+.diy-swiper-placeholder-sub {
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  margin-top: 8px;
+  letter-spacing: 6px;
+}
+
+/* ===== 功能入口 ===== */
+.diy-func-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 8px;
+}
+.diy-func-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 4px;
+  box-sizing: border-box;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+.diy-func-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+.diy-func-label {
+  font-size: 12px;
+  color: $ys-text;
+  text-align: center;
+}
+
+/* ===== 品牌标语 ===== */
+.diy-slogan {
+  padding: 28px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  border-top: 1px solid rgba($ys-yellow, 0.08);
+  border-bottom: 1px solid rgba($ys-yellow, 0.08);
+  margin: 0;
+}
+.diy-slogan-title {
+  font-size: 22px;
+  font-weight: bold;
+  display: block;
+  letter-spacing: 4px;
+}
+.diy-slogan-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  display: block;
+  margin-top: 4px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.diy-slogan-text {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  display: block;
+  margin-top: 10px;
+  letter-spacing: 2px;
+}
+
+/* ===== 文本块 ===== */
+.diy-text-block {
+  line-height: 1.6;
+  color: $ys-text;
+}
+
+/* ===== 图片 ===== */
+.diy-image-wrap {
+  line-height: 0;
+}
+.diy-image {
+  display: block;
+}
+
+/* ===== 通用区块头（展厅/活动） ===== */
+.diy-section {
+  margin: 16px 16px 0;
+}
+.diy-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.diy-section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  padding-left: 10px;
+  border-left: 3px solid $ys-yellow;
+}
+.diy-section-more {
+  font-size: 13px;
+  color: $ys-yellow;
+  opacity: 0.7;
+}
+
+/* ===== 展厅横向滚动 ===== */
+.diy-exhibition-scroll {
+  display: flex;
+  white-space: nowrap;
+  padding-bottom: 4px;
+}
+.diy-exhibition-card {
+  display: inline-block;
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: $ys-gray;
+  margin-right: 10px;
+  flex-shrink: 0;
+
+  &:last-child {
+    margin-right: 0;
+  }
+  &:active {
+    opacity: 0.85;
+  }
+}
+.diy-exhibition-img {
+  width: 100%;
+  height: 130px;
+  display: block;
+}
+.diy-exhibition-info {
+  padding: 10px 12px 12px;
+}
+.diy-exhibition-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.diy-exhibition-desc {
+  font-size: 12px;
+  color: $ys-text-dim;
+  display: block;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== 活动列表 ===== */
+.diy-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.diy-activity-item {
+  display: flex;
+  align-items: center;
+  background: $ys-gray;
+  border-radius: 10px;
+  padding: 14px;
+  gap: 12px;
+
+  &:active {
+    background: $ys-gray-light;
+  }
+}
+.diy-activity-tag-wrap {
+  flex-shrink: 0;
+}
+.diy-activity-tag {
+  background: $ys-yellow;
+  color: $ys-black;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.diy-activity-content {
+  flex: 1;
+  min-width: 0;
+}
+.diy-activity-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.diy-activity-time {
+  font-size: 12px;
+  color: $ys-text-dim;
+  display: block;
+  margin-top: 4px;
+}
+.diy-activity-arrow {
+  color: $ys-text-dim;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ===== 公告栏 ===== */
+.diy-notice-bar {
+  padding: 10px 16px;
+  margin: 0;
+}
+.diy-notice-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ===== 分隔线 ===== */
+.diy-divider {
+  padding: 0 16px;
+}
+.diy-divider-line {
+  height: 1px;
+}
+
+/* ===== 按钮 ===== */
+.diy-button-wrap {
+  padding: 8px 16px;
+}
+.diy-button {
+  width: 100%;
+}
+
+/* ===== 底部信息 ===== */
+.diy-footer {
+  text-align: center;
+  padding: 28px 16px 12px;
+}
+.diy-footer-brand {
+  font-size: 14px;
+  font-weight: bold;
+  color: $ys-yellow;
+  display: block;
+  letter-spacing: 2px;
+}
+.diy-footer-copy {
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  display: block;
+  margin-top: 4px;
+}

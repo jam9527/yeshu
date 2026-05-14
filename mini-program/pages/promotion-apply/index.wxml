@@ -1,0 +1,60 @@
+<view class="container">
+  <view class="apply-card">
+    <view class="icon-wrap">📢</view>
+    <text class="title">申请成为推广员</text>
+
+    <!-- 初始化加载 -->
+    <block wx:if="{{initializing}}">
+      <view class="loading-wrap">
+        <view class="loading-spinner"></view>
+        <text>加载中...</text>
+      </view>
+    </block>
+
+    <!-- 加载/提交中 -->
+    <block wx:if="{{applying}}">
+      <view class="loading-wrap">
+        <view class="loading-spinner"></view>
+        <text>提交中...</text>
+      </view>
+    </block>
+
+    <!-- 申请已提交 -->
+    <block wx:elif="{{submitted}}">
+      <view class="result-wrap">
+        <text class="result-icon success-icon">✓</text>
+        <text class="result-text">申请已提交</text>
+        <text class="result-desc">请等待管理员审核，审核通过后可在个人中心查看推广中心入口</text>
+        <button class="apply-btn" bindtap="goHome">返回首页</button>
+      </view>
+    </block>
+
+    <!-- 已是推广员 -->
+    <block wx:elif="{{alreadyPromoter}}">
+      <view class="result-wrap">
+        <text class="result-icon info-icon">ℹ</text>
+        <text class="result-text">你已是推广员</text>
+        <text class="result-desc">可在个人中心进入推广中心查看推广数据</text>
+        <button class="apply-btn" bindtap="goHome">返回首页</button>
+      </view>
+    </block>
+
+    <!-- 错误 -->
+    <block wx:elif="{{errorMsg}}">
+      <view class="result-wrap">
+        <text class="result-icon fail-icon">!</text>
+        <text class="result-text">申请失败</text>
+        <text class="result-desc">{{errorMsg}}</text>
+        <button class="apply-btn" bindtap="goHome">返回首页</button>
+      </view>
+    </block>
+
+    <!-- 未登录 - 显示一键登录按钮 -->
+    <block wx:elif="{{!loggedIn}}">
+      <text class="desc">扫描推广二维码后，请使用微信一键登录并自动提交申请</text>
+      <button class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="handlePhoneLogin">
+        微信一键登录
+      </button>
+    </block>
+  </view>
+</view>

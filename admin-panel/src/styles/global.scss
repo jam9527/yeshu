@@ -1,0 +1,45 @@
+/* 椰树集团品牌色变量 */
+:root {
+  --ys-black: #000000;
+  --ys-yellow: #ffd700;
+  --ys-red: #e60012;
+  --ys-blue: #005bac;
+  --ys-bg: #f5f6fa;
+}
+
+/* 全局样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--ys-bg);
+}
+
+/* Element Plus 主题覆盖 */
+.el-menu {
+  border-right: none !important;
+}
+
+.el-menu-item.is-active {
+  background-color: #1890ff33 !important;
+}
+
+/* 通用卡片样式 */
+.page-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+}

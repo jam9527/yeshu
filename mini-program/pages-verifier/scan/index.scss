@@ -1,0 +1,367 @@
+/* 扫一扫核销 - 品牌风格 */
+.container {
+  min-height: 100vh;
+  background: #000;
+}
+
+/* 顶部品牌区 */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px 16px;
+  background: #000;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* 扫码框 */
+.scan-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
+}
+.scan-overlay {
+  position: relative;
+  width: 260px;
+  height: 260px;
+}
+.scan-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.scan-corner {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-color: #ffd700;
+  border-style: solid;
+}
+.scan-corner.tl {
+  top: 0;
+  left: 0;
+  border-width: 4px 0 0 4px;
+}
+.scan-corner.tr {
+  top: 0;
+  right: 0;
+  border-width: 4px 4px 0 0;
+}
+.scan-corner.bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 4px 4px;
+}
+.scan-corner.br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 4px 4px 0;
+}
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: #e60012;
+  animation: scanMove 2s ease-in-out infinite;
+}
+@keyframes scanMove {
+  0%,
+  100% {
+    top: 0;
+  }
+  50% {
+    top: calc(100% - 2px);
+  }
+}
+.scan-hint {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #999;
+}
+
+/* 初始状态 */
+.init-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 120px;
+}
+.init-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.init-text {
+  font-size: 16px;
+  color: #999;
+}
+
+/* ===== 开发模式手动输入 ===== */
+.dev-section {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.dev-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dev-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+.dev-input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.dev-btn {
+  height: 40px;
+  line-height: 40px;
+  background: #e60012;
+  color: #fff;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+}
+.dev-btn-cancel {
+  height: 36px;
+  line-height: 36px;
+  background: transparent;
+  color: #999;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.dev-toggle {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 16px;
+  font-size: 12px;
+  color: #666;
+  z-index: 50;
+}
+
+/* 结果区域 */
+.result-section {
+  padding: 20px 16px;
+}
+.result-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+}
+.result-header.success {
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+}
+.result-header.error {
+  background: linear-gradient(135deg, #e60012, #cc0010);
+}
+.result-icon {
+  font-size: 24px;
+}
+.result-status {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* 信息行 */
+.result-body {
+  padding: 16px;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.info-row:last-child {
+  border-bottom: none;
+}
+.info-label {
+  font-size: 14px;
+  color: #999;
+}
+.info-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+}
+.info-value.badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #f0fff0;
+  color: #52c41a;
+  font-size: 12px;
+}
+.info-value.badge.pending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+/* 按钮 */
+.result-actions {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-confirm {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+}
+.btn-confirm:active {
+  opacity: 0.9;
+}
+.btn-disabled {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  background: #d9d9d9;
+  color: #999;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  border: none;
+}
+.btn-reset {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  background: transparent;
+  color: #e60012;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e60012;
+}
+.btn-reset:active {
+  opacity: 0.7;
+}
+
+/* 错误消息 */
+.error-msg {
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #e60012;
+}
+
+/* ===== 参观人明细 ===== */
+.visitor-section,
+.team-section {
+  padding: 0 16px 8px;
+}
+.visitor-header {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  padding: 10px 0 8px;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 4px;
+}
+.visitor-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.visitor-item:last-child {
+  border-bottom: none;
+}
+.visitor-index {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffd700;
+  color: #000;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.visitor-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.visitor-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+.visitor-idcard {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 团队信息行 */
+.team-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.team-row:last-child {
+  border-bottom: none;
+}
+.team-label {
+  font-size: 13px;
+  color: #999;
+}
+.team-value {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}

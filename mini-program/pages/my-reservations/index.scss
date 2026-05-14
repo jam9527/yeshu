@@ -1,0 +1,254 @@
+/* 我的预约 - 列表样式 */
+$ys-black: #000000;
+$ys-yellow: #ffd700;
+$ys-red: #e60012;
+$ys-blue: #005bac;
+
+.container {
+  min-height: 100vh;
+}
+
+/* ===== 状态标签页 ===== */
+.status-tabs {
+  display: flex;
+  white-space: nowrap;
+  background: #fff;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  display: inline-block;
+  padding: 6px 18px;
+  margin: 0 4px;
+  border-radius: 16px;
+  font-size: 13px;
+  color: #666;
+  background: #f5f5f5;
+
+  &:first-child {
+    margin-left: 12px;
+  }
+
+  &:last-child {
+    margin-right: 12px;
+  }
+
+  &.active {
+    background: $ys-red;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.tab-label {
+  font-size: 13px;
+}
+
+/* ===== 类型筛选 ===== */
+.type-tabs {
+  display: flex;
+  background: #fff;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+}
+
+.type-tab {
+  padding: 4px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #999;
+  background: #f5f5f5;
+
+  &.active {
+    background: $ys-blue;
+    color: #fff;
+  }
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+/* ===== 预约列表 ===== */
+.reservation-list {
+  padding: 12px 0;
+  height: calc(100vh - 100px);
+}
+
+.reservation-card {
+  background: #fff;
+  border-radius: 12px;
+  margin: 0 16px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.card-no {
+  font-size: 12px;
+  color: #999;
+}
+
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+
+  /* 状态色彩映射 */
+  &.status-approving {
+    background: #fff8e1;
+    color: #f5a623;
+  }
+
+  &.status-approved {
+    background: #e8f5e9;
+    color: #4caf50;
+  }
+
+  &.status-verified {
+    background: #e3f2fd;
+    color: $ys-blue;
+  }
+
+  &.status-cancelled {
+    background: #f5f5f5;
+    color: #999;
+  }
+
+  &.status-rejected {
+    background: #ffebee;
+    color: $ys-red;
+  }
+}
+
+.card-body {
+  padding: 12px 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.info-label {
+  font-size: 13px;
+  color: #999;
+}
+
+.info-value {
+  font-size: 13px;
+  color: $ys-black;
+  font-weight: 500;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px 14px;
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+
+  &.qr-btn {
+    background: $ys-blue;
+    color: #fff;
+
+    &:active {
+      opacity: 0.8;
+    }
+  }
+
+  &.cancel-btn {
+    border: 1px solid #ddd;
+    color: #999;
+    background: #fff;
+
+    &:active {
+      background: #f5f5f5;
+    }
+  }
+}
+
+/* ===== 加载更多 ===== */
+.load-more {
+  text-align: center;
+  padding: 16px 0;
+
+  text {
+    font-size: 12px;
+    color: #ccc;
+  }
+}
+
+/* ===== 加载中 ===== */
+.loading-tip {
+  text-align: center;
+  padding: 80px 0;
+  font-size: 14px;
+  color: #999;
+}
+
+/* ===== 空状态 ===== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 16px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 16px;
+  color: #999;
+  margin-bottom: 4px;
+}
+
+.empty-desc {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.empty-action {
+  padding: 8px 28px;
+  border: 1px solid $ys-red;
+  border-radius: 20px;
+  font-size: 14px;
+  color: $ys-red;
+
+  &:active {
+    background: #fff5f5;
+  }
+}

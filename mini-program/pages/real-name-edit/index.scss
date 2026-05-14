@@ -1,0 +1,148 @@
+@import '../../app';
+
+.container {
+  padding: 16px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #eee;
+  border-top-color: $ys-red;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #999;
+}
+
+.form {
+  padding-bottom: 40px;
+}
+
+.form-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.form-label {
+  width: 72px;
+  font-size: 14px;
+  font-weight: bold;
+  color: $ys-black;
+  flex-shrink: 0;
+}
+
+.form-input {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+  height: 36px;
+  padding: 0 8px;
+  background: #f5f6fa;
+  border-radius: 4px;
+}
+
+.ocr-btn {
+  margin-left: 8px;
+  padding: 6px 14px;
+  background: $ys-blue;
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.picker-value {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+  padding: 8px 0;
+}
+
+.picker-placeholder {
+  color: #ccc;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  background: $ys-red;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.submit-btn::after {
+  border: none;
+}
+
+.submit-btn[disabled] {
+  opacity: 0.6;
+}
+
+.verify-btn {
+  width: 100%;
+  height: 44px;
+  line-height: 44px;
+  background: $ys-blue;
+  color: #fff;
+  font-size: 14px;
+  border-radius: 8px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.verify-btn::after {
+  border: none;
+}
+
+.verify-btn[disabled] {
+  opacity: 0.6;
+}
+
+.verify-result {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.verify-pass {
+  background: #f0f9eb;
+  color: #67c23a;
+  border: 1px solid #c2e7b0;
+}
+
+.verify-fail {
+  background: #fef0f0;
+  color: #f56c6c;
+  border: 1px solid #fbc4c4;
+}

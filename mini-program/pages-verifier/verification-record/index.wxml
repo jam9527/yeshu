@@ -1,0 +1,69 @@
+<!-- 核销记录 -->
+<view class="container">
+  <!-- 顶部品牌区 -->
+  <view class="header-bar">
+    <text class="header-title">核销记录</text>
+  </view>
+
+  <!-- 日期筛选 -->
+  <view class="filter-bar">
+    <picker mode="date" value="{{dateFilter}}" bindchange="onDateChange">
+      <view class="date-picker">
+        <text wx:if="{{dateFilter}}">{{dateFilter}}</text>
+        <text wx:else class="placeholder">选择日期筛选</text>
+        <text class="arrow">▾</text>
+      </view>
+    </picker>
+    <view wx:if="{{dateFilter}}" class="clear-filter" bindtap="clearFilter">
+      <text>清除</text>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view wx:if="{{loading && records.length === 0}}" class="loading-state">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{records.length === 0}}" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无核销记录</text>
+  </view>
+
+  <!-- 记录列表 -->
+  <scroll-view
+    wx:else
+    class="record-scroll"
+    scroll-y
+    bindscrolltolower="loadMore"
+    lower-threshold="100"
+  >
+    <view class="record-list">
+      <view
+        class="record-item"
+        wx:for="{{records}}"
+        wx:key="id"
+      >
+        <view class="record-left">
+          <text class="record-no">{{item.reservationNo || '—'}}</text>
+          <text class="record-date">日期：{{item.visitDate || '—'}} · {{item.session === 'AM' ? '上午场' : item.session === 'PM' ? '下午场' : item.session}}</text>
+          <text class="record-type">{{item.type === 'TEAM' ? '团队' : '个人'}}预约 · {{item.visitorCount || 1}}人</text>
+        </view>
+        <view class="record-right">
+          <text class="record-time">核销于 {{formatTime(item.verifiedAt)}}</text>
+          <text class="record-badge verified">已核销</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多提示 -->
+    <view wx:if="{{loading && records.length > 0}}" class="load-more">
+      <text>加载更多...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view wx:elif="{{records.length >= total && records.length > 0}}" class="load-more">
+      <text>— 没有更多了 —</text>
+    </view>
+  </scroll-view>
+</view>

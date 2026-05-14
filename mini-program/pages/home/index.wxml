@@ -1,0 +1,140 @@
+<view class="container">
+
+  <!-- ===== 全部内容由 DIY 组件驱动 ===== -->
+  <block wx:for="{{diyComponents}}" wx:key="index">
+    <!-- 轮播图 -->
+    <swiper wx:if="{{item.type === 'swiper'}}" class="diy-swiper" autoplay interval="{{item.props.interval || 3000}}" circular indicator-dots indicator-active-color="#ffd700" indicator-color="rgba(255,255,255,0.3)" style="height:{{item.props.height || 220}}px">
+      <swiper-item wx:for="{{item.props.images}}" wx:for-item="img" wx:for-index="imgIndex" wx:key="imgIndex">
+        <image class="diy-swiper-img" src="{{img}}" mode="aspectFill" data-link="{{item.props.link}}" bindtap="onDiySwiperTap" />
+      </swiper-item>
+      <swiper-item wx:if="{{!item.props.images || item.props.images.length === 0}}">
+        <view class="diy-swiper-placeholder">
+          <text class="diy-swiper-placeholder-title">椰树集团</text>
+          <text class="diy-swiper-placeholder-sub">欢迎莅临参观</text>
+        </view>
+      </swiper-item>
+    </swiper>
+
+    <!-- 功能入口 -->
+    <view wx:elif="{{item.type === 'func_grid'}}" class="diy-func-grid">
+      <view
+        class="diy-func-item"
+        wx:for="{{item.props.items}}"
+        wx:for-item="menuItem"
+        wx:for-index="fi"
+        wx:key="fi"
+        data-url="{{menuItem.url}}"
+        bindtap="onFuncGridTap"
+        style="width:{{100 / (item.props.columns || 3)}}%"
+      >
+        <view class="diy-func-icon" style="background-color:{{menuItem.color || '#005bac'}}">{{menuItem.icon || '📋'}}</view>
+        <text class="diy-func-label">{{menuItem.text}}</text>
+      </view>
+    </view>
+
+    <!-- 品牌标语 -->
+    <view wx:elif="{{item.type === 'slogan'}}" class="diy-slogan">
+      <text class="diy-slogan-title" style="color:{{item.props.titleColor || '#ffd700'}}">{{item.props.title}}</text>
+      <text class="diy-slogan-sub" wx:if="{{item.props.subtitle}}">{{item.props.subtitle}}</text>
+      <text class="diy-slogan-text" wx:if="{{item.props.text}}">{{item.props.text}}</text>
+    </view>
+
+    <!-- 文本块 -->
+    <view wx:elif="{{item.type === 'text_block'}}" class="diy-text-block" style="font-size:{{(item.props.style && item.props.style.fontSize) || '14px'}};color:{{(item.props.style && item.props.style.color) || '#e0e0e0'}};padding:{{(item.props.style && item.props.style.padding) || '12px'}}">
+      <rich-text nodes="{{item.props.content}}" />
+    </view>
+
+    <!-- 图片 -->
+    <view wx:elif="{{item.type === 'image'}}" class="diy-image-wrap">
+      <image class="diy-image" src="{{item.props.src}}" mode="widthFix" data-link="{{item.props.link}}" bindtap="onDiyImageTap" style="width:{{item.props.width || '100%'}}" />
+    </view>
+
+    <!-- 展厅列表 -->
+    <view wx:elif="{{item.type === 'exhibition_scroll'}}" class="diy-section">
+      <view wx:if="{{exhibitions.length > 0}}">
+        <view class="diy-section-header">
+          <text class="diy-section-title">{{item.props.title || '常设展厅'}}</text>
+          <text class="diy-section-more" wx:if="{{item.props.showMore !== false}}" bindtap="goExhibitionList">查看全部 ›</text>
+        </view>
+        <scroll-view class="diy-exhibition-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+          <view
+            class="diy-exhibition-card"
+            wx:for="{{exhibitions}}"
+            wx:for-item="exh"
+            wx:key="id"
+            data-id="{{exh.id}}"
+            bindtap="goExhibitionDetail"
+          >
+            <image class="diy-exhibition-img" src="{{exh.coverImage}}" mode="aspectFill" />
+            <view class="diy-exhibition-info">
+              <text class="diy-exhibition-name">{{exh.name}}</text>
+              <text class="diy-exhibition-desc" wx:if="{{exh.description}}">{{exh.description}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 活动列表 -->
+    <view wx:elif="{{item.type === 'activity_list'}}" class="diy-section">
+      <view wx:if="{{activities.length > 0}}">
+        <view class="diy-section-header">
+          <text class="diy-section-title">{{item.props.title || '活动资讯'}}</text>
+          <text class="diy-section-more" wx:if="{{item.props.showMore !== false}}" bindtap="goActivityList">查看全部 ›</text>
+        </view>
+        <view class="diy-activity-list">
+          <view
+            class="diy-activity-item"
+            wx:for="{{activities}}"
+            wx:for-item="act"
+            wx:key="id"
+            data-id="{{act.id}}"
+            bindtap="goActivityDetail"
+          >
+            <view class="diy-activity-tag-wrap">
+              <view class="diy-activity-tag">公告</view>
+            </view>
+            <view class="diy-activity-content">
+              <text class="diy-activity-title">{{act.title}}</text>
+              <text class="diy-activity-time" wx:if="{{act.startTime}}">{{act.startTime}} - {{act.endTime}}</text>
+            </view>
+            <text class="diy-activity-arrow">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 公告栏 -->
+    <view wx:elif="{{item.type === 'notice_bar'}}" class="diy-notice-bar" style="background-color:{{item.props.backgroundColor || '#fff3e0'}}">
+      <text class="diy-notice-text">{{item.props.text}}</text>
+    </view>
+
+    <!-- 分隔线 -->
+    <view wx:elif="{{item.type === 'divider'}}" class="diy-divider" style="margin:{{item.props.margin || '12px 0'}}">
+      <view class="diy-divider-line" style="background-color:{{item.props.color || '#333'}}"></view>
+    </view>
+
+    <!-- 按钮 -->
+    <view wx:elif="{{item.type === 'button'}}" class="diy-button-wrap">
+      <button class="diy-button" type="{{item.props.type || 'primary'}}" data-link="{{item.props.link}}" bindtap="onDiyButtonTap">{{item.props.text || '按钮'}}</button>
+    </view>
+
+    <!-- 底部信息 -->
+    <view wx:elif="{{item.type === 'footer'}}" class="diy-footer">
+      <text class="diy-footer-brand">{{item.props.brand || '椰树集团'}}</text>
+      <text class="diy-footer-copy">{{item.props.copyright || '© 椰树集团 参观预约系统'}}</text>
+    </view>
+
+    <!-- 空白间距 -->
+    <view wx:elif="{{item.type === 'spacer'}}" style="height:{{item.props.height || 16}}px;width:100%"></view>
+  </block>
+
+  <!-- ===== 无 DIY 配置时显示基础引导 ===== -->
+  <view wx:if="{{diyComponents.length === 0 && !loading}}" class="diy-empty-guide">
+    <view class="diy-empty-guide-content">
+      <text class="diy-empty-guide-title">椰树集团</text>
+      <text class="diy-empty-guide-sub">欢迎莅临参观</text>
+      <text class="diy-empty-guide-hint">请登录管理后台配置首页内容</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,35 @@
+<!-- 精彩活动 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-title">精彩活动</view>
+
+  <!-- 活动列表 -->
+  <view class="activity-list" wx:if="{{!loading && activities.length > 0}}">
+    <view
+      class="activity-card"
+      wx:for="{{activities}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="goDetail"
+    >
+      <image class="card-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      <view class="card-info">
+        <text class="card-title">{{item.title}}</text>
+        <view class="card-meta">
+          <text class="meta-time">{{item.startTime}} - {{item.endTime}}</text>
+          <text class="meta-location">{{item.location}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:elif="{{!loading && activities.length === 0}}">
+    <text class="empty-text">暂无活动信息</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>

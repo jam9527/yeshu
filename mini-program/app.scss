@@ -1,0 +1,58 @@
+/**
+ * 椰树集团品牌色系
+ * 黑黄红蓝高对比撞色风格
+ */
+$ys-black: #000000;
+$ys-yellow: #ffd700;
+$ys-red: #e60012;
+$ys-blue: #005bac;
+
+page {
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  color: #333;
+  background-color: #f5f6fa;
+}
+
+/* 通用按钮样式 - 椰树红 */
+.btn-primary {
+  background: $ys-red;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+
+  &::after {
+    border: none;
+  }
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+/* 通用卡片 */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 页面标题 */
+.page-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: $ys-black;
+  margin-bottom: 16px;
+  padding-left: 8px;
+  border-left: 3px solid $ys-yellow;
+}
+
+/* 品牌色文字 */
+.text-brand-red { color: $ys-red; }
+.text-brand-yellow { color: $ys-yellow; }
+.text-brand-blue { color: $ys-blue; }

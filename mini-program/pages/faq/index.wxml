@@ -1,0 +1,35 @@
+<!-- 常见问题 -->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="page-title">常见问题</view>
+
+  <!-- FAQ 列表 -->
+  <view class="faq-list" wx:if="{{!loading && faqs.length > 0}}">
+    <view
+      class="faq-item"
+      wx:for="{{faqs}}"
+      wx:key="id"
+    >
+      <!-- 问题（点击切换展开/收起） -->
+      <view class="faq-question" bindtap="toggleExpand" data-id="{{item.id}}">
+        <text class="question-text">{{item.question}}</text>
+        <text class="arrow {{expandedId === item.id ? 'arrow-up' : ''}}">›</text>
+      </view>
+
+      <!-- 答案（展开时显示） -->
+      <view class="faq-answer" wx:if="{{expandedId === item.id}}">
+        <text class="answer-text">{{item.answer}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:elif="{{!loading && faqs.length === 0}}">
+    <text class="empty-text">暂无常见问题</text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+</view>

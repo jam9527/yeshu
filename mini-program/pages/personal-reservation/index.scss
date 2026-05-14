@@ -1,0 +1,718 @@
+/* ===== 个人预约 - 椰树品牌风格 ===== */
+$ys-black: #000000;
+$ys-yellow: #ffd700;
+$ys-red: #e60012;
+$ys-blue: #005bac;
+
+.container {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ===== 页面标题 ===== */
+.page-header {
+  background: linear-gradient(135deg, $ys-black, #1a1a2e);
+  padding: 20px 16px 16px;
+}
+.page-title-main {
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+}
+.page-title-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  display: block;
+  margin-top: 4px;
+}
+
+/* ===== 步骤指示器 ===== */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #fff;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background: $ys-red;
+  }
+}
+
+.step-label {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+
+  .step-item.active & {
+    color: $ys-black;
+    font-weight: bold;
+  }
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 8px;
+  margin-bottom: 22px;
+
+  &.active {
+    background: $ys-red;
+  }
+}
+
+/* ===== 步骤内容 ===== */
+.step-content {
+  padding: 0 16px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-black;
+  margin: 16px 0 12px;
+  padding-left: 8px;
+  border-left: 3px solid $ys-yellow;
+}
+
+.selected-date-info,
+.selected-summary {
+  font-size: 13px;
+  color: $ys-blue;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f0f6ff;
+  border-radius: 6px;
+}
+
+/* ===== 日历卡片 ===== */
+.calendar-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.calendar-month {
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.calendar-nav {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: $ys-blue;
+  border-radius: 50%;
+
+  &:active {
+    background: #f0f0f0;
+  }
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 4px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  min-height: 52px;
+  padding: 4px 0;
+
+  &:active {
+    opacity: 0.7;
+  }
+
+  /* 状态 */
+  &.available {
+    background: #f0f9f0;
+    color: #2e7d32;
+
+    .cell-status {
+      color: #4caf50;
+    }
+  }
+
+  &.unavailable {
+    background: #f5f5f5;
+    color: #bbb;
+
+    .cell-status {
+      color: #ccc;
+      font-size: 9px;
+    }
+  }
+
+  &.full {
+    background: #fff8e1;
+    color: #999;
+
+    .cell-status {
+      color: #f5a623;
+      font-size: 9px;
+    }
+  }
+
+  &.closed {
+    background: #f5f5f5;
+    color: #bbb;
+
+    .cell-status {
+      color: #ccc;
+      font-size: 9px;
+    }
+  }
+
+  &.empty {
+    background: transparent;
+  }
+}
+
+.cell-day {
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.cell-status {
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+/* ===== 预约须知 ===== */
+.notice-section {
+  margin-top: 16px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.notice-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-red;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid $ys-yellow;
+}
+
+.notice-item {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.notice-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: $ys-black;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.notice-text {
+  font-size: 12px;
+  color: #666;
+  display: block;
+  line-height: 1.6;
+}
+
+/* ===== 场次卡片 ===== */
+.session-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 2px solid transparent;
+
+  &.selected {
+    border-color: $ys-red;
+    background: #fff5f5;
+  }
+
+  &.full {
+    opacity: 0.5;
+
+    .session-quota.full {
+      color: #999;
+    }
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.session-left {
+  margin-right: 14px;
+}
+
+.session-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+
+  &.am {
+    background: $ys-yellow;
+    color: $ys-black;
+  }
+
+  &.pm {
+    background: $ys-blue;
+  }
+}
+
+.session-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.session-label {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.session-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.session-quota {
+  font-size: 12px;
+  color: $ys-blue;
+}
+
+.session-arrow {
+  font-size: 22px;
+  color: #ccc;
+  padding-left: 8px;
+}
+
+.step-back {
+  padding: 12px 0;
+  text-align: center;
+
+  text {
+    font-size: 13px;
+    color: $ys-blue;
+  }
+}
+
+/* ===== 人数选择 ===== */
+.count-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.count-label {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.count-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: $ys-black;
+  background: #fff;
+
+  &:first-child {
+    border-radius: 6px 0 0 6px;
+  }
+
+  &:last-child {
+    border-radius: 0 6px 6px 0;
+  }
+
+  &.disabled {
+    color: #ccc;
+    background: #f5f5f5;
+  }
+
+  &:not(.disabled):active {
+    background: #f0f0f0;
+  }
+}
+
+.stepper-value {
+  width: 44px;
+  height: 32px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-red;
+  background: #fff;
+}
+
+/* ===== 访客表单 ===== */
+.visitors-section {
+  margin-bottom: 16px;
+}
+
+.visitor-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.visitor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.visitor-number {
+  font-size: 14px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.real-name-btn {
+  font-size: 12px;
+  color: $ys-blue;
+  padding: 4px 10px;
+  border: 1px solid $ys-blue;
+  border-radius: 4px;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.form-group {
+  margin-bottom: 10px;
+
+  &.half {
+    flex: 1;
+  }
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.form-input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #333;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+  color: #999;
+}
+.picker-value.has-value {
+  color: #333;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== 实名核验警告 ===== */
+.real-name-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.warning-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.warning-text {
+  flex: 1;
+  font-size: 13px;
+  color: #e65100;
+}
+.warning-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #fff;
+  background: #e65100;
+  padding: 4px 12px;
+  border-radius: 4px;
+  &:active { opacity: 0.7; }
+}
+
+.submit-btn {
+  width: 100%;
+  height: 46px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 实名选择弹窗 ===== */
+.real-name-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 100;
+}
+
+.real-name-picker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 60vh;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  z-index: 101;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+
+  &.show {
+    transform: translateY(0);
+  }
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.picker-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.picker-close {
+  font-size: 14px;
+  color: #999;
+
+  &:active {
+    opacity: 0.6;
+  }
+}
+
+.picker-list {
+  padding: 8px 0;
+  max-height: 45vh;
+}
+
+.picker-item {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f5f5f5;
+
+  &:active {
+    background: #f5f5f5;
+  }
+}
+
+.picker-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.picker-idcard {
+  font-size: 13px;
+  color: #999;
+}
+
+/* ===== 预约须知弹窗 ===== */
+.notice-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+}
+
+.notice-popup {
+  position: fixed;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 16px;
+  z-index: 201;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+
+.notice-popup-header {
+  padding: 20px 20px 12px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.notice-popup-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.notice-popup-body {
+  padding: 16px 20px;
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.7;
+  max-height: 50vh;
+}
+
+.notice-popup-footer {
+  padding: 12px 20px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.notice-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+
+  &.disabled {
+    opacity: 0.5;
+  }
+}
+
+/* ===== 通用 ===== */
+.loading-tip {
+  text-align: center;
+  padding: 40px 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #ccc;
+}

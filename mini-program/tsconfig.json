@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "module": "Node16",
+    "sourceMap": false,
+    "strict": false,
+    "esModuleInterop": true,
+    "noEmitOnError": false,
+    "skipLibCheck": true,
+    "moduleResolution": "node16",
+    "ignoreDeprecations": "6.0",
+    "allowSyntheticDefaultImports": true,
+    "outDir": ".",
+    "rootDir": "."
+  },
+  "include": [
+    "pages/**/*.ts",
+    "pages-verifier/**/*.ts",
+    "utils/**/*.ts",
+    "app.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

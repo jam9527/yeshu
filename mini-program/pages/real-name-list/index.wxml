@@ -1,0 +1,55 @@
+<view class="container">
+  <view class="page-title">实名信息</view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 列表 -->
+  <view wx:elif="{{records.length > 0}}" class="list">
+    <view
+      class="card record-item"
+      wx:for="{{records}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      catchtap="goEdit"
+    >
+      <view class="record-header">
+        <text class="record-name">{{item.name}}</text>
+        <view class="record-tags">
+          <text class="record-tag">{{getIdCardTypeLabel(item.idCardType)}}</text>
+          <text wx:if="{{item.idVerified}}" class="verify-badge verified">已核验</text>
+          <text wx:else class="verify-badge unverified">未核验</text>
+        </view>
+      </view>
+      <view class="record-idcard">
+        <text class="label">证件号码</text>
+        <text class="value">{{formatIdCard(item.idCard, item.idCardType)}}</text>
+      </view>
+
+      <!-- 删除按钮 -->
+      <view
+        class="delete-btn"
+        data-id="{{item.id}}"
+        catchtap="deleteRecord"
+        hover-class="delete-btn-active"
+      >
+        删除
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{!loading}}" class="empty-state">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">暂无实名信息</text>
+    <text class="empty-desc">添加实名信息后可快速预约</text>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="bottom-bar">
+    <button class="add-btn" bindtap="goAdd">添加实名信息</button>
+  </view>
+</view>

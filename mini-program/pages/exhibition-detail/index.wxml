@@ -1,0 +1,24 @@
+<!-- 展厅详情 -->
+<view class="container">
+  <!-- 封面图 -->
+  <view class="cover-wrap" wx:if="{{exhibition}}">
+    <image class="cover-img" src="{{exhibition.coverImage}}" mode="aspectFill" />
+  </view>
+
+  <!-- 详情内容 -->
+  <view class="content-wrap" wx:if="{{!loading && exhibition}}">
+    <text class="name">{{exhibition.name}}</text>
+
+    <rich-text class="rich-content" nodes="{{exhibition.content}}"></rich-text>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 返回按钮 -->
+  <view class="back-btn-wrap" wx:if="{{!loading}}">
+    <button class="btn-primary" bindtap="goBack">返回</button>
+  </view>
+</view>

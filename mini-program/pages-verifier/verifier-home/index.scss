@@ -1,0 +1,158 @@
+/* 核销工作台 - 品牌风格 */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 30px;
+}
+
+/* 顶部品牌区 */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px 16px;
+  background: #000;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* 统计数据 */
+.stats-row {
+  display: flex;
+  align-items: center;
+  margin: 16px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stat-label {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 6px;
+}
+.stat-number {
+  font-size: 32px;
+  font-weight: bold;
+}
+.stat-number.gold {
+  color: #ffd700;
+}
+.stat-number.red {
+  color: #e60012;
+}
+.stat-divider {
+  width: 1px;
+  height: 40px;
+  background: #eee;
+}
+
+/* 扫一扫按钮 */
+.scan-section {
+  margin: 0 16px 16px;
+}
+.scan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e60012, #cc0010);
+  box-shadow: 0 4px 12px rgba(230, 0, 18, 0.3);
+}
+.scan-btn:active {
+  opacity: 0.9;
+}
+.scan-btn-icon {
+  font-size: 24px;
+}
+.scan-btn-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* 区块通用 */
+.section {
+  margin: 0 16px;
+}
+.section-header {
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
+  padding-left: 8px;
+  border-left: 3px solid #ffd700;
+}
+
+/* 记录列表 */
+.record-list {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.record-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.record-item:last-child {
+  border-bottom: none;
+}
+.record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.record-no {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+.record-time {
+  font-size: 12px;
+  color: #999;
+}
+.record-badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.record-badge.verified {
+  background: #f0fff0;
+  color: #52c41a;
+}
+
+/* 查看全部 */
+.view-all {
+  text-align: center;
+  padding: 14px;
+  color: #e60012;
+  font-size: 14px;
+}
+.view-all:active {
+  opacity: 0.7;
+}
+
+/* 状态 */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 30px 0;
+  color: #999;
+  font-size: 14px;
+}

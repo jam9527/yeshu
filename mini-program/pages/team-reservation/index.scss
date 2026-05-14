@@ -1,0 +1,576 @@
+/* 团队预约 - 表单样式 */
+$ys-black: #000000;
+$ys-yellow: #ffd700;
+$ys-red: #e60012;
+$ys-blue: #005bac;
+
+.container {
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* ===== 提示条 ===== */
+.notice-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  background: #fff8e1;
+  border-radius: 8px;
+  border-left: 3px solid $ys-yellow;
+}
+
+.notice-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: $ys-yellow;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notice-text {
+  font-size: 12px;
+  color: #8d6e00;
+  line-height: 1.5;
+}
+
+/* ===== 步骤指示器 ===== */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: #fff;
+  margin-bottom: 12px;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.active {
+    background: $ys-red;
+  }
+}
+
+.step-label {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+
+  .step-item.active & {
+    color: $ys-black;
+    font-weight: bold;
+  }
+}
+
+.step-line {
+  width: 40px;
+  height: 2px;
+  background: #e0e0e0;
+  margin: 0 8px;
+  margin-bottom: 22px;
+
+  &.active {
+    background: $ys-red;
+  }
+}
+
+/* ===== 步骤内容 ===== */
+.step-content {
+  padding: 0 16px;
+}
+
+.selected-date-info,
+.selected-summary {
+  font-size: 13px;
+  color: $ys-blue;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: #f0f6ff;
+  border-radius: 6px;
+}
+
+/* ===== 日期网格 ===== */
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.date-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 2px solid transparent;
+
+  &.selected {
+    border-color: $ys-red;
+    background: #fff5f5;
+  }
+
+  &.unavailable {
+    opacity: 0.5;
+    background: #f5f5f5;
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.date-weekday {
+  font-size: 12px;
+  color: #999;
+}
+
+.date-value {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.date-quota {
+  font-size: 11px;
+  color: $ys-blue;
+  margin-top: 2px;
+
+  &.full {
+    color: #ccc;
+  }
+
+  &.closed {
+    color: #ccc;
+  }
+}
+
+/* ===== 场次卡片 ===== */
+.session-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 2px solid transparent;
+
+  &.selected {
+    border-color: $ys-red;
+    background: #fff5f5;
+  }
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.session-left {
+  margin-right: 14px;
+}
+
+.session-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+
+  &.am {
+    background: $ys-yellow;
+    color: $ys-black;
+  }
+
+  &.pm {
+    background: $ys-blue;
+  }
+}
+
+.session-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.session-label {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.session-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.session-quota {
+  font-size: 12px;
+  color: $ys-blue;
+}
+
+.session-arrow {
+  font-size: 22px;
+  color: #ccc;
+  padding-left: 8px;
+}
+
+/* ===== 步骤返回 ===== */
+.step-back {
+  padding: 12px 0;
+  text-align: center;
+
+  text {
+    font-size: 13px;
+    color: $ys-blue;
+  }
+}
+
+/* ===== 表单区域 ===== */
+.form-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: bold;
+  color: $ys-black;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.form-group {
+  margin-bottom: 14px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.required {
+  color: $ys-red;
+}
+
+.form-input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #333;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+/* 固定人数显示（团队预约固定10人） */
+.count-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px 0;
+}
+.count-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: $ys-red;
+}
+.count-unit {
+  font-size: 16px;
+  color: #333;
+}
+.count-tip {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.picker-display {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  font-size: 14px;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.picker-arrow {
+  font-size: 18px;
+  color: #ccc;
+}
+
+/* ===== 模板下载 ===== */
+.template-download {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9ff;
+  border-radius: 8px;
+  border: 1px dashed $ys-blue;
+  cursor: pointer;
+}
+
+.template-download:active {
+  opacity: 0.7;
+}
+
+.template-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background: #e8f0fe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.template-icon-text {
+  font-size: 11px;
+  font-weight: bold;
+  color: $ys-blue;
+}
+
+.template-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.template-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.template-desc {
+  font-size: 12px;
+  color: #999;
+}
+
+.template-arrow {
+  font-size: 20px;
+  color: $ys-blue;
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+/* ===== 人数限制提示 ===== */
+.count-limit {
+  display: block;
+  font-size: 11px;
+  color: $ys-blue;
+  margin-top: 4px;
+}
+
+/* ===== 附件上传 ===== */
+.file-upload-area {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px dashed #ddd;
+}
+
+.file-list {
+  margin-bottom: 10px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border: 1px solid #eee;
+}
+
+.file-name {
+  font-size: 13px;
+  color: #333;
+}
+
+.file-remove {
+  font-size: 12px;
+  color: $ys-red;
+  padding: 2px 8px;
+}
+
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.file-upload-btn:active {
+  opacity: 0.7;
+}
+
+.file-upload-icon {
+  font-size: 20px;
+  color: $ys-blue;
+  font-weight: bold;
+}
+
+.file-upload-text {
+  font-size: 14px;
+  color: $ys-blue;
+}
+
+.file-upload-hint {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ===== 预约须知弹窗 ===== */
+.notice-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+}
+
+.notice-popup {
+  position: fixed;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 16px;
+  z-index: 201;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+
+.notice-popup-header {
+  padding: 20px 20px 12px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.notice-popup-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: $ys-black;
+}
+
+.notice-popup-body {
+  padding: 16px 20px;
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.7;
+  max-height: 50vh;
+}
+
+.notice-popup-footer {
+  padding: 12px 20px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.notice-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
+}
+
+/* ===== 提交按钮 ===== */
+.submit-btn {
+  width: 100%;
+  height: 46px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 通用 ===== */
+.loading-tip {
+  text-align: center;
+  padding: 40px 0;
+  font-size: 14px;
+  color: #999;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.empty-text {
+  font-size: 14px;
+  color: #ccc;
+}

@@ -1,0 +1,147 @@
+/* 核销记录 - 品牌风格 */
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding-bottom: 20px;
+}
+
+/* 顶部品牌区 */
+.header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 16px 16px;
+  background: #000;
+}
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffd700;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.date-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+}
+.date-picker .placeholder {
+  color: #999;
+}
+.date-picker .arrow {
+  font-size: 10px;
+  color: #999;
+}
+.clear-filter {
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #e60012;
+}
+.clear-filter:active {
+  opacity: 0.7;
+}
+
+/* 记录滚动区 */
+.record-scroll {
+  height: calc(100vh - 130px);
+}
+
+/* 记录列表 */
+.record-list {
+  margin: 12px 16px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.record-item:last-child {
+  border-bottom: none;
+}
+.record-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.record-no {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+.record-date,
+.record-session,
+.record-type {
+  font-size: 12px;
+  color: #999;
+}
+.record-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.record-count {
+  font-size: 16px;
+  font-weight: bold;
+  color: #e60012;
+}
+.record-time {
+  font-size: 11px;
+  color: #bbb;
+}
+.record-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.record-badge.verified {
+  background: #f0fff0;
+  color: #52c41a;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 16px 0;
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* 状态 */
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+}
+.loading-state {
+  color: #999;
+  font-size: 14px;
+}
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+.empty-text {
+  font-size: 14px;
+  color: #999;
+}
