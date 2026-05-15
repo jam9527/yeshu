@@ -37,20 +37,37 @@ export class StatisticsService {
     };
   }
 
-  /** 一周内预约趋势 */
+  /** 本周预约趋势（按预约日期统计，补齐7天） */
   async weeklyTrend() {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay(); // 0=周日, 1=周一...6=周六
+    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - mondayOffset);
 
     const records = await this.reservationRepo
       .createQueryBuilder('r')
       .select("DATE(r.reservationDate) as date, COUNT(*) as count")
-      .where('r.createdAt >= :start', { start: sevenDaysAgo })
+      .where('r.reservationDate >= :monday', { monday: monday.toISOString().split('T')[0] })
       .groupBy('DATE(r.reservationDate)')
       .orderBy('date', 'ASC')
       .getRawMany();
 
-    return records;
+    // 补齐周一至周日7天
+    const result: { date: string; count: number }[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const found = records.find((r: any) => {
+        const rDate = r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0];
+        return rDate === dateStr;
+      });
+      result.push({ date: dateStr, count: found ? Number(found.count) : 0 });
+    }
+
+    return result;
   }
 
   /**
@@ -119,7 +136,10 @@ export class StatisticsService {
       .limit(5)
       .getRawMany();
 
-    return records;
+    return records.map((r: any) => ({
+      ...r,
+      date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
+    }));
   }
 
   /**
@@ -188,6 +208,9 @@ export class StatisticsService {
       .orderBy('DATE(r.reservationDate)', 'ASC')
       .getRawMany();
 
-    return records;
+    return records.map((r: any) => ({
+      ...r,
+      date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
+    }));
   }
 }

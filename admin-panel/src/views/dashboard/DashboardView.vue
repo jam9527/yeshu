@@ -70,7 +70,7 @@ onMounted(async () => {
       <!-- 一周预约趋势 -->
       <el-col :span="16">
         <el-card shadow="hover" style="margin-bottom: 16px;">
-          <template #header>一周预约趋势</template>
+          <template #header>本周预约人数统计</template>
           <div class="bar-chart" v-loading="loading">
             <div v-if="weeklyTrend.length" class="bar-chart-inner">
               <div v-for="(d, i) in weeklyTrend" :key="i" class="bar-column">

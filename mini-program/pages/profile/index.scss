@@ -69,6 +69,15 @@ $ys-blue: #005bac;
   flex: 1;
   margin-left: 14px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-field {
+  &:active {
+    opacity: 0.7;
+  }
 }
 
 .nickname {
@@ -77,10 +86,9 @@ $ys-blue: #005bac;
   display: block;
 }
 
-.edit-hint {
-  font-size: 12px;
+.phone-text {
+  font-size: 13px;
   color: #aaa;
-  margin-top: 4px;
   display: block;
 }
 
@@ -90,7 +98,7 @@ $ys-blue: #005bac;
   margin-left: 4px;
 }
 
-/* ===== 我的订单（大按钮） ===== */
+/* ===== 我的预约（大按钮） ===== */
 .order-section {
   margin: -20px 16px 0;
   background: linear-gradient(135deg, $ys-red, #cc0010);

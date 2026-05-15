@@ -10,8 +10,8 @@
     <!-- 标题 + 状态标签 -->
     <view class="header">
       <text class="title">{{activity.title}}</text>
-      <text class="status-badge {{activity.status === 'ongoing' ? 'badge-ongoing' : 'badge-ended'}}">
-        {{activity.status === 'ongoing' ? '进行中' : '已结束'}}
+      <text class="status-badge badge-{{activity._statusClass}}">
+        {{activity._statusLabel}}
       </text>
     </view>
 
@@ -22,7 +22,8 @@
     </view>
 
     <!-- 富文本内容 -->
-    <rich-text class="rich-content" nodes="{{activity.richContent}}"></rich-text>
+    <rich-text wx:if="{{activity.richContent}}" class="rich-content" nodes="{{activity.richContent}}"></rich-text>
+    <text wx:else class="empty-hint">暂无详细介绍</text>
   </view>
 
   <!-- 加载状态 -->

@@ -9,5 +9,6 @@ import { LogController } from './log.controller';
   imports: [TypeOrmModule.forFeature([LoginLog, OperationLog])],
   controllers: [LogController],
   providers: [LogService],
+  exports: [LogService],
 })
 export class LogModule {}

@@ -57,10 +57,29 @@ export class AdminConfigController {
     return saved;
   }
 
-  /** PUT /api/admin/config/dates/:id - 更新日期配置 */
+  /** PUT /api/admin/config/dates/:id - 更新日期配置（同步配额表） */
   @Put('dates/:id')
   async updateDate(@Param('id') id: number, @Body() dto: any) {
     await this.dateConfigRepo.update(id, dto);
+
+    // 同步更新配额表，确保前台查询的剩余名额一致
+    if (dto.amPersonalQuota !== undefined || dto.amTeamQuota !== undefined) {
+      const amQuota = await this.quotaRepo.findOne({ where: { dateConfigId: id, sessionType: 'AM' } });
+      if (amQuota) {
+        if (dto.amPersonalQuota !== undefined) amQuota.totalPersonal = dto.amPersonalQuota;
+        if (dto.amTeamQuota !== undefined) amQuota.totalTeam = dto.amTeamQuota;
+        await this.quotaRepo.save(amQuota);
+      }
+    }
+    if (dto.pmPersonalQuota !== undefined || dto.pmTeamQuota !== undefined) {
+      const pmQuota = await this.quotaRepo.findOne({ where: { dateConfigId: id, sessionType: 'PM' } });
+      if (pmQuota) {
+        if (dto.pmPersonalQuota !== undefined) pmQuota.totalPersonal = dto.pmPersonalQuota;
+        if (dto.pmTeamQuota !== undefined) pmQuota.totalTeam = dto.pmTeamQuota;
+        await this.quotaRepo.save(pmQuota);
+      }
+    }
+
     return { success: true };
   }
 
@@ -80,10 +99,28 @@ export class AdminConfigController {
     });
   }
 
-  /** PUT /api/admin/config/quotas/:id - 更新配额 */
+  /** PUT /api/admin/config/quotas/:id - 更新配额（同步日期配置表） */
   @Put('quotas/:id')
   async updateQuota(@Param('id') id: number, @Body() dto: { totalPersonal?: number; totalTeam?: number }) {
+    const quota = await this.quotaRepo.findOne({ where: { id } });
+    if (!quota) return { success: false, message: '配额记录不存在' };
+
     await this.quotaRepo.update(id, dto);
+
+    // 同步更新日期配置表
+    const dateDto: any = {};
+    if (dto.totalPersonal !== undefined) {
+      if (quota.sessionType === 'AM') dateDto.amPersonalQuota = dto.totalPersonal;
+      else dateDto.pmPersonalQuota = dto.totalPersonal;
+    }
+    if (dto.totalTeam !== undefined) {
+      if (quota.sessionType === 'AM') dateDto.amTeamQuota = dto.totalTeam;
+      else dateDto.pmTeamQuota = dto.totalTeam;
+    }
+    if (Object.keys(dateDto).length > 0) {
+      await this.dateConfigRepo.update(quota.dateConfigId, dateDto);
+    }
+
     return { success: true };
   }
 

@@ -50,6 +50,10 @@ Page({
     showQrCode: false,
     /** 二维码图片base64 */
     qrCodeImage: '',
+    /** 取消预约弹窗 */
+    showCancelSheet: false,
+    cancelReason: '',
+    cancelReasonTags: ['行程有变', '预约错误', '时间冲突', '人数变更', '其他原因'],
   },
 
   onLoad(options: any) {
@@ -142,30 +146,44 @@ Page({
     })
   },
 
-  /** 取消预约 */
+  /** 取消预约 - 显示取消原因弹窗 */
   cancelReservation() {
     const { reservation } = this.data
     if (!reservation) return
+    this.setData({ showCancelSheet: true, cancelReason: '' })
+  },
 
-    wx.showModal({
-      title: '确认取消',
-      content: '确定要取消该预约吗？取消后不可恢复。',
-      success: async (res) => {
-        if (res.confirm) {
-          try {
-            wx.showLoading({ title: '取消中...' })
-            await api.put(`/reservations/${reservation.id}/cancel`)
-            wx.hideLoading()
-            wx.showToast({ title: '已取消', icon: 'success' })
-            // 重新加载详情
-            this.fetchDetail(reservation.id)
-          } catch (err) {
-            wx.hideLoading()
-            console.error('取消预约失败', err)
-          }
-        }
-      },
-    })
+  /** 隐藏取消弹窗 */
+  hideCancelSheet() {
+    this.setData({ showCancelSheet: false, cancelReason: '' })
+  },
+
+  /** 选择取消原因标签 */
+  selectCancelReason(e: any) {
+    const { reason } = e.currentTarget.dataset
+    this.setData({ cancelReason: reason })
+  },
+
+  /** 输入取消原因 */
+  onCancelReasonInput(e: any) {
+    this.setData({ cancelReason: e.detail.value })
+  },
+
+  /** 确认取消 */
+  async confirmCancel() {
+    const { reservation, cancelReason } = this.data
+    if (!reservation) return
+    try {
+      wx.showLoading({ title: '取消中...' })
+      await api.put(`/reservations/${reservation.id}/cancel`, { reason: cancelReason || '用户主动取消' })
+      wx.hideLoading()
+      wx.showToast({ title: '已取消', icon: 'success' })
+      this.setData({ showCancelSheet: false, cancelReason: '' })
+      this.fetchDetail(reservation.id)
+    } catch (err) {
+      wx.hideLoading()
+      console.error('取消预约失败', err)
+    }
   },
 
   /** 返回列表 */

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import request from '../../api/request'
 
@@ -9,6 +9,12 @@ const page = ref(1)
 const loading = ref(false)
 const detailVisible = ref(false)
 const currentDetail = ref<any>(null)
+
+const attachmentFiles = computed(() => {
+  const raw = currentDetail.value?.teamInfo?.attachmentFiles
+  if (!raw) return []
+  try { return typeof raw === 'string' ? JSON.parse(raw) : raw } catch { return [raw] }
+})
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
@@ -115,6 +121,11 @@ onMounted(fetchData)
           <el-descriptions-item label="团队类型">{{ currentDetail.teamInfo.teamType }}</el-descriptions-item>
           <el-descriptions-item label="单位名称">{{ currentDetail.teamInfo.orgName }}</el-descriptions-item>
           <el-descriptions-item v-if="currentDetail.teamInfo.orgCode" label="信用代码">{{ currentDetail.teamInfo.orgCode }}</el-descriptions-item>
+          <el-descriptions-item v-if="attachmentFiles.length" label="附件文件" :span="2">
+            <div v-for="(f, i) in attachmentFiles" :key="i">
+              <el-link :href="f" target="_blank" type="primary">{{ f.split('/').pop() }}</el-link>
+            </div>
+          </el-descriptions-item>
         </el-descriptions>
 
         <!-- 参观人列表 -->

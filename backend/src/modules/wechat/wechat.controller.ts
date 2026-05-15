@@ -37,8 +37,8 @@ export class WechatController {
    */
   @Public()
   @Post('test-login')
-  async testLogin() {
-    return this.wechatService.testLogin();
+  async testLogin(@Body('username') username?: string) {
+    return this.wechatService.testLogin(username);
   }
 
   /**

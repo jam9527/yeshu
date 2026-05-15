@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -9,8 +9,9 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  async login(@Body('username') username: string, @Body('password') password: string) {
-    return this.authService.login(username, password);
+  async login(@Body('username') username: string, @Body('password') password: string, @Req() req: any) {
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress;
+    return this.authService.login(username, password, ip);
   }
 
   @Get('profile')

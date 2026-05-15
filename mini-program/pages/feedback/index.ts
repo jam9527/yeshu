@@ -7,12 +7,17 @@ import api from '../../utils/api'
 Page({
   data: {
     content: '',
+    contact: '',
     images: [] as string[],
     submitting: false,
   },
 
   onContentInput(e: any) {
     this.setData({ content: e.detail.value })
+  },
+
+  onContactInput(e: any) {
+    this.setData({ contact: e.detail.value })
   },
 
   /** 选择图片 */
@@ -71,6 +76,7 @@ Page({
 
       await api.post('/feedback', {
         content: content.trim(),
+        contact: this.data.contact.trim(),
         images: imageUrls,
       })
 

@@ -5,12 +5,25 @@
 
 const app = getApp()
 
-/** 递归将对象中 /uploads/ 开头的 URL 转为绝对路径 */
+/** 递归将对象中 /uploads/ 开头的 URL 转为绝对路径（包括 HTML 内嵌图片） */
 export function resolveImageUrls(obj: any, _depth = 0): any {
   if (_depth > 30) return obj // 防止循环引用导致超时
-  if (typeof obj === 'string' && obj.startsWith('/uploads/')) {
-    const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
-    return `${baseUrl}${obj}`
+  if (typeof obj === 'string') {
+    // 纯 URL
+    if (obj.startsWith('/uploads/')) {
+      const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
+      return `${baseUrl}${obj}`
+    }
+    // HTML 字符串内的 <img src="/uploads/..."> 转绝对路径
+    if (obj.includes('<img') && obj.includes('/uploads/')) {
+      const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
+      return obj.replace(
+        /(<img\b[^>]*\s+src\s*=\s*["'])(\/uploads\/[^"']*?)(["'])/gi,
+        (_, prefix: string, path: string, suffix: string) =>
+          `${prefix}${baseUrl}${path}${suffix}`,
+      )
+    }
+    return obj
   }
   if (Array.isArray(obj)) return obj.map(item => resolveImageUrls(item, _depth + 1))
   if (obj && typeof obj === 'object') {

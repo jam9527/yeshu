@@ -1,6 +1,17 @@
 import api, { resolveImageUrls } from '../../utils/api'
 import { formatDate } from '../../utils/formatDate'
 
+function normalizeSwiperImages(components: any[]): any[] {
+  return components.map((comp: any) => {
+    if (comp.type === 'swiper' && Array.isArray(comp.props?.images)) {
+      comp.props.images = comp.props.images.map((img: any) =>
+        typeof img === 'string' ? { src: img, link: '' } : img,
+      )
+    }
+    return comp
+  })
+}
+
 interface ComponentDef {
   type: string
   label: string
@@ -58,7 +69,7 @@ Page({
         activities: actList,
         _homeExhibitions: exhList.slice(0, 4),
         _homeActivities: homeActs,
-        diyComponents: resolveImageUrls(diyConfig?.components) || [],
+        diyComponents: normalizeSwiperImages(resolveImageUrls(diyConfig?.components) || []),
         diyBackgroundStyle: bgStyle,
       })
     } finally {

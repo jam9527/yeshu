@@ -28,7 +28,7 @@ export class UserController {
   @Put('me')
   async updateProfile(
     @CurrentUser('id') userId: number,
-    @Body() data: { nickname?: string; avatarUrl?: string },
+    @Body() data: { nickname?: string; avatarUrl?: string; phone?: string },
   ) {
     await this.userService.update(userId, data);
     return { success: true };

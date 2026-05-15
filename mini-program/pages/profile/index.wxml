@@ -20,20 +20,24 @@
         />
       </view>
     </view>
-    <view class="user-info" bindtap="handleEditNickname">
-      <text class="nickname">{{userInfo.nickname || '点击设置昵称'}}</text>
-      <text class="edit-hint">点击编辑资料 ›</text>
+    <view class="user-info">
+      <view class="info-field" bindtap="handleEditNickname">
+        <text class="nickname">{{userInfo.nickname || '点击设置昵称'}}</text>
+      </view>
+      <view class="info-field" bindtap="handleEditPhone">
+        <text class="phone-text">{{userInfo.phone || '点击设置手机号'}}</text>
+      </view>
     </view>
     <text class="user-arrow">›</text>
   </view>
 
-  <!-- 我的订单（突出的大按钮） -->
+  <!-- 我的预约（突出的大按钮） -->
   <view class="order-section" bindtap="goTo" data-url="/pages/my-reservations/index" data-need-login="true">
     <view class="order-icon">
       <text class="order-icon-text">📋</text>
     </view>
     <view class="order-info">
-      <text class="order-title">我的订单</text>
+      <text class="order-title">我的预约</text>
       <text class="order-desc">查看预约记录与核销状态</text>
     </view>
     <view class="order-badge-wrap" wx:if="{{unreadCount > 0}}">

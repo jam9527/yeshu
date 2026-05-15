@@ -94,7 +94,7 @@ Page({
     try {
       const res: any = await api.get('/notices/personal')
       if (res?.content) {
-        this.setData({ noticeContent: res.content, showNotice: true, agreed: false, countdown: 5 })
+        this.setData({ noticeContent: res.content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false, countdown: 5 })
         this.startCountdown()
       } else {
         // 没有配置须知内容，直接跳过

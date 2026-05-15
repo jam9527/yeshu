@@ -126,6 +126,37 @@
     </view>
   </view>
 
+  <!-- 取消预约弹窗 -->
+  <view class="cancel-sheet-mask" wx:if="{{showCancelSheet}}" bindtap="hideCancelSheet"></view>
+  <view class="cancel-sheet" wx:if="{{showCancelSheet}}">
+    <view class="cancel-sheet-header">
+      <text class="cancel-sheet-title">取消预约</text>
+      <text class="cancel-sheet-close" bindtap="hideCancelSheet">✕</text>
+    </view>
+    <view class="cancel-sheet-body">
+      <text class="cancel-sheet-label">请选择取消原因</text>
+      <view class="cancel-reason-tags">
+        <view
+          class="cancel-tag {{cancelReason === item ? 'active' : ''}}"
+          wx:for="{{cancelReasonTags}}"
+          wx:key="*this"
+          data-reason="{{item}}"
+          bindtap="selectCancelReason"
+        >{{item}}</view>
+      </view>
+      <input
+        class="cancel-reason-input"
+        placeholder="或输入其他原因（选填）"
+        value="{{cancelReason}}"
+        bindinput="onCancelReasonInput"
+        maxlength="100"
+      />
+    </view>
+    <view class="cancel-sheet-footer">
+      <button class="cancel-sheet-btn cancel-confirm-btn" bindtap="confirmCancel">确认取消</button>
+    </view>
+  </view>
+
   <!-- 加载失败 -->
   <view class="empty-state" wx:if="{{!loading && !reservation}}">
     <text class="empty-text">未找到预约信息</text>

@@ -11,9 +11,10 @@ export class FeedbackController {
   create(
     @CurrentUser('id') userId: number,
     @Body('content') content: string,
+    @Body('contact') contact?: string,
     @Body('images') images?: string[],
   ) {
-    return this.feedbackService.create(userId, content, images);
+    return this.feedbackService.create(userId, content, contact, images);
   }
 
   @AdminPermissions('feedback:view')

@@ -1,5 +1,5 @@
 import { Module, Global } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { typeOrmConfig } from './database/typeorm.config';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { OperationLogInterceptor } from './common/interceptors/operation-log.interceptor';
 import { AdminRole } from './modules/auth/entities/admin-role.entity';
 
 // 基础设施模块
@@ -98,6 +99,11 @@ import { NotificationModule } from './modules/notification/notification.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    // 全局操作日志拦截器
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: OperationLogInterceptor,
     },
   ],
 })

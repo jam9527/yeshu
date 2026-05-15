@@ -8,6 +8,7 @@ const overview = ref({ totalReservations: 0, todayReservations: 0, pendingReview
 // 年龄段分布
 const ageDistribution = ref<any[]>([])
 const ageChartStyle = ref('')
+const hasAgeData = ref(false)
 
 // 热门日期
 const popularDates = ref<any[]>([])
@@ -37,7 +38,8 @@ function buildAgeChart() {
   if (!ageDistribution.value.length) return
   const colors = ['#91cc75', '#5470c6', '#fac858', '#ee6666', '#73c0de', '#3ba272']
   const total = ageDistribution.value.reduce((s: number, d: any) => s + d.count, 0)
-  if (total === 0) { ageChartStyle.value = ''; return }
+  if (total === 0) { ageChartStyle.value = ''; hasAgeData.value = false; return }
+  hasAgeData.value = true
 
   let accumulated = 0
   const sectors = ageDistribution.value.map((d: any, i: number) => {
@@ -131,7 +133,7 @@ onMounted(() => {
       <el-col :span="12">
         <el-card shadow="hover" style="margin-bottom: 16px;">
           <template #header>年龄段分布</template>
-          <div v-if="ageDistribution.length" class="chart-container">
+          <div v-if="hasAgeData" class="chart-container">
             <div class="pie-chart-wrapper">
               <div class="pie-chart" :style="{ background: ageChartStyle }"></div>
             </div>

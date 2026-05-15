@@ -57,6 +57,11 @@ Page({
       { label: '已完成', value: 'VERIFIED' },
       { label: '已取消', value: 'CANCELLED' },
     ] as StatusTab[],
+    /** 取消预约弹窗 */
+    showCancelSheet: false,
+    cancelId: '',
+    cancelReason: '',
+    cancelReasonTags: ['行程有变', '预约错误', '时间冲突', '人数变更', '其他原因'],
   },
 
   onLoad() {
@@ -98,7 +103,7 @@ Page({
         (r: any) => ({
           id: r.id,
           reservationNo: r.reservationNo,
-          date: r.date || r.visitDate,
+          date: r.reservationDate || r.date || r.visitDate,
           sessionType: r.sessionType,
           sessionLabel: r.sessionType === 'AM' ? '上午场' : '下午场',
           type: r.type || r.reservationType,
@@ -162,27 +167,43 @@ Page({
     wx.navigateTo({ url: `/pages/reservation-detail/index?id=${id}` })
   },
 
-  /** 取消预约 */
+  /** 取消预约 - 显示取消原因弹窗 */
   cancelReservation(e: any) {
     const { id } = e.currentTarget.dataset
-    wx.showModal({
-      title: '确认取消',
-      content: '确定要取消该预约吗？取消后不可恢复。',
-      success: async (res) => {
-        if (res.confirm) {
-          try {
-            wx.showLoading({ title: '取消中...' })
-            await api.put(`/reservations/${id}/cancel`)
-            wx.hideLoading()
-            wx.showToast({ title: '已取消', icon: 'success' })
-            this.refreshData()
-          } catch (err) {
-            wx.hideLoading()
-            console.error('取消预约失败', err)
-          }
-        }
-      },
-    })
+    this.setData({ showCancelSheet: true, cancelId: id, cancelReason: '' })
+  },
+
+  /** 隐藏取消弹窗 */
+  hideCancelSheet() {
+    this.setData({ showCancelSheet: false, cancelId: '', cancelReason: '' })
+  },
+
+  /** 选择取消原因标签 */
+  selectCancelReason(e: any) {
+    const { reason } = e.currentTarget.dataset
+    this.setData({ cancelReason: reason })
+  },
+
+  /** 输入取消原因 */
+  onCancelReasonInput(e: any) {
+    this.setData({ cancelReason: e.detail.value })
+  },
+
+  /** 确认取消 */
+  async confirmCancel() {
+    const { cancelId, cancelReason } = this.data
+    if (!cancelId) return
+    try {
+      wx.showLoading({ title: '取消中...' })
+      await api.put(`/reservations/${cancelId}/cancel`, { reason: cancelReason || '用户主动取消' })
+      wx.hideLoading()
+      wx.showToast({ title: '已取消', icon: 'success' })
+      this.setData({ showCancelSheet: false, cancelId: '', cancelReason: '' })
+      this.refreshData()
+    } catch (err) {
+      wx.hideLoading()
+      console.error('取消预约失败', err)
+    }
   },
 
   /** 是否可取消 */

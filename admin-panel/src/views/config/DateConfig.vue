@@ -187,10 +187,10 @@ async function batchSet() {
   }).catch(() => {})
 }
 
-/** 一键生成本月所有工作日（排除周一闭馆） */
+/** 一键生成本月所有日期（已有配置自动跳过） */
 async function generateMonth() {
   ElMessageBox.confirm(
-    `将为 ${monthLabel.value} 所有非周一工作日创建预约配置（各500/200名额），是否继续？`,
+    `将为 ${monthLabel.value} 所有日期创建预约配置（各500/200名额），是否继续？`,
     '批量生成',
     { confirmButtonText: '生成', cancelButtonText: '取消' }
   ).then(async () => {
@@ -198,9 +198,7 @@ async function generateMonth() {
     const total = daysInMonth.value
     for (let d = 1; d <= total; d++) {
       const dateStr = `${year.value}-${String(month.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      const dateObj = new Date(year.value, month.value - 1, d)
-      // 跳过周一和已有配置的日期
-      if (dateObj.getDay() === 1) continue
+      // 跳过已有配置的日期
       if (configs.value.some(c => c.date === dateStr)) continue
       try {
         await request.post('/admin/config/dates', { date: dateStr })

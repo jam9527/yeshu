@@ -49,6 +49,10 @@
       background: #eee;
       color: #999;
     }
+    .badge-upcoming {
+      background: #f5a623;
+      color: #fff;
+    }
   }
 
   /* 时间地点信息卡 */
@@ -90,6 +94,15 @@
     font-size: 14px;
     color: #999;
   }
+}
+
+/* 暂无内容提示 */
+.empty-hint {
+  display: block;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 0;
 }
 
 /* 返回按钮 */

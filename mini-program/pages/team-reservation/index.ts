@@ -101,7 +101,7 @@ Page({
     try {
       const res: any = await api.get('/notices/team')
       if (res?.content) {
-        this.setData({ noticeContent: res.content, showNotice: true, agreed: false })
+        this.setData({ noticeContent: res.content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false })
       } else {
         this.setData({ agreed: true })
       }
@@ -231,7 +231,13 @@ Page({
     this.setData({
       selectedSession: session,
       currentStep: 3,
+      maxVisitorCount: session.remaining,
     })
+  },
+
+  onVisitorCountInput(e: any) {
+    const val = parseInt(e.detail.value, 10)
+    this.setData({ visitorCount: isNaN(val) ? 0 : val })
   },
 
   /** 返回上一步 */
@@ -323,6 +329,7 @@ Page({
     if (!/^1\d{10}$/.test(contactPhone.trim())) return '联系电话格式不正确'
     if (!contactIdCard.trim()) return '请输入联系人证件号'
     if (!visitorCount || visitorCount < 10) return '团队预约人数不能少于10人'
+    if (visitorCount > this.data.maxVisitorCount) return `当前场次最多可预约${this.data.maxVisitorCount}人`
     if (!orgName.trim()) return '请输入单位名称'
 
     return null

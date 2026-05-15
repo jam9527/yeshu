@@ -1,8 +1,7 @@
 /**
  * 登录页
- * 两步登录：手机号授权 → 昵称设置
- * 昵称优先通过 getUserInfo 按钮加密数据由后端解密获取，用户可手动输入作为备选
- * 登录成功后跳转到之前要访问的页面
+ * 两步登录：code 登录 → 个人资料设置（头像/昵称/手机号）
+ * 测试环境：通过用户名区分不同测试用户
  */
 import api from '../../utils/api'
 
@@ -12,10 +11,11 @@ Page({
     codeLoggedIn: false,
     fetchingNickname: false,
     needNicknameAuth: false,
-    /** 手动输入昵称 */
     nicknameInput: '',
-    /** 是否正在保存昵称 */
     saving: false,
+    testUsername: '',
+    chosenAvatarUrl: '',
+    phoneInput: '',
   },
 
   onLoad() {
@@ -25,7 +25,6 @@ Page({
     }
   },
 
-  /** 跳转到之前要访问的页面 */
   goToPendingPage() {
     const app = getApp()
     const redirect = app.globalData.pendingRedirect
@@ -103,50 +102,24 @@ Page({
     }
   },
 
-  /** 尝试获取微信昵称（静默） */
+  /** 检查是否需要设置昵称（wx.getUserInfo 在新版微信已废弃，直接跳过） */
   async tryGetNickname() {
-    this.setData({ fetchingNickname: true })
-    try {
-      const userInfo = await wx.getUserInfo({ lang: 'zh_CN' })
-      if (userInfo.nickName && userInfo.nickName !== '微信用户') {
-        await this.saveNickname(userInfo.nickName, userInfo.avatarUrl)
-        this.goToPendingPage()
-        return
-      }
-    } catch {}
-    // 静默获取失败，显示昵称设置步骤（授权按钮 + 手动输入）
     this.setData({ needNicknameAuth: true, fetchingNickname: false })
   },
 
-  /** 微信昵称授权按钮回调（后端解密获取真实昵称） */
-  async handleGetUserInfo(e: any) {
-    if (e.detail.errMsg !== 'getUserInfo:ok') return
+  /** 测试用户名输入 */
+  onTestUsernameInput(e: any) {
+    this.setData({ testUsername: e.detail.value })
+  },
 
-    // 优先通过后端解密 encryptedData 获取真实昵称
-    if (e.detail.encryptedData && e.detail.iv) {
-      this.setData({ saving: true })
-      try {
-        const res: any = await api.post('/wechat/decode-userinfo', {
-          encryptedData: e.detail.encryptedData,
-          iv: e.detail.iv,
-        })
-        if (res.nickname) {
-          const app = getApp()
-          if (app.globalData.userInfo) {
-            app.globalData.userInfo.nickname = res.nickname
-          }
-          this.goToPendingPage()
-          return
-        }
-      } catch {}
-    }
+  /** 选择头像回调 */
+  handleChooseAvatar(e: any) {
+    this.setData({ chosenAvatarUrl: e.detail.avatarUrl })
+  },
 
-    // 降级：使用前端返回的 userInfo
-    const { nickName, avatarUrl } = e.detail.userInfo
-    if (nickName && nickName !== '微信用户') {
-      await this.saveNickname(nickName, avatarUrl)
-    }
-    this.goToPendingPage()
+  /** 手机号输入 */
+  onPhoneInput(e: any) {
+    this.setData({ phoneInput: e.detail.value })
   },
 
   /** 手动输入昵称 */
@@ -162,7 +135,7 @@ Page({
       return
     }
     this.setData({ saving: true })
-    await this.saveNickname(nickname)
+    await this.saveNickname(nickname, this.data.chosenAvatarUrl, this.data.phoneInput.trim())
     this.goToPendingPage()
   },
 
@@ -171,27 +144,35 @@ Page({
     this.goToPendingPage()
   },
 
-  /** 保存昵称到后端 */
-  async saveNickname(nickname: string, avatarUrl?: string) {
+  /** 保存昵称/头像/手机号到后端 */
+  async saveNickname(nickname: string, avatarUrl?: string, phone?: string) {
     try {
-      await api.put('/users/me', { nickname, avatarUrl })
+      const body: any = { nickname, avatarUrl }
+      if (phone) body.phone = phone
+      await api.put('/users/me', body)
       const app = getApp()
       if (app.globalData.userInfo) {
         app.globalData.userInfo.nickname = nickname
+        if (avatarUrl) app.globalData.userInfo.avatarUrl = avatarUrl
       }
     } catch {}
   },
 
-  /** 测试登录（开发环境用） */
+  /** 测试登录（开发环境用，支持多用户） */
   async handleTestLogin() {
     wx.showLoading({ title: '测试登录中...' })
     try {
-      const res: any = await api.post('/wechat/test-login')
+      const username = this.data.testUsername.trim() || undefined
+      const res: any = await api.post('/wechat/test-login', { username })
       const app = getApp()
       app.setToken(res.token)
       app.globalData.userInfo = res.user
       wx.hideLoading()
-      this.goToPendingPage()
+      if (res.user.nickname && res.user.nickname !== '测试用户') {
+        this.goToPendingPage()
+      } else {
+        this.setData({ codeLoggedIn: true, needNicknameAuth: true, fetchingNickname: false })
+      }
     } catch (err: any) {
       wx.hideLoading()
       wx.showToast({ title: err.message || '测试登录失败', icon: 'none' })

@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed, nextTick, watch, onUnmounted } from 'vue'
+import { ref, onMounted, reactive, computed, nextTick, watch, onUnmounted, shallowRef } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../../api/request'
 import { useUpload } from '../../composables/useUpload'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import type { IDomEditor } from '@wangeditor/editor'
 
 interface ComponentDef {
   type: string
@@ -63,7 +65,7 @@ const componentTypes = [
   { type: 'image', label: '图片', icon: '📷', defaultProps: { src: '', link: '', width: '100%' } },
   { type: 'exhibition_scroll', label: '展厅列表', icon: '🏛️', defaultProps: { title: '常设展厅', showMore: true } },
   { type: 'activity_list', label: '活动列表', icon: '🎪', defaultProps: { title: '活动资讯', showMore: true } },
-  { type: 'notice_bar', label: '公告栏', icon: '📢', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0' } },
+  { type: 'notice_bar', label: '公告栏', icon: '📢', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0', textColor: '#e65100', fontSize: '13px', fontWeight: 'normal' } },
   { type: 'media_grid', label: '媒体网格', icon: '🔲', defaultProps: { columns: 3, gap: 8, items: [] } },
   { type: 'video', label: '视频', icon: '🎬', defaultProps: { src: '', poster: '', controls: true, autoplay: false, loop: false, objectFit: 'contain', height: 220 } },
   { type: 'section_wrapper', label: '区块包装器', icon: '📦', defaultProps: { bgColor: '#1a1a1a', padding: '16px', borderRadius: 12, margin: '0', title: '', components: [] } },
@@ -171,7 +173,7 @@ watch([compDialogVisible, () => editingComp.type, () => editingComp.props?.inter
   }
 })
 
-onUnmounted(stopSwiper)
+onUnmounted(() => { stopSwiper(); destroyTextBlockEditor() })
 
 // 拖拽
 const dragIndex = ref(-1)
@@ -269,6 +271,16 @@ function openEdit(item: DiyPageItem) {
   if (!cfg.background) {
     cfg.background = { image: '', color: '#000000', size: 'cover', position: 'center center' }
   }
+  // 兼容旧轮播图数据格式：string[] → {src, link}[]
+  if (cfg.components) {
+    for (const comp of cfg.components) {
+      if (comp.type === 'swiper' && Array.isArray(comp.props?.images)) {
+        comp.props.images = comp.props.images.map((img: any) =>
+          typeof img === 'string' ? { src: img, link: '' } : img,
+        )
+      }
+    }
+  }
   form.config = cfg
   dialogVisible.value = true
 }
@@ -313,6 +325,45 @@ async function handleDelete(id: number) {
     ElMessage.success('已删除')
     fetchList()
   } catch { /* cancelled */ }
+}
+
+// ===== wangEditor 文本块编辑器 =====
+const editorRef = shallowRef<IDomEditor | null>(null)
+const textBlockEditorMode = ref(false)
+
+const toolbarConfig = {
+  excludeKeys: ['group-video', 'fullScreen', 'insertTable', 'codeBlock'],
+}
+const editorConfig = {
+  placeholder: '请输入文本内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file: File, insertFn: (url: string) => void) {
+        try {
+          const url = await uploadFile(file)
+          insertFn(url)
+        } catch { ElMessage.error('图片上传失败') }
+      },
+    },
+  },
+}
+
+function handleTextBlockCreated(editor: IDomEditor) {
+  editorRef.value = editor
+}
+
+// 销毁编辑器
+function destroyTextBlockEditor() {
+  if (editorRef.value) {
+    editorRef.value.destroy()
+    editorRef.value = null
+  }
+}
+
+// 打开文本块编辑时初始化编辑器内容
+function openTextBlockEditor(comp: any) {
+  textBlockEditorMode.value = true
+  // wangEditor 通过 v-model 双向绑定 content
 }
 
 // ===== 组件管理 =====
@@ -446,7 +497,7 @@ const sectionChildTypes = [
   { type: 'button', label: '按钮', defaultProps: { text: '按钮', link: '', type: 'primary' } },
   { type: 'divider', label: '分隔线', defaultProps: { margin: '12px 0', color: '#eee' } },
   { type: 'spacer', label: '空白间距', defaultProps: { height: 16 } },
-  { type: 'notice_bar', label: '公告栏', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0' } },
+  { type: 'notice_bar', label: '公告栏', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0', textColor: '#e65100', fontSize: '13px', fontWeight: 'normal' } },
 ]
 
 function addSectionChildComp(type: string) {
@@ -483,7 +534,7 @@ async function handleUploadSwiperImage() {
     try {
       const url = await uploadFile(file)
       if (!editingComp.props.images) editingComp.props.images = []
-      editingComp.props.images.push(url)
+      editingComp.props.images.push({ src: url, link: '' })
     } catch { ElMessage.error('上传失败') }
   }
   input.click()
@@ -1225,9 +1276,11 @@ onMounted(fetchList)
           <el-form-item label="图片列表">
             <div style="width:100%">
               <el-button size="small" type="primary" @click="handleUploadSwiperImage">+ 上传图片</el-button>
+              <div style="color:#999;font-size:12px;margin-top:2px">建议尺寸 750×350px，2:1比例</div>
               <div v-if="editingComp.props.images?.length" class="swiper-image-list">
                 <div v-for="(img, imgIdx) in editingComp.props.images" :key="imgIdx" class="swiper-image-item">
-                  <img :src="img" class="swiper-image-preview" />
+                  <img :src="typeof img === 'string' ? img : img.src" class="swiper-image-preview" />
+                  <el-input v-model="img.link" placeholder="跳转链接（可选，如 /pages/activities/index）" size="small" style="width:200px;margin-top:4px" />
                   <el-button size="small" type="danger" circle class="swiper-image-del" @click="removeSwiperImage(imgIdx)">×</el-button>
                 </div>
               </div>
@@ -1484,8 +1537,11 @@ onMounted(fetchList)
 
         <!-- 文本块 -->
         <template v-if="editingComp.type === 'text_block'">
-          <el-form-item label="内容(HTML)">
-            <el-input v-model="editingComp.props.content" type="textarea" :rows="6" />
+          <el-form-item label="内容">
+            <div style="border:1px solid #dcdfe6;width:100%">
+              <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" style="border-bottom:1px solid #dcdfe6" />
+              <Editor v-model="editingComp.props.content" :defaultConfig="editorConfig" @onCreated="handleTextBlockCreated" style="height:300px" />
+            </div>
           </el-form-item>
           <el-form-item label="字号">
             <el-input v-model="editingComp.props.style.fontSize" placeholder="14px" />
@@ -1518,6 +1574,27 @@ onMounted(fetchList)
         <template v-if="editingComp.type === 'notice_bar'">
           <el-form-item label="文字内容">
             <el-input v-model="editingComp.props.text" type="textarea" :rows="3" placeholder="公告文字..." />
+          </el-form-item>
+          <el-form-item label="文字颜色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.textColor" placeholder="#e65100" style="width:150px" />
+              <input type="color" v-model="editingComp.props.textColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
+          <el-form-item label="字号">
+            <el-select v-model="editingComp.props.fontSize" style="width:150px">
+              <el-option label="12px" value="12px" />
+              <el-option label="13px" value="13px" />
+              <el-option label="14px" value="14px" />
+              <el-option label="16px" value="16px" />
+              <el-option label="18px" value="18px" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="字重">
+            <el-select v-model="editingComp.props.fontWeight" style="width:150px">
+              <el-option label="正常" value="normal" />
+              <el-option label="加粗" value="bold" />
+            </el-select>
           </el-form-item>
           <el-form-item label="背景色">
             <div style="display:flex;gap:8px;align-items:center">
@@ -2817,3 +2894,5 @@ input[type="color"] {
   padding-bottom: 4px;
 }
 </style>
+
+<style src="@wangeditor/editor/dist/css/style.css"></style>

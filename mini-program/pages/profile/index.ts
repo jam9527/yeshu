@@ -79,27 +79,23 @@ Page({
     }
   },
 
-  /** 编辑头像 - 使用微信原生头像裁剪 */
-  async handleEditAvatar() {
+  /** 编辑头像 - 由 open-type="chooseAvatar" 触发 */
+  async handleEditAvatar(e: any) {
     const app = getApp()
     if (!app.globalData.token) {
       wx.navigateTo({ url: '/pages/login/index' })
       return
     }
+    const avatarUrl = e?.detail?.avatarUrl
+    if (!avatarUrl) return
     try {
-      const { avatarUrl } = await wx.chooseAvatar()
       this.setData({ uploadingAvatar: true })
-      // 上传头像到服务器
-      const res: any = await api.put('/users/me', { avatarUrl })
-      if (res) {
-        app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl }
-        this.setData({ userInfo: app.globalData.userInfo })
-        wx.showToast({ title: '头像已更新', icon: 'success' })
-      }
-    } catch (err: any) {
-      if (err.errMsg !== 'chooseAvatar:fail cancel') {
-        console.error('更新头像失败', err)
-      }
+      await api.put('/users/me', { avatarUrl })
+      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl }
+      this.setData({ userInfo: app.globalData.userInfo })
+      wx.showToast({ title: '头像已更新', icon: 'success' })
+    } catch (err) {
+      console.error('更新头像失败', err)
     } finally {
       this.setData({ uploadingAvatar: false })
     }
@@ -125,6 +121,34 @@ Page({
             app.globalData.userInfo = { ...app.globalData.userInfo, nickname }
             this.setData({ userInfo: app.globalData.userInfo })
             wx.showToast({ title: '昵称已更新', icon: 'success' })
+          } catch {
+            wx.showToast({ title: '修改失败', icon: 'none' })
+          }
+        }
+      },
+    })
+  },
+
+  /** 编辑手机号 */
+  handleEditPhone() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: '/pages/login/index' })
+      return
+    }
+    wx.showModal({
+      title: '修改手机号',
+      editable: true,
+      placeholderText: '请输入手机号',
+      content: this.data.userInfo?.phone || '',
+      success: async (res) => {
+        if (res.confirm && res.content?.trim()) {
+          try {
+            const phone = res.content.trim()
+            await api.put('/users/me', { phone })
+            app.globalData.userInfo = { ...app.globalData.userInfo, phone }
+            this.setData({ userInfo: app.globalData.userInfo })
+            wx.showToast({ title: '手机号已更新', icon: 'success' })
           } catch {
             wx.showToast({ title: '修改失败', icon: 'none' })
           }

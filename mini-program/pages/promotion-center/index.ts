@@ -29,12 +29,9 @@ Page({
     this.setData({ loading: true })
     try {
       const app = getApp()
-      let userInfo = app.globalData.userInfo
-
-      if (!userInfo) {
-        userInfo = await api.get('/users/me')
-        app.globalData.userInfo = userInfo
-      }
+      // 始终从服务器获取最新用户信息，避免使用过期缓存
+      const userInfo = await api.get('/users/me')
+      app.globalData.userInfo = userInfo
 
       const isPromoter = userInfo?.isPromoter || false
       this.setData({ isPromoter })

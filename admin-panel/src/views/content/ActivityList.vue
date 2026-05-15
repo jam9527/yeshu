@@ -107,7 +107,10 @@ onBeforeUnmount(() => { if (editorRef.value) editorRef.value.destroy() })
     <el-dialog v-model="editVisible" :title="isEdit ? '编辑活动' : '新增活动'" width="750px" destroy-on-close>
       <el-form :model="editForm" label-width="80px">
         <el-form-item label="标题"><el-input v-model="editForm.title" /></el-form-item>
-        <el-form-item label="头图"><el-input v-model="editForm.coverImage" placeholder="图片URL" /></el-form-item>
+        <el-form-item label="头图">
+          <el-input v-model="editForm.coverImage" placeholder="图片URL" />
+          <div style="color:#999;font-size:12px;margin-top:4px">建议尺寸 750×400px</div>
+        </el-form-item>
         <el-form-item label="地点"><el-input v-model="editForm.location" /></el-form-item>
         <el-form-item label="时间">
           <el-date-picker v-model="editForm.startTime" type="datetime" placeholder="选择开始时间" format="YYYY-MM-DD HH:mm" style="width:220px" />

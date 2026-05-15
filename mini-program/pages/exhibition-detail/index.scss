@@ -52,6 +52,15 @@
   }
 }
 
+/* 暂无内容提示 */
+.empty-hint {
+  display: block;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 0;
+}
+
 /* 返回按钮 */
 .back-btn-wrap {
   padding: 16px;

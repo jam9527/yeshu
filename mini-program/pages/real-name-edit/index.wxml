@@ -47,9 +47,6 @@
         bindinput="onIdCardInput"
         maxlength="{{idCardType === 'ID_CARD' ? 18 : 30}}"
       />
-      <view wx:if="{{idCardType === 'ID_CARD'}}" class="ocr-btn" bindtap="idCardOCR">
-        <text>扫描</text>
-      </view>
     </view>
 
     <!-- 核验按钮 -->

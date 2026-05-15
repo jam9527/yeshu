@@ -10,10 +10,11 @@ export class FeedbackService {
     private readonly repo: Repository<Feedback>,
   ) {}
 
-  async create(userId: number, content: string, images?: string[]) {
+  async create(userId: number, content: string, contact?: string, images?: string[]) {
     const feedback = this.repo.create({
       userId,
       content,
+      contact: contact || undefined,
       images: images ? JSON.stringify(images) : undefined,
     });
     return this.repo.save(feedback);

@@ -100,15 +100,19 @@
       {{selectedDate.date}} · {{selectedSession.label}} ({{selectedSession.startTime}}-{{selectedSession.endTime}})
     </view>
 
-    <!-- 人数（团队预约固定10人） -->
+    <!-- 人数 -->
     <view class="form-section">
       <view class="form-group">
-        <text class="form-label">参观人数</text>
-        <view class="count-display">
-          <text class="count-number">10</text>
-          <text class="count-unit">人</text>
-        </view>
-        <text class="count-tip">团队预约人数固定为10人</text>
+        <text class="form-label">参观人数 <text class="required">*</text></text>
+        <input
+          class="form-input"
+          type="number"
+          value="{{visitorCount}}"
+          placeholder="请输入参观人数（最低10人）"
+          maxlength="4"
+          bindinput="onVisitorCountInput"
+        />
+        <text class="count-tip">最少10人，当前场次剩余 {{selectedSession.remaining}} 人</text>
       </view>
     </view>
 

@@ -62,64 +62,6 @@ Page({
     this.setData({ idCardType: this.data.idCardTypes[index].value, idCardTypeIndex: index })
   },
 
-  /** 身份证 OCR 识别 — 拍照/相册选择后上传识别 */
-  async idCardOCR() {
-    wx.showActionSheet({
-      itemList: ['拍照', '从相册选择'],
-      success: async (res) => {
-        let sourceType: 'camera' | 'album'
-        if (res.tapIndex === 0) {
-          sourceType = 'camera'
-        } else {
-          sourceType = 'album'
-        }
-
-        try {
-          const media = await wx.chooseMedia({
-            count: 1,
-            mediaType: ['image'],
-            sourceType: [sourceType],
-            sizeType: ['compressed'],
-          })
-
-          const tempFile = media.tempFiles[0]
-          if (!tempFile) return
-
-          this.setData({ loading: true })
-          wx.showLoading({ title: '识别中...' })
-
-          const result: any = await api.upload('/real-names/ocr', tempFile.tempFilePath, 'image')
-
-          if (result.name) {
-            this.setData({ name: result.name })
-          }
-          if (result.idCard) {
-            this.setData({ idCard: result.idCard })
-          }
-
-          wx.hideLoading()
-
-          if (result.isSimulated) {
-            wx.showToast({
-              title: '开发模式：数据为模拟结果，请核对',
-              icon: 'none',
-              duration: 3000,
-            })
-          } else {
-            wx.showToast({ title: '识别成功', icon: 'success' })
-          }
-        } catch (err: any) {
-          wx.hideLoading()
-          // 用户取消选择不提示错误
-          if (err?.errMsg?.includes('cancel')) return
-          wx.showToast({ title: err?.message || '识别失败', icon: 'none' })
-        } finally {
-          this.setData({ loading: false })
-        }
-      },
-    })
-  },
-
   /** 姓名+身份证号二要素核验 */
   async idCardVerify() {
     const { name, idCard } = this.data

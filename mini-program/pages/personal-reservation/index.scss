@@ -679,6 +679,8 @@ $ys-blue: #005bac;
   color: #333;
   line-height: 1.7;
   max-height: 50vh;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .notice-popup-footer {

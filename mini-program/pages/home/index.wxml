@@ -6,7 +6,7 @@
     <view wx:if="{{item.type === 'swiper'}}" class="diy-swiper-wrap" style="border-radius:{{item.props.borderRadius || 0}}px;overflow:hidden;position:relative;z-index:0;padding-left:{{item.props.margin || 0}}px;padding-right:{{item.props.margin || 0}}px">
     <swiper class="diy-swiper" autoplay interval="{{item.props.interval || 3000}}" circular indicator-dots indicator-active-color="#ffd700" indicator-color="rgba(255,255,255,0.3)" style="height:{{item.props.height || 220}}px;border-radius:{{item.props.borderRadius || 0}}px;overflow:hidden">
       <swiper-item wx:for="{{item.props.images}}" wx:for-item="img" wx:for-index="imgIndex" wx:key="imgIndex">
-        <image class="diy-swiper-img" src="{{img}}" mode="aspectFill" data-link="{{item.props.link}}" bindtap="onDiySwiperTap" />
+        <image class="diy-swiper-img" src="{{img.src || img}}" mode="aspectFill" data-link="{{img.link || ''}}" bindtap="onDiySwiperTap" />
       </swiper-item>
       <swiper-item wx:if="{{!item.props.images || item.props.images.length === 0}}">
         <view class="diy-swiper-placeholder">
@@ -105,7 +105,7 @@
 
     <!-- 公告栏 -->
     <view wx:elif="{{item.type === 'notice_bar'}}" class="diy-notice-bar" style="background-color:{{item.props.backgroundColor || '#fff3e0'}}">
-      <text class="diy-notice-text">{{item.props.text}}</text>
+      <text class="diy-notice-text" style="color:{{item.props.textColor || '#e65100'}};font-size:{{item.props.fontSize || '13px'}};font-weight:{{item.props.fontWeight || 'normal'}}">{{item.props.text}}</text>
     </view>
 
     <!-- 分隔线 -->

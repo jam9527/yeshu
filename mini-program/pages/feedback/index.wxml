@@ -1,6 +1,18 @@
 <view class="container">
   <view class="page-title">意见反馈</view>
 
+  <!-- 联系方式 -->
+  <view class="form-section">
+    <text class="section-label">联系方式（选填）</text>
+    <input
+      class="form-input"
+      placeholder="请留下手机号或微信号，方便我们联系您"
+      value="{{contact}}"
+      bindinput="onContactInput"
+      maxlength="64"
+    />
+  </view>
+
   <!-- 反馈内容 -->
   <view class="form-section">
     <textarea

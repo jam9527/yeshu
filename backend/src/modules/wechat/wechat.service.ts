@@ -54,8 +54,10 @@ export class WechatService {
     };
   }
 
-  async testLogin() {
-    const testOpenid = 'test_openid_yeshu_dev';
+  async testLogin(username?: string) {
+    const testOpenid = username
+      ? `test_openid_${username.replace(/[^a-zA-Z0-9_一-鿿]/g, '_')}`
+      : 'test_openid_yeshu_dev';
     let user = await this.userService.findOrCreate(testOpenid);
     if (!user.nickname) await this.userService.update(user.id, { nickname: '测试用户' });
     if (!user.isVerifier) { await this.userService.update(user.id, { isVerifier: true } as any); user.isVerifier = true; }
@@ -67,7 +69,7 @@ export class WechatService {
 
     return {
       token,
-      user: { id: user.id, nickname: user.nickname || '测试用户', phone: user.phone, isVerifier: user.isVerifier, isPromoter: user.isPromoter },
+      user: { id: user.id, nickname: user.nickname || '测试用户', avatarUrl: user.avatarUrl, phone: user.phone, isVerifier: user.isVerifier, isPromoter: user.isPromoter },
     };
   }
 
