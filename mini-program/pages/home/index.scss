@@ -13,6 +13,7 @@ $ys-text-dim: #888;
   padding-bottom: 32px;
   background: $ys-black;
   min-height: 100vh;
+  box-sizing: border-box;
 }
 
 /* ===== 空状态引导 ===== */
@@ -48,8 +49,13 @@ $ys-text-dim: #888;
 }
 
 /* ===== 轮播图 ===== */
+.diy-swiper-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
 .diy-swiper {
   width: 100%;
+  height: 100%;
 }
 .diy-swiper-img {
   width: 100%;
@@ -178,37 +184,32 @@ $ys-text-dim: #888;
   opacity: 0.7;
 }
 
-/* ===== 展厅横向滚动 ===== */
-.diy-exhibition-scroll {
+/* ===== 2x2 宫格（展厅/活动共用） ===== */
+.diy-grid-2col {
   display: flex;
-  white-space: nowrap;
-  padding-bottom: 4px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-.diy-exhibition-card {
-  display: inline-block;
-  width: 240px;
+.diy-grid-card {
+  width: calc(50% - 5px);
+  box-sizing: border-box;
   border-radius: 12px;
   overflow: hidden;
   background: $ys-gray;
-  margin-right: 10px;
-  flex-shrink: 0;
 
-  &:last-child {
-    margin-right: 0;
-  }
   &:active {
     opacity: 0.85;
   }
 }
-.diy-exhibition-img {
+.diy-grid-card-img {
   width: 100%;
-  height: 130px;
+  height: 110px;
   display: block;
 }
-.diy-exhibition-info {
-  padding: 10px 12px 12px;
+.diy-grid-card-info {
+  padding: 10px 10px 12px;
 }
-.diy-exhibition-name {
+.diy-grid-card-title {
   font-size: 14px;
   font-weight: bold;
   color: #fff;
@@ -217,7 +218,7 @@ $ys-text-dim: #888;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.diy-exhibition-desc {
+.diy-grid-card-desc {
   font-size: 12px;
   color: $ys-text-dim;
   display: block;
@@ -226,59 +227,11 @@ $ys-text-dim: #888;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* ===== 活动列表 ===== */
-.diy-activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.diy-activity-item {
-  display: flex;
-  align-items: center;
-  background: $ys-gray;
-  border-radius: 10px;
-  padding: 14px;
-  gap: 12px;
-
-  &:active {
-    background: $ys-gray-light;
-  }
-}
-.diy-activity-tag-wrap {
-  flex-shrink: 0;
-}
-.diy-activity-tag {
-  background: $ys-yellow;
-  color: $ys-black;
+.diy-grid-card-time {
   font-size: 11px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-.diy-activity-content {
-  flex: 1;
-  min-width: 0;
-}
-.diy-activity-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #fff;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.diy-activity-time {
-  font-size: 12px;
   color: $ys-text-dim;
   display: block;
   margin-top: 4px;
-}
-.diy-activity-arrow {
-  color: $ys-text-dim;
-  font-size: 18px;
-  flex-shrink: 0;
 }
 
 /* ===== 公告栏 ===== */
@@ -305,6 +258,124 @@ $ys-text-dim: #888;
 }
 .diy-button {
   width: 100%;
+}
+
+/* ===== 多列布局 ===== */
+.diy-columns {
+  display: flex;
+  padding: 12px;
+}
+.diy-column {
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+.diy-column-img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+.diy-column-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  display: block;
+}
+.diy-column-text {
+  font-size: 11px;
+  color: $ys-text-dim;
+  display: block;
+  line-height: 1.4;
+}
+.diy-column-btn {
+  margin: 0;
+}
+
+/* ===== 区块包装器 ===== */
+.diy-section-wrapper {
+  position: relative;
+}
+.diy-section-wrapper-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  margin-bottom: 12px;
+  padding-left: 10px;
+  border-left: 3px solid $ys-yellow;
+}
+
+/* ===== 视频 ===== */
+.diy-video-wrap {
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.diy-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.diy-video-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a1a;
+}
+.diy-video-placeholder-text {
+  color: #555;
+  font-size: 13px;
+}
+
+/* ===== 媒体网格 ===== */
+.diy-media-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px;
+}
+.diy-media-cell {
+  padding: 4px;
+  box-sizing: border-box;
+}
+.diy-media-inner {
+  width: 100%;
+  overflow: hidden;
+  background: $ys-gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.diy-media-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.diy-media-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 24px;
+}
+.diy-media-title {
+  font-size: 12px;
+  color: $ys-text;
+  text-align: center;
+  margin-top: 6px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ===== 底部信息 ===== */

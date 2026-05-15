@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FrequencyLimit } from './entities/frequency-limit.entity';
 import { NoticeConfig } from './entities/notice-config.entity';
 import { ReservationTemplate } from './entities/reservation-template.entity';
 import { SystemConfig } from './entities/system-config.entity';
+import { RedisService } from '../../redis/redis.service';
+
+/** 配置缓存 TTL（秒） */
+const CONFIG_CACHE_TTL = 300; // 5 分钟
 
 /**
  * 预约设置服务
@@ -12,6 +16,8 @@ import { SystemConfig } from './entities/system-config.entity';
  */
 @Injectable()
 export class ReservationConfigService {
+  private readonly logger = new Logger(ReservationConfigService.name);
+
   constructor(
     @InjectRepository(FrequencyLimit)
     private readonly freqRepo: Repository<FrequencyLimit>,
@@ -21,6 +27,7 @@ export class ReservationConfigService {
     private readonly templateRepo: Repository<ReservationTemplate>,
     @InjectRepository(SystemConfig)
     private readonly systemConfigRepo: Repository<SystemConfig>,
+    private readonly redis: RedisService,
   ) {}
 
   // -- 频率限制 --
@@ -86,10 +93,21 @@ export class ReservationConfigService {
     await this.templateRepo.delete(id);
   }
 
-  // -- 系统配置 --
+  // -- 系统配置（含 Redis 缓存） --
   async getConfig(key: string): Promise<string | null> {
+    // 优先读缓存
+    const cached = await this.redis.get(`config:${key}`);
+    if (cached !== null) return cached;
+
     const config = await this.systemConfigRepo.findOne({ where: { configKey: key } });
-    return config?.configValue ?? null;
+    const value = config?.configValue ?? null;
+
+    // 写入缓存
+    if (value !== null) {
+      await this.redis.set(`config:${key}`, value, CONFIG_CACHE_TTL);
+    }
+
+    return value;
   }
 
   async setConfig(key: string, value: string, description?: string): Promise<void> {
@@ -101,5 +119,8 @@ export class ReservationConfigService {
       config = this.systemConfigRepo.create({ configKey: key, configValue: value, description });
     }
     await this.systemConfigRepo.save(config);
+
+    // 更新缓存
+    await this.redis.set(`config:${key}`, value, CONFIG_CACHE_TTL);
   }
 }

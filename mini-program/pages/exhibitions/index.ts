@@ -2,7 +2,7 @@
  * 展厅导览 - 展厅列表页
  * TabBar 页面，展示全部展厅，支持点击进入详情
  */
-import api from '../../utils/api'
+import api, { resolveImageUrls } from '../../utils/api'
 
 Page({
   data: {
@@ -25,7 +25,7 @@ Page({
     this.setData({ loading: true })
     try {
       const res: any = await api.get('/exhibitions')
-      this.setData({ exhibitions: res || [] })
+      this.setData({ exhibitions: resolveImageUrls(res || []) })
     } catch {
       wx.showToast({ title: '获取展厅列表失败', icon: 'none' })
     } finally {

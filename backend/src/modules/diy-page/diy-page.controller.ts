@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Param, Body, Query,
+  Controller, Get, Post, Put, Delete, Param, Body, Query, Req,
 } from '@nestjs/common';
 import { DiyPageService } from './diy-page.service';
 import { Public } from '../../common/decorators/public.decorator';
@@ -17,8 +17,9 @@ export class DiyPageController {
   /** 获取启用的页面配置（小程序渲染用，无需登录） */
   @Public()
   @Get('active')
-  async getActive(@Query('pageKey') pageKey?: string) {
-    return this.diyPageService.getActive(pageKey || 'home');
+  async getActive(@Query('pageKey') pageKey: string, @Req() req) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    return this.diyPageService.getActive(pageKey || 'home', baseUrl);
   }
 
   /** 获取所有版本列表（管理后台） */

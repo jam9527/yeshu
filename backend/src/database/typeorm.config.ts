@@ -1,5 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as path from 'path';
+import { config } from 'dotenv';
+
+// 确保 .env 在 ConfigModule 加载前已生效，避免 TypeORM 走 named pipe
+config();
 
 /**
  * TypeORM 数据库连接配置
@@ -7,19 +11,13 @@ import * as path from 'path';
  * 实体文件自动扫描加载，新增实体无需手动注册
  * 开发环境开启 synchronize 自动同步表结构（生产环境需关闭并用 migration）
  */
-/**
- * 判断当前环境是否可以通过 TCP 连接 MySQL
- * 非 Windows 或明确指定 DB_HOST 时使用 TCP
- */
-const useTcp = () => {
-  if (process.env.DB_HOST) return true;
-  return process.platform !== 'win32';
-};
+const host = process.env.DB_HOST || 'localhost';
+const port = Number(process.env.DB_PORT) || 3306;
 
-const baseConfig: TypeOrmModuleOptions = {
+export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 3306,
+  host,
+  port,
   username: process.env.DB_USERNAME || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_DATABASE || 'yeshu_reservation',
@@ -30,12 +28,3 @@ const baseConfig: TypeOrmModuleOptions = {
   timezone: '+08:00',
   extra: { charset: 'utf8mb4' },
 };
-
-export const typeOrmConfig: TypeOrmModuleOptions = useTcp()
-  ? baseConfig
-  : {
-      ...baseConfig,
-      host: undefined,
-      port: undefined,
-      extra: { ...baseConfig.extra, socketPath: '\\\\.\\pipe\\MySQL' },
-    };

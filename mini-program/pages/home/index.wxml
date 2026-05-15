@@ -1,9 +1,10 @@
-<view class="container">
+<view class="container" style="{{diyBackgroundStyle}}">
 
   <!-- ===== 全部内容由 DIY 组件驱动 ===== -->
   <block wx:for="{{diyComponents}}" wx:key="index">
     <!-- 轮播图 -->
-    <swiper wx:if="{{item.type === 'swiper'}}" class="diy-swiper" autoplay interval="{{item.props.interval || 3000}}" circular indicator-dots indicator-active-color="#ffd700" indicator-color="rgba(255,255,255,0.3)" style="height:{{item.props.height || 220}}px">
+    <view wx:if="{{item.type === 'swiper'}}" class="diy-swiper-wrap" style="border-radius:{{item.props.borderRadius || 0}}px;overflow:hidden;position:relative;z-index:0;padding-left:{{item.props.margin || 0}}px;padding-right:{{item.props.margin || 0}}px">
+    <swiper class="diy-swiper" autoplay interval="{{item.props.interval || 3000}}" circular indicator-dots indicator-active-color="#ffd700" indicator-color="rgba(255,255,255,0.3)" style="height:{{item.props.height || 220}}px;border-radius:{{item.props.borderRadius || 0}}px;overflow:hidden">
       <swiper-item wx:for="{{item.props.images}}" wx:for-item="img" wx:for-index="imgIndex" wx:key="imgIndex">
         <image class="diy-swiper-img" src="{{img}}" mode="aspectFill" data-link="{{item.props.link}}" bindtap="onDiySwiperTap" />
       </swiper-item>
@@ -14,6 +15,7 @@
         </view>
       </swiper-item>
     </swiper>
+    </view>
 
     <!-- 功能入口 -->
     <view wx:elif="{{item.type === 'func_grid'}}" class="diy-func-grid">
@@ -49,56 +51,53 @@
       <image class="diy-image" src="{{item.props.src}}" mode="widthFix" data-link="{{item.props.link}}" bindtap="onDiyImageTap" style="width:{{item.props.width || '100%'}}" />
     </view>
 
-    <!-- 展厅列表 -->
+    <!-- 展厅列表 - 2x2 宫格 -->
     <view wx:elif="{{item.type === 'exhibition_scroll'}}" class="diy-section">
-      <view wx:if="{{exhibitions.length > 0}}">
+      <view wx:if="{{_homeExhibitions.length > 0}}">
         <view class="diy-section-header">
           <text class="diy-section-title">{{item.props.title || '常设展厅'}}</text>
           <text class="diy-section-more" wx:if="{{item.props.showMore !== false}}" bindtap="goExhibitionList">查看全部 ›</text>
         </view>
-        <scroll-view class="diy-exhibition-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="diy-grid-2col">
           <view
-            class="diy-exhibition-card"
-            wx:for="{{exhibitions}}"
+            class="diy-grid-card"
+            wx:for="{{_homeExhibitions}}"
             wx:for-item="exh"
             wx:key="id"
             data-id="{{exh.id}}"
             bindtap="goExhibitionDetail"
           >
-            <image class="diy-exhibition-img" src="{{exh.coverImage}}" mode="aspectFill" />
-            <view class="diy-exhibition-info">
-              <text class="diy-exhibition-name">{{exh.name}}</text>
-              <text class="diy-exhibition-desc" wx:if="{{exh.description}}">{{exh.description}}</text>
+            <image class="diy-grid-card-img" src="{{exh.coverImage}}" mode="aspectFill" />
+            <view class="diy-grid-card-info">
+              <text class="diy-grid-card-title">{{exh.name}}</text>
+              <text class="diy-grid-card-desc" wx:if="{{exh.description}}">{{exh.description}}</text>
             </view>
           </view>
-        </scroll-view>
+        </view>
       </view>
     </view>
 
-    <!-- 活动列表 -->
+    <!-- 活动列表 - 2x2 宫格 -->
     <view wx:elif="{{item.type === 'activity_list'}}" class="diy-section">
-      <view wx:if="{{activities.length > 0}}">
+      <view wx:if="{{_homeActivities.length > 0}}">
         <view class="diy-section-header">
           <text class="diy-section-title">{{item.props.title || '活动资讯'}}</text>
           <text class="diy-section-more" wx:if="{{item.props.showMore !== false}}" bindtap="goActivityList">查看全部 ›</text>
         </view>
-        <view class="diy-activity-list">
+        <view class="diy-grid-2col">
           <view
-            class="diy-activity-item"
-            wx:for="{{activities}}"
+            class="diy-grid-card"
+            wx:for="{{_homeActivities}}"
             wx:for-item="act"
             wx:key="id"
             data-id="{{act.id}}"
             bindtap="goActivityDetail"
           >
-            <view class="diy-activity-tag-wrap">
-              <view class="diy-activity-tag">公告</view>
+            <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="aspectFill" />
+            <view class="diy-grid-card-info">
+              <text class="diy-grid-card-title">{{act.title}}</text>
+              <text class="diy-grid-card-time" wx:if="{{act._startTime}}">{{act._startTime}} - {{act._endTime}}</text>
             </view>
-            <view class="diy-activity-content">
-              <text class="diy-activity-title">{{act.title}}</text>
-              <text class="diy-activity-time" wx:if="{{act.startTime}}">{{act.startTime}} - {{act.endTime}}</text>
-            </view>
-            <text class="diy-activity-arrow">›</text>
           </view>
         </view>
       </view>
@@ -125,8 +124,110 @@
       <text class="diy-footer-copy">{{item.props.copyright || '© 椰树集团 参观预约系统'}}</text>
     </view>
 
+    <!-- 多列布局 -->
+    <view wx:elif="{{item.type === 'columns'}}" class="diy-columns" style="gap:{{item.props.gap || 12}}px">
+      <view
+        class="diy-column"
+        wx:for="{{item.props.items}}"
+        wx:for-item="col"
+        wx:for-index="colIdx"
+        wx:key="colIdx"
+        data-link="{{col.link}}"
+        bindtap="onColumnsTap"
+        style="width:{{100 / (item.props.columns || 2)}}%"
+      >
+        <!-- 有行内容（子组件）时，渲染行内容 -->
+        <block wx:if="{{col.components && col.components.length}}">
+          <view wx:for="{{col.components}}" wx:for-item="row" wx:for-index="ri" wx:key="ri" style="width:100%">
+            <image wx:if="{{row.type === 'image' && row.props.src}}" class="diy-column-img" src="{{row.props.src}}" mode="widthFix" />
+            <view wx:elif="{{row.type === 'text_block' && row.props.content}}" class="diy-text-block" style="font-size:{{(row.props.style && row.props.style.fontSize) || '14px'}};color:{{(row.props.style && row.props.style.color) || '#e0e0e0'}};padding:{{(row.props.style && row.props.style.padding) || '12px'}}">
+              <rich-text nodes="{{row.props.content}}" />
+            </view>
+            <view wx:elif="{{row.type === 'button'}}" class="diy-button-wrap">
+              <button class="diy-button" type="{{row.props.type || 'primary'}}">{{row.props.text || '按钮'}}</button>
+            </view>
+            <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;width:100%"></view>
+          </view>
+        </block>
+        <!-- 无行内容时使用简单字段 -->
+        <block wx:else>
+          <image wx:if="{{col.image}}" class="diy-column-img" src="{{col.image}}" mode="widthFix" />
+          <text wx:if="{{col.title}}" class="diy-column-title">{{col.title}}</text>
+          <text wx:if="{{col.text}}" class="diy-column-text">{{col.text}}</text>
+          <button wx:if="{{col.buttonText}}" class="diy-column-btn" type="{{col.buttonType || 'primary'}}" size="mini">{{col.buttonText}}</button>
+        </block>
+      </view>
+    </view>
+
+    <!-- 区块包装器 -->
+    <view wx:elif="{{item.type === 'section_wrapper'}}" class="diy-section-wrapper" style="background:{{item.props.bgColor || '#1a1a1a'}};padding:{{item.props.padding || '16px'}};border-radius:{{item.props.borderRadius || 12}}px;margin:{{item.props.margin || '0'}}">
+      <text wx:if="{{item.props.title}}" class="diy-section-wrapper-title">{{item.props.title}}</text>
+      <block wx:for="{{item.props.components}}" wx:for-item="child" wx:for-index="ci" wx:key="ci">
+        <!-- 文本块 -->
+        <view wx:if="{{child.type === 'text_block'}}" class="diy-text-block" style="font-size:{{(child.props.style && child.props.style.fontSize) || '14px'}};color:{{(child.props.style && child.props.style.color) || '#e0e0e0'}};padding:{{(child.props.style && child.props.style.padding) || '12px'}}">
+          <rich-text nodes="{{child.props.content}}" />
+        </view>
+        <!-- 图片 -->
+        <view wx:elif="{{child.type === 'image'}}" class="diy-image-wrap">
+          <image class="diy-image" src="{{child.props.src}}" mode="widthFix" style="width:{{child.props.width || '100%'}}" />
+        </view>
+        <!-- 分隔线 -->
+        <view wx:elif="{{child.type === 'divider'}}" class="diy-divider" style="margin:{{child.props.margin || '12px 0'}}">
+          <view class="diy-divider-line" style="background-color:{{child.props.color || '#333'}}"></view>
+        </view>
+        <!-- 按钮 -->
+        <view wx:elif="{{child.type === 'button'}}" class="diy-button-wrap">
+          <button class="diy-button" type="{{child.props.type || 'primary'}}">{{child.props.text || '按钮'}}</button>
+        </view>
+        <!-- 空白间距 -->
+        <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;width:100%"></view>
+        <!-- 公告栏 -->
+        <view wx:elif="{{child.type === 'notice_bar'}}" class="diy-notice-bar" style="background-color:{{child.props.backgroundColor || '#fff3e0'}}">
+          <text class="diy-notice-text">{{child.props.text}}</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 视频 -->
+    <view wx:elif="{{item.type === 'video'}}" class="diy-video-wrap" style="height:{{item.props.height || 220}}px">">
+      <video
+        wx:if="{{item.props.src}}"
+        class="diy-video"
+        src="{{item.props.src}}"
+        poster="{{item.props.poster || ''}}"
+        controls="{{item.props.controls !== false}}"
+        autoplay="{{item.props.autoplay || false}}"
+        loop="{{item.props.loop || false}}"
+        object-fit="{{item.props.objectFit || 'contain'}}"
+        style="width:100%;height:100%"
+      ></video>
+      <view wx:else class="diy-video-placeholder">
+        <text class="diy-video-placeholder-text">暂无视频</text>
+      </view>
+    </view>
+
     <!-- 空白间距 -->
     <view wx:elif="{{item.type === 'spacer'}}" style="height:{{item.props.height || 16}}px;width:100%"></view>
+
+    <!-- 媒体网格 -->
+    <view wx:elif="{{item.type === 'media_grid'}}" class="diy-media-grid" style="gap:{{item.props.gap || 8}}px">
+      <view
+        class="diy-media-cell"
+        wx:for="{{item.props.items}}"
+        wx:for-item="mi"
+        wx:for-index="miIdx"
+        wx:key="miIdx"
+        data-link="{{mi.link}}"
+        bindtap="onMediaGridTap"
+        style="width:{{100 / (item.props.columns || 3)}}%"
+      >
+        <view class="diy-media-inner" style="border-radius:{{mi.borderRadius || 8}}px;{{mi.shadow ? 'box-shadow:0 2px 8px rgba(0,0,0,0.4);' : ''}}aspect-ratio:{{mi.aspectRatio || '1'}}">
+          <image wx:if="{{mi.image}}" class="diy-media-img" src="{{mi.image}}" mode="aspectFill" />
+          <view wx:else class="diy-media-placeholder">+</view>
+        </view>
+        <text wx:if="{{mi.title}}" class="diy-media-title">{{mi.title}}</text>
+      </view>
+    </view>
   </block>
 
   <!-- ===== 无 DIY 配置时显示基础引导 ===== -->

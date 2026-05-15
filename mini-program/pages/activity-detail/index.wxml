@@ -2,7 +2,7 @@
 <view class="container">
   <!-- 封面图 -->
   <view class="cover-wrap" wx:if="{{activity}}">
-    <image class="cover-img" src="{{activity.coverImage}}" mode="aspectFill" />
+    <image class="cover-img" src="{{activity.coverImage}}" mode="widthFix" />
   </view>
 
   <!-- 详情内容 -->
@@ -17,12 +17,12 @@
 
     <!-- 时间地点 -->
     <view class="meta">
-      <text class="meta-item">时间：{{activity.startTime}} - {{activity.endTime}}</text>
+      <text class="meta-item">时间：{{activity._startTime}} - {{activity._endTime}}</text>
       <text class="meta-item">地点：{{activity.location}}</text>
     </view>
 
     <!-- 富文本内容 -->
-    <rich-text class="rich-content" nodes="{{activity.content}}"></rich-text>
+    <rich-text class="rich-content" nodes="{{activity.richContent}}"></rich-text>
   </view>
 
   <!-- 加载状态 -->

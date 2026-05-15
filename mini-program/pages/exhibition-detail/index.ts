@@ -2,7 +2,7 @@
  * 展厅详情页
  * 展示展厅完整信息，包括封面图、名称、富文本内容
  */
-import api from '../../utils/api'
+import api, { resolveImageUrls } from '../../utils/api'
 
 Page({
   data: {
@@ -23,12 +23,12 @@ Page({
       // 优先尝试直接获取单个展厅
       try {
         const res: any = await api.get('/exhibitions/' + id)
-        this.setData({ exhibition: res })
+        this.setData({ exhibition: resolveImageUrls(res) })
         return
       } catch {
         // 接口不支持按 ID 查询时，拉取全量列表后过滤
         const res: any = await api.get('/exhibitions')
-        const list = res || []
+        const list = resolveImageUrls(res || [])
         const found = list.find((item: any) => String(item.id) === String(id))
         if (found) {
           this.setData({ exhibition: found })

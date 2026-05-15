@@ -2,6 +2,11 @@
 import { ref, onMounted } from 'vue'
 import request from '../../api/request'
 
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  try { const d = new Date(iso); if (isNaN(d.getTime())) return iso; const p = (n: number) => n.toString().padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}` } catch { return iso }
+}
+
 const list = ref([]); const total = ref(0); const page = ref(1); const loading = ref(false)
 
 async function fetchData() {
@@ -21,7 +26,9 @@ onMounted(fetchData)
         <el-table-column prop="module" label="模块" width="120" />
         <el-table-column prop="resourceId" label="资源ID" width="80" />
         <el-table-column prop="detail" label="详情" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="createdAt" label="时间" width="160" />
+        <el-table-column label="时间" width="160">
+          <template #default="{ row }">{{ fmtDate(row.createdAt) }}</template>
+        </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="page" :total="total" :page-size="10" layout="prev, pager, next" @current-change="fetchData" style="margin-top:16px;text-align:right" />
     </el-card>

@@ -5,6 +5,24 @@
 
 const app = getApp()
 
+/** 递归将对象中 /uploads/ 开头的 URL 转为绝对路径 */
+export function resolveImageUrls(obj: any, _depth = 0): any {
+  if (_depth > 30) return obj // 防止循环引用导致超时
+  if (typeof obj === 'string' && obj.startsWith('/uploads/')) {
+    const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
+    return `${baseUrl}${obj}`
+  }
+  if (Array.isArray(obj)) return obj.map(item => resolveImageUrls(item, _depth + 1))
+  if (obj && typeof obj === 'object') {
+    const result: any = {}
+    for (const key of Object.keys(obj)) {
+      result[key] = resolveImageUrls(obj[key], _depth + 1)
+    }
+    return result
+  }
+  return obj
+}
+
 interface RequestOptions {
   url: string
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'

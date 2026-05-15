@@ -16,7 +16,7 @@
       <view class="card-info">
         <text class="card-title">{{item.title}}</text>
         <view class="card-meta">
-          <text class="meta-time">{{item.startTime}} - {{item.endTime}}</text>
+          <text class="meta-time">{{item._startTime}} - {{item._endTime}}</text>
           <text class="meta-location">{{item.location}}</text>
         </view>
       </view>

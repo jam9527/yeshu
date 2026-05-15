@@ -23,6 +23,7 @@ const menuItems = [
     { path: '/content/activity', label: '活动管理' },
     { path: '/content/banner', label: 'Banner管理' },
     { path: '/content/faq', label: '常见问题' },
+    { path: '/content/page-links', label: '页面链接' },
     { path: '/diy/page', label: 'DIY首页编辑' },
   ]},
   { path: '/config/date', label: '预约设置', icon: Setting, children: [

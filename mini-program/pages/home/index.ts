@@ -1,4 +1,5 @@
-import api from '../../utils/api'
+import api, { resolveImageUrls } from '../../utils/api'
+import { formatDate } from '../../utils/formatDate'
 
 interface ComponentDef {
   type: string
@@ -10,7 +11,10 @@ Page({
   data: {
     exhibitions: [] as any[],
     activities: [] as any[],
+    _homeExhibitions: [] as any[],
+    _homeActivities: [] as any[],
     diyComponents: [] as ComponentDef[],
+    diyBackgroundStyle: '',
     loading: true,
   },
 
@@ -30,10 +34,32 @@ Page({
         api.get('/diy-page/active', { pageKey: 'home' }).catch(() => null),
       ])
       const diyConfig = (diyPage as any)?.config
+      const bg = diyConfig?.background || {} as any
+      let bgStyle = ''
+      if (bg.color) bgStyle += bg.color
+      if (bg.image) {
+        const absBgImg = typeof bg.image === 'string' && bg.image.startsWith('/uploads/')
+          ? resolveImageUrls(bg.image)
+          : bg.image
+        const size = bg.size || 'cover'
+        const position = bg.position || 'center center'
+        const repeat = size === 'repeat' ? 'repeat' : 'no-repeat'
+        bgStyle = `background:url(${absBgImg}) ${repeat} ${position}/${size}, ${bg.color || 'transparent'}`
+      } else if (bg.color) {
+        bgStyle = `background:${bg.color}`
+      }
+
+      const exhList = resolveImageUrls((exhibitions as any) || []) as any[]
+      const actList = resolveImageUrls((activities as any) || []) as any[]
+      const homeActs = actList.slice(0, 4)
+      homeActs.forEach(act => { act._startTime = formatDate(act.startTime); act._endTime = formatDate(act.endTime) })
       this.setData({
-        exhibitions: (exhibitions as any) || [],
-        activities: ((activities as any) || []).slice(0, 5),
-        diyComponents: diyConfig?.components || [],
+        exhibitions: exhList,
+        activities: actList,
+        _homeExhibitions: exhList.slice(0, 4),
+        _homeActivities: homeActs,
+        diyComponents: resolveImageUrls(diyConfig?.components) || [],
+        diyBackgroundStyle: bgStyle,
       })
     } finally {
       this.setData({ loading: false })
@@ -58,6 +84,22 @@ Page({
   },
 
   onDiyImageTap(e: any) {
+    const { link } = e.currentTarget.dataset
+    if (link) {
+      if (link.startsWith('/')) wx.navigateTo({ url: link })
+      else wx.setClipboardData({ data: link })
+    }
+  },
+
+  onMediaGridTap(e: any) {
+    const { link } = e.currentTarget.dataset
+    if (link) {
+      if (link.startsWith('/')) wx.navigateTo({ url: link })
+      else wx.setClipboardData({ data: link })
+    }
+  },
+
+  onColumnsTap(e: any) {
     const { link } = e.currentTarget.dataset
     if (link) {
       if (link.startsWith('/')) wx.navigateTo({ url: link })

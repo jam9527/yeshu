@@ -3,6 +3,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DiyPage } from './entities/diy-page.entity';
 
+/** 递归将配置中 /uploads/ 开头的 URL 转为绝对路径 */
+function resolveImageUrls(obj: any, baseUrl: string): any {
+  if (typeof obj === 'string' && obj.startsWith('/uploads/')) {
+    return `${baseUrl}${obj}`;
+  }
+  if (Array.isArray(obj)) return obj.map(item => resolveImageUrls(item, baseUrl));
+  if (obj && typeof obj === 'object') {
+    const result: any = {};
+    for (const key of Object.keys(obj)) {
+      result[key] = resolveImageUrls(obj[key], baseUrl);
+    }
+    return result;
+  }
+  return obj;
+}
+
 @Injectable()
 export class DiyPageService {
   constructor(
@@ -11,7 +27,7 @@ export class DiyPageService {
   ) {}
 
   /** 获取启用的页面配置（供小程序端渲染） */
-  async getActive(pageKey: string = 'home') {
+  async getActive(pageKey: string = 'home', baseUrl?: string) {
     const page = await this.repo.findOne({
       where: { pageKey, isActive: true },
       order: { version: 'DESC' },
@@ -20,7 +36,11 @@ export class DiyPageService {
       // 没有配置时返回空结构，前端使用默认渲染
       return { pageKey, config: { components: [] }, version: 0 };
     }
-    return { pageKey: page.pageKey, config: page.config, version: page.version };
+    let config = page.config;
+    if (baseUrl) {
+      config = resolveImageUrls(config, baseUrl);
+    }
+    return { pageKey: page.pageKey, config, version: page.version };
   }
 
   /** 获取所有版本列表（管理后台） */

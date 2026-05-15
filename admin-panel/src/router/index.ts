@@ -27,6 +27,7 @@ const router = createRouter({
         { path: 'content/activity', name: 'ActivityList', component: () => import('../views/content/ActivityList.vue') },
         { path: 'content/banner', name: 'BannerList', component: () => import('../views/content/BannerList.vue') },
         { path: 'content/faq', name: 'FaqList', component: () => import('../views/content/FaqList.vue') },
+        { path: 'content/page-links', name: 'PageLinks', component: () => import('../views/content/PageLinks.vue') },
         { path: 'diy/page', name: 'DiyPageEditor', component: () => import('../views/diy/DiyPageEditor.vue') },
         // 预约设置
         { path: 'config/date', name: 'DateConfig', component: () => import('../views/config/DateConfig.vue') },
