@@ -79,23 +79,31 @@ Page({
     }
   },
 
-  /** 编辑头像 - 由 open-type="chooseAvatar" 触发 */
+  /** 编辑头像 - 由 open-type="chooseAvatar" 触发，先上传再保存 */
   async handleEditAvatar(e: any) {
     const app = getApp()
     if (!app.globalData.token) {
       wx.navigateTo({ url: '/pages/login/index' })
       return
     }
-    const avatarUrl = e?.detail?.avatarUrl
-    if (!avatarUrl) return
+    const tempPath = e?.detail?.avatarUrl
+    if (!tempPath) return
     try {
       this.setData({ uploadingAvatar: true })
-      await api.put('/users/me', { avatarUrl })
-      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl }
+      // 上传临时文件到服务器，获取永久 URL
+      const uploadRes: any = await api.upload('/files/upload', tempPath)
+      const serverUrl = uploadRes?.url || uploadRes?.data?.url
+      if (!serverUrl) {
+        wx.showToast({ title: '上传失败', icon: 'none' })
+        return
+      }
+      await api.put('/users/me', { avatarUrl: serverUrl })
+      app.globalData.userInfo = { ...app.globalData.userInfo, avatarUrl: serverUrl }
       this.setData({ userInfo: app.globalData.userInfo })
       wx.showToast({ title: '头像已更新', icon: 'success' })
     } catch (err) {
       console.error('更新头像失败', err)
+      wx.showToast({ title: '更新失败', icon: 'none' })
     } finally {
       this.setData({ uploadingAvatar: false })
     }
@@ -142,9 +150,13 @@ Page({
       placeholderText: '请输入手机号',
       content: this.data.userInfo?.phone || '',
       success: async (res) => {
-        if (res.confirm && res.content?.trim()) {
+        if (res.confirm) {
+          const phone = (res.content || '').trim()
+          if (!phone) {
+            wx.showToast({ title: '手机号不能为空', icon: 'none' })
+            return
+          }
           try {
-            const phone = res.content.trim()
             await api.put('/users/me', { phone })
             app.globalData.userInfo = { ...app.globalData.userInfo, phone }
             this.setData({ userInfo: app.globalData.userInfo })

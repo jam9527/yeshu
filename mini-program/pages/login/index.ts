@@ -145,15 +145,27 @@ Page({
   },
 
   /** 保存昵称/头像/手机号到后端 */
-  async saveNickname(nickname: string, avatarUrl?: string, phone?: string) {
+  async saveNickname(nickname: string, avatarTempPath?: string, phone?: string) {
     try {
-      const body: any = { nickname, avatarUrl }
+      let serverAvatarUrl = ''
+      // 如果选择了头像，先上传到服务器
+      if (avatarTempPath) {
+        try {
+          const uploadRes: any = await api.upload('/files/upload', avatarTempPath)
+          serverAvatarUrl = uploadRes?.url || uploadRes?.data?.url || ''
+        } catch {
+          // 上传失败不影响昵称保存
+        }
+      }
+      const body: any = { nickname }
+      if (serverAvatarUrl) body.avatarUrl = serverAvatarUrl
       if (phone) body.phone = phone
       await api.put('/users/me', body)
       const app = getApp()
       if (app.globalData.userInfo) {
         app.globalData.userInfo.nickname = nickname
-        if (avatarUrl) app.globalData.userInfo.avatarUrl = avatarUrl
+        if (serverAvatarUrl) app.globalData.userInfo.avatarUrl = serverAvatarUrl
+        if (phone) app.globalData.userInfo.phone = phone
       }
     } catch {}
   },
