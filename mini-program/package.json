@@ -4,6 +4,7 @@
     "preview": "npx tsc && node scripts/postbuild.js"
   },
   "devDependencies": {
+    "@types/wechat-miniprogram": "^3.4.10",
     "typescript": "^6.0.3"
   }
 }
