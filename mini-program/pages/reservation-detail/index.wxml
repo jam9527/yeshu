@@ -9,7 +9,7 @@
     <!-- 状态横幅 -->
     <view class="status-banner status-{{reservation.status}}">
       <view class="status-icon">
-        <text wx:if="{{reservation.status === 'APPROVING'}}">⏳</text>
+        <text wx:if="{{reservation.status === 'APPROVING' || reservation.status === 'PENDING'}}">📋</text>
         <text wx:if="{{reservation.status === 'APPROVED'}}">✅</text>
         <text wx:if="{{reservation.status === 'VERIFIED'}}">✔</text>
         <text wx:if="{{reservation.status === 'CANCELLED'}}">✕</text>
@@ -17,6 +17,7 @@
       </view>
       <view class="status-info">
         <text class="status-title">{{reservation.statusLabel}}</text>
+        <text class="status-desc" wx:if="{{reservation.status === 'PENDING'}}">请出示核销码完成检票入场</text>
         <text class="status-desc" wx:if="{{reservation.status === 'APPROVING'}}">团队预约需管理员审核，请耐心等待</text>
         <text class="status-desc" wx:if="{{reservation.status === 'APPROVED'}}">请在参观时出示核销码完成检票</text>
         <text class="status-desc" wx:if="{{reservation.status === 'VERIFIED'}}">感谢您参观椰树集团，欢迎下次光临</text>
@@ -116,7 +117,7 @@
     <view class="action-bar">
       <button
         class="btn-cancel"
-        wx:if="{{canCancel()}}"
+        wx:if="{{canCancel}}"
         bindtap="cancelReservation"
       >取消预约</button>
       <button

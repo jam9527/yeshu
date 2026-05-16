@@ -4,15 +4,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ROLES_KEY } from '../decorators/public.decorator';
 import { AdminRole } from '../../modules/auth/entities/admin-role.entity';
+import { AdminUser } from '../../modules/auth/entities/admin-user.entity';
 
 /**
  * 角色权限守卫
- * 与 @Roles() 装饰器配合使用，检查当前用户是否拥有所需权限
+ * 与 @AdminPermissions() 装饰器配合，检查当前用户是否拥有所需权限
  *
  * 使用方式:
- * @Roles('reservation:review')     // 需要预约审核权限
- * @Roles('system:admin')           // 需要系统管理权限
- * @Roles('super_admin')            // 仅超级管理员
+ * @AdminPermissions('reservation:review')     // 需要预约审核权限
+ * @AdminPermissions('system:admin')           // 需要系统管理权限
+ * @AdminPermissions('super_admin')            // 仅超级管理员
  */
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -20,6 +21,8 @@ export class RolesGuard implements CanActivate {
     private readonly reflector: Reflector,
     @InjectRepository(AdminRole)
     private readonly roleRepo: Repository<AdminRole>,
+    @InjectRepository(AdminUser)
+    private readonly adminUserRepo: Repository<AdminUser>,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -45,8 +48,14 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('仅管理后台用户可访问');
     }
 
+    // 从数据库查询用户最新状态（JWT 中的角色信息可能已过时）
+    const dbUser = await this.adminUserRepo.findOne({ where: { id: user.sub } });
+    if (!dbUser || dbUser.status !== 1) {
+      throw new ForbiddenException('账号已被禁用');
+    }
+
     // 超级管理员拥有所有权限
-    if (user.isSuperAdmin) {
+    if (dbUser.isSuperAdmin) {
       return true;
     }
 
@@ -55,9 +64,9 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('仅超级管理员可执行此操作');
     }
 
-    // 检查用户角色权限
-    if (user.roleId) {
-      const role = await this.roleRepo.findOne({ where: { id: user.roleId, status: 1 } });
+    // 检查用户角色权限（从数据库查询）
+    if (dbUser.roleId) {
+      const role = await this.roleRepo.findOne({ where: { id: dbUser.roleId, status: 1 } });
       if (role) {
         const permissions = Array.isArray(role.permissions) ? role.permissions : [];
         const hasPermission = requiredRoles.some((r) => permissions.includes(r));

@@ -39,26 +39,54 @@
     <text class="notice-text">团队预约需管理员审核，请如实填写信息。预约人数不得少于10人。</text>
   </view>
 
-  <!-- 步骤 1: 选择日期 -->
+  <!-- 步骤 1: 选择日期（日历视图） -->
   <view class="step-content" wx:if="{{currentStep === 1}}">
-    <view class="page-title">选择参观日期</view>
+    <view class="section-title">选择参观日期</view>
+
     <view class="loading-tip" wx:if="{{loading}}">加载中...</view>
-    <view class="date-grid" wx:if="{{!loading}}">
-      <view
-        class="date-card {{selectedDate && selectedDate.id === item.id ? 'selected' : ''}} {{!item.isAvailable ? 'unavailable' : ''}}"
-        wx:for="{{dates}}"
-        wx:key="id"
-        data-index="{{index}}"
-        bindtap="selectDate"
-      >
-        <text class="date-weekday">{{item.date}}</text>
-        <text class="date-value">{{item.date}}</text>
-        <text class="date-quota" wx:if="{{item.isAvailable && item.remainingQuota > 0}}">余 {{item.remainingQuota}} 位</text>
-        <text class="date-quota full" wx:elif="{{item.isAvailable && item.remainingQuota <= 0}}">已满</text>
-        <text class="date-quota closed" wx:else>已关闭</text>
+
+    <view class="calendar-card" wx:if="{{!loading}}">
+      <view class="calendar-header">
+        <view class="calendar-nav" bindtap="prevMonth">‹</view>
+        <text class="calendar-month">{{currentMonthLabel}}</text>
+        <view class="calendar-nav" bindtap="nextMonth">›</view>
+      </view>
+
+      <view class="calendar-weekdays">
+        <text class="weekday">日</text>
+        <text class="weekday">一</text>
+        <text class="weekday">二</text>
+        <text class="weekday">三</text>
+        <text class="weekday">四</text>
+        <text class="weekday">五</text>
+        <text class="weekday">六</text>
+      </view>
+
+      <view class="calendar-grid">
+        <view
+          wx:for="{{calendarDays}}"
+          wx:key="dateStr"
+          class="calendar-cell {{item.status}}"
+          data-index="{{index}}"
+          bindtap="selectDate"
+          wx:if="{{item.status !== 'empty'}}"
+        >
+          <text class="cell-day">{{item.day}}</text>
+          <text class="cell-status">
+            {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
+          </text>
+        </view>
+        <view
+          wx:for="{{calendarDays}}"
+          wx:key="dateStr"
+          class="calendar-cell empty"
+          wx:if="{{item.status === 'empty'}}"
+        >
+        </view>
       </view>
     </view>
-    <view class="empty-state" wx:if="{{!loading && dates.length === 0}}">
+
+    <view class="empty-state" wx:if="{{!loading && calendarDays.length === 0}}">
       <text class="empty-text">暂无可预约日期</text>
     </view>
   </view>
@@ -234,8 +262,8 @@
       <view class="section-title">附件上传</view>
       <view class="file-upload-area">
         <view class="file-list" wx:if="{{files.length > 0}}">
-          <view class="file-item" wx:for="{{files}}" wx:key="*this" data-index="{{index}}" bindtap="removeFile">
-            <text class="file-name">文件 {{index + 1}}</text>
+          <view class="file-item" wx:for="{{files}}" wx:key="url" data-index="{{index}}" bindtap="removeFile">
+            <text class="file-name">{{item.name}}</text>
             <text class="file-remove">删除</text>
           </view>
         </view>

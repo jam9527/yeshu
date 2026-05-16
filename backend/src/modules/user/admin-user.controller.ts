@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Param, Query, ParseBoolPipe } from '@nestjs/common';
+import { Controller, Get, Put, Param, Query, ParseBoolPipe, Body } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
 
@@ -17,13 +17,25 @@ export class AdminUserController {
     return { records, total, page, pageSize };
   }
 
-  /** PUT /api/admin/users/:id/blacklist - 设置/移出黑名单 */
+  /** PUT /api/admin/users/:id/blacklist - 设置/移出黑名单，可指定拉黑截止日期 */
   @Put('users/:id/blacklist')
   async toggleBlacklist(
     @Param('id') id: number,
-    @Query('isBlacklisted') isBlacklisted: boolean,
+    @Body() body?: { isBlacklisted?: boolean; blacklistUntil?: string },
   ) {
-    await this.userService.update(id, { isBlacklisted } as any);
+    const updateData: any = {};
+    if (body?.isBlacklisted !== undefined) {
+      updateData.isBlacklisted = body.isBlacklisted;
+      // 移出黑名单时清除截止时间
+      if (!body.isBlacklisted) {
+        updateData.blacklistUntil = null;
+        updateData.noShowCount = 0;
+      }
+    }
+    if (body?.blacklistUntil) {
+      updateData.blacklistUntil = new Date(body.blacklistUntil);
+    }
+    await this.userService.update(id, updateData);
     return { success: true };
   }
 

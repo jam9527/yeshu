@@ -18,6 +18,7 @@ async function handleLogin() {
     })
     if (res.data?.token) {
       localStorage.setItem('admin_token', res.data.token)
+      localStorage.setItem('admin_user', JSON.stringify(res.data.user || {}))
       router.push('/dashboard')
     }
   } finally {

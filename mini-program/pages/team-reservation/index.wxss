@@ -107,50 +107,128 @@
   border-radius: 6px;
 }
 
-/* ===== 日期网格 ===== */
-.date-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+/* ===== 页面标题 ===== */
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #000000;
+  margin: 16px 0 12px;
+  padding-left: 8px;
+  border-left: 3px solid #ffd700;
 }
 
-.date-card {
+/* ===== 日历卡片 ===== */
+.calendar-card {
   background: #fff;
-  border-radius: 10px;
-  padding: 14px 8px;
+  border-radius: 14px;
+  padding: 16px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.calendar-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-  border: 2px solid transparent;
-}
-.date-card.selected {
-  border-color: #e60012;
-  background: #fff5f5;
-}
-.date-card:active {
-  opacity: 0.7;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.date-weekday {
-  font-size: 12px;
-  color: #999;
-}
-
-.date-value {
-  font-size: 15px;
+.calendar-month {
+  font-size: 16px;
   font-weight: bold;
   color: #000000;
 }
 
-.date-quota {
-  font-size: 11px;
+.calendar-nav {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
   color: #005bac;
-  margin-top: 2px;
+  border-radius: 50%;
 }
-.date-quota.full {
+.calendar-nav:active {
+  background: #f0f0f0;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 8px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 4px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  min-height: 52px;
+  padding: 4px 0;
+}
+.calendar-cell:active {
+  opacity: 0.7;
+}
+.calendar-cell.available {
+  background: #f0f9f0;
+  color: #2e7d32;
+}
+.calendar-cell.available .cell-status {
+  color: #4caf50;
+}
+.calendar-cell.unavailable {
+  background: #f5f5f5;
+  color: #bbb;
+}
+.calendar-cell.unavailable .cell-status {
   color: #ccc;
+  font-size: 9px;
+}
+.calendar-cell.full {
+  background: #fff8e1;
+  color: #999;
+}
+.calendar-cell.full .cell-status {
+  color: #f5a623;
+  font-size: 9px;
+}
+.calendar-cell.closed {
+  background: #f5f5f5;
+  color: #bbb;
+}
+.calendar-cell.closed .cell-status {
+  color: #ccc;
+  font-size: 9px;
+}
+.calendar-cell.empty {
+  background: transparent;
+}
+
+.cell-day {
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.cell-status {
+  font-size: 9px;
+  line-height: 1.2;
 }
 
 /* ===== 场次卡片 ===== */
@@ -282,19 +360,30 @@
   box-sizing: border-box;
 }
 
-.count-control {
+/* 固定人数显示（团队预约固定10人） */
+.count-display {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  gap: 4px;
+  padding: 8px 0;
 }
 
-.count-input {
-  flex: 1;
+.count-number {
+  font-size: 28px;
+  font-weight: bold;
+  color: #e60012;
 }
 
-.count-hint {
-  font-size: 14px;
+.count-unit {
+  font-size: 16px;
+  color: #333;
+}
+
+.count-tip {
+  display: block;
+  font-size: 12px;
   color: #999;
+  margin-top: 2px;
 }
 
 .picker-display {
@@ -373,6 +462,147 @@
   color: #005bac;
   font-weight: bold;
   padding: 0 4px;
+}
+
+/* ===== 人数限制提示 ===== */
+.count-limit {
+  display: block;
+  font-size: 11px;
+  color: #005bac;
+  margin-top: 4px;
+}
+
+/* ===== 附件上传 ===== */
+.file-upload-area {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px dashed #ddd;
+}
+
+.file-list {
+  margin-bottom: 10px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border: 1px solid #eee;
+}
+
+.file-name {
+  font-size: 13px;
+  color: #333;
+}
+
+.file-remove {
+  font-size: 12px;
+  color: #e60012;
+  padding: 2px 8px;
+}
+
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  border: 1px dashed #ccc;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.file-upload-btn:active {
+  opacity: 0.7;
+}
+
+.file-upload-icon {
+  font-size: 20px;
+  color: #005bac;
+  font-weight: bold;
+}
+
+.file-upload-text {
+  font-size: 14px;
+  color: #005bac;
+}
+
+.file-upload-hint {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ===== 预约须知弹窗 ===== */
+.notice-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+.notice-popup {
+  position: fixed;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 16px;
+  z-index: 201;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+.notice-popup-header {
+  padding: 20px 20px 12px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.notice-popup-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #000000;
+}
+
+.notice-popup-body {
+  padding: 16px 20px;
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.7;
+  max-height: 50vh;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.notice-popup-footer {
+  padding: 12px 20px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.notice-btn {
+  width: 100%;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22px;
 }
 
 /* ===== 提交按钮 ===== */

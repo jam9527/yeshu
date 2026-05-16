@@ -52,6 +52,15 @@ onMounted(fetchData)
     <el-card>
       <el-table :data="records" v-loading="loading" stripe>
         <el-table-column prop="reservationNo" label="编号" width="150" />
+        <el-table-column label="昵称" width="100">
+          <template #default="{ row }">{{ row.user?.nickname || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="手机号" width="120">
+          <template #default="{ row }">{{ row.user?.phone || '-' }}</template>
+        </el-table-column>
+        <el-table-column label="OpenID" width="180">
+          <template #default="{ row }">{{ row.user?.openid || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="type" label="类型" width="80">
           <template #default="{ row }">{{ row.type === 'PERSONAL' ? '个人' : '团队' }}</template>
         </el-table-column>
@@ -60,11 +69,28 @@ onMounted(fetchData)
           <template #default="{ row }">{{ row.sessionType === 'AM' ? '上午' : '下午' }}</template>
         </el-table-column>
         <el-table-column prop="visitorCount" label="人数" width="60" />
+        <el-table-column label="参观人" min-width="160">
+          <template #default="{ row }">
+            <div v-if="row.visitors && row.visitors.length > 0">
+              <div v-for="(v, i) in row.visitors" :key="i" style="font-size:12px;line-height:1.6">
+                {{ v.name }} <span style="color:#999">{{ v.idCard }}</span>
+              </div>
+            </div>
+            <span v-else style="color:#ccc">—</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)" size="small">
               {{ statusLabel(row.status) }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="取消/驳回原因" min-width="160">
+          <template #default="{ row }">
+            <span v-if="row.status === 'CANCELLED' && row.cancelReason" style="color:#e6a23c">{{ row.cancelReason }}</span>
+            <span v-else-if="row.status === 'REJECTED' && row.rejectReason" style="color:#f56c6c">{{ row.rejectReason }}</span>
+            <span v-else style="color:#ccc">—</span>
           </template>
         </el-table-column>
         <el-table-column prop="verifierName" label="核销员" width="100" />

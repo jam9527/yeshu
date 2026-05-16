@@ -24,7 +24,7 @@ export class Reservation {
   userId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column({ length: 10, comment: '预约类型: PERSONAL=个人 TEAM=团队' })

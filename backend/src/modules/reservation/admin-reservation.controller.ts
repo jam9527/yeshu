@@ -56,9 +56,42 @@ export class AdminReservationController {
       : [];
     const verifierMap = new Map(verifiers.map(v => [Number(v.id), v.nickname || v.phone || '核销员']));
 
+    // 获取参观人信息
+    const reservationIds = records.map(r => r.id);
+    const allVisitors = reservationIds.length > 0
+      ? await this.visitorRepo.find({ where: { reservationId: In(reservationIds) } })
+      : [];
+    const visitorMap = new Map<number, { name: string; idCard: string }[]>();
+    allVisitors.forEach(v => {
+      if (!visitorMap.has(v.reservationId)) visitorMap.set(v.reservationId, []);
+      visitorMap.get(v.reservationId)!.push({ name: v.name, idCard: v.idCard });
+    });
+
     const list = records.map(r => ({
-      ...r,
+      id: r.id,
+      reservationNo: r.reservationNo,
+      type: r.type,
+      sessionType: r.sessionType,
+      reservationDate: r.reservationDate,
+      visitorCount: r.visitorCount,
+      status: r.status,
+      qrCode: r.qrCode,
+      rejectReason: r.rejectReason,
+      cancelReason: r.cancelReason,
+      verifierId: r.verifierId,
+      verifyTime: r.verifyTime,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
       verifierName: verifierMap.get(Number(r.verifierId)) || null,
+      user: r.user ? {
+        id: r.user.id,
+        nickname: r.user.nickname,
+        phone: r.user.phone,
+        openid: r.user.openid,
+        avatarUrl: r.user.avatarUrl,
+        isBlacklisted: r.user.isBlacklisted,
+      } : null,
+      visitors: visitorMap.get(r.id) || [],
     }));
 
     return { records: list, total, page, pageSize };

@@ -50,6 +50,8 @@ Page({
     showQrCode: false,
     /** 二维码图片base64 */
     qrCodeImage: '',
+    /** 是否可取消 */
+    canCancel: false,
     /** 取消预约弹窗 */
     showCancelSheet: false,
     cancelReason: '',
@@ -110,9 +112,11 @@ Page({
       }
 
       const shouldShowQr = ['APPROVED', 'PENDING', 'VERIFIED'].includes(raw.status)
+      const canCancel = ['APPROVING', 'APPROVED', 'PENDING'].includes(raw.status)
       this.setData({
         reservation,
         showQrCode: shouldShowQr,
+        canCancel,
       })
 
       // 加载二维码图片（使用 arraybuffer base64 避免域名白名单问题）
@@ -178,7 +182,7 @@ Page({
       await api.put(`/reservations/${reservation.id}/cancel`, { reason: cancelReason || '用户主动取消' })
       wx.hideLoading()
       wx.showToast({ title: '已取消', icon: 'success' })
-      this.setData({ showCancelSheet: false, cancelReason: '' })
+      this.setData({ showCancelSheet: false, cancelReason: '', canCancel: false })
       this.fetchDetail(reservation.id)
     } catch (err) {
       wx.hideLoading()

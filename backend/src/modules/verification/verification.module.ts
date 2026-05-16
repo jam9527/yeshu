@@ -4,12 +4,14 @@ import { VerificationRecord } from './entities/verification-record.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { ReservationVisitor } from '../reservation/entities/reservation-visitor.entity';
 import { TeamReservationInfo } from '../reservation/entities/team-reservation-info.entity';
+import { User } from '../user/entities/user.entity';
+import { VerifierGuard } from '../../common/guards/verifier.guard';
 import { VerificationService } from './verification.service';
 import { VerificationController } from './verification.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VerificationRecord, Reservation, ReservationVisitor, TeamReservationInfo])],
+  imports: [TypeOrmModule.forFeature([VerificationRecord, Reservation, ReservationVisitor, TeamReservationInfo, User])],
   controllers: [VerificationController],
-  providers: [VerificationService],
+  providers: [VerificationService, VerifierGuard],
 })
 export class VerificationModule {}

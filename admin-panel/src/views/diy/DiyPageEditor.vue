@@ -929,7 +929,7 @@ onMounted(fetchList)
                 <!-- 轮播图预览 -->
                 <div v-if="comp.type === 'swiper'" class="mini-swiper" :style="{ height: Math.min(comp.props.height || 180, 100) + 'px' }">
                   <div v-if="comp.props.images?.length" class="mini-swiper-track">
-                    <img v-for="(img, i) in comp.props.images.slice(0, 3)" :key="i" :src="img" class="mini-swiper-img" />
+                    <img v-for="(img, i) in comp.props.images.slice(0, 3)" :key="i" :src="typeof img === 'string' ? img : img.src" class="mini-swiper-img" />
                     <span v-if="comp.props.images.length > 3" class="mini-swiper-more">+{{ comp.props.images.length - 3 }}</span>
                   </div>
                   <div v-else class="mini-empty">暂无图片</div>
@@ -1076,7 +1076,7 @@ onMounted(fetchList)
                 <div v-if="comp.type === 'swiper'" class="pv-swiper" :style="{ height: (comp.props.height || 180) + 'px', borderRadius: (comp.props.borderRadius || 0) + 'px', paddingLeft: (comp.props.margin ?? 0) + 'px', paddingRight: (comp.props.margin ?? 0) + 'px' }">
                   <div v-if="comp.props.images?.length" class="pv-swiper-track">
                     <div class="pv-swiper-slider" :style="{ transform: 'translateX(-' + (activeSwiperIndex * 100) + '%)' }">
-                      <img v-for="(img, i) in comp.props.images" :key="i" :src="img" class="pv-swiper-img" :style="{ objectFit: comp.props.objectFit || 'cover' }" />
+                      <img v-for="(img, i) in comp.props.images" :key="i" :src="typeof img === 'string' ? img : img.src" class="pv-swiper-img" :style="{ objectFit: comp.props.objectFit || 'cover' }" />
                     </div>
                     <!-- 指示点 -->
                     <div v-if="comp.props.images.length > 1" class="pv-swiper-dots">
@@ -1280,7 +1280,7 @@ onMounted(fetchList)
               <div v-if="editingComp.props.images?.length" class="swiper-image-list">
                 <div v-for="(img, imgIdx) in editingComp.props.images" :key="imgIdx" class="swiper-image-item">
                   <img :src="typeof img === 'string' ? img : img.src" class="swiper-image-preview" />
-                  <el-input v-model="img.link" placeholder="跳转链接（可选，如 /pages/activities/index）" size="small" style="width:200px;margin-top:4px" />
+                  <el-input v-model="img.link" placeholder="跳转链接（可选，如 /pages/activities/index）" size="small" style="width:220px" />
                   <el-button size="small" type="danger" circle class="swiper-image-del" @click="removeSwiperImage(imgIdx)">×</el-button>
                 </div>
               </div>
@@ -2455,16 +2455,19 @@ onMounted(fetchList)
 }
 .swiper-image-item {
   position: relative;
-  width: 100px;
-  height: 100px;
-  border-radius: 6px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid #eee;
+  border-radius: 6px;
 }
 .swiper-image-preview {
-  width: 100%;
-  height: 100%;
+  width: 100px;
+  height: 100px;
   object-fit: cover;
+  border-radius: 4px;
 }
 .swiper-image-del {
   position: absolute;

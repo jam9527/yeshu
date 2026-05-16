@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { OperationLogInterceptor } from './common/interceptors/operation-log.interceptor';
 import { AdminRole } from './modules/auth/entities/admin-role.entity';
+import { AdminUser } from './modules/auth/entities/admin-user.entity';
 
 // 基础设施模块
 import { RedisModule } from './redis/redis.module';
@@ -63,8 +64,8 @@ import { NotificationModule } from './modules/notification/notification.module';
       signOptions: { expiresIn: '7d' },
     }),
 
-    // RolesGuard 需要访问 AdminRole 仓库
-    TypeOrmModule.forFeature([AdminRole]),
+    // RolesGuard 需要访问 AdminRole / AdminUser 仓库
+    TypeOrmModule.forFeature([AdminRole, AdminUser]),
 
     // 基础设施
     RedisModule,

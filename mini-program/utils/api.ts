@@ -64,7 +64,7 @@ function request<T = any>(options: RequestOptions): Promise<T> {
       },
       success: (res: any) => {
         if (res.data.code === 200 || res.statusCode === 200) {
-          resolve(res.data.data ?? res.data)
+          resolve(resolveImageUrls(res.data.data ?? res.data))
         } else if (res.statusCode === 401) {
           // 未登录且无 token — 静默失败，不跳转
           if (!token) {
@@ -108,9 +108,12 @@ function upload<T = any>(url: string, filePath: string, name: string = 'file', f
         Authorization: token ? `Bearer ${token}` : '',
       },
       success: (res: any) => {
-        const data = JSON.parse(res.data)
-        if (res.statusCode === 200 && (data.code === 200 || data.data !== undefined)) {
-          resolve(data.data ?? data)
+        // wx.uploadFile 在某些版本可能自动解析 JSON 为对象
+        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data
+        // 兼容多种成功响应格式：{ code:200, data:{...} } 或直接 { url:... }
+        const success = (res.statusCode === 200 || res.statusCode === 201) && (data.code === 200 || data.data !== undefined || data.url)
+        if (success) {
+          resolve(resolveImageUrls(data.data ?? data))
         } else {
           const msg = data?.message || '上传失败'
           wx.showToast({ title: msg, icon: 'none' })

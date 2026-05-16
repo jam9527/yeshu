@@ -15,7 +15,18 @@ Page({
   },
 
   onLoad() {
+    if (!this.checkVerifier()) return
     this.fetchData()
+  },
+
+  checkVerifier(): boolean {
+    const app = getApp()
+    if (!app.globalData.userInfo?.isVerifier) {
+      wx.showToast({ title: '仅核销员可执行此操作', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 1500)
+      return false
+    }
+    return true
   },
 
   /** 获取核销记录 */

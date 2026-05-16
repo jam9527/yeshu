@@ -56,11 +56,10 @@ export class WechatService {
 
   async testLogin(username?: string) {
     const testOpenid = username
-      ? `test_openid_${username.replace(/[^a-zA-Z0-9_一-鿿]/g, '_')}`
+      ? `test_openid_${Buffer.from(username, 'utf-8').toString('hex')}`
       : 'test_openid_yeshu_dev';
     let user = await this.userService.findOrCreate(testOpenid);
     if (!user.nickname) await this.userService.update(user.id, { nickname: '测试用户' });
-    if (!user.isVerifier) { await this.userService.update(user.id, { isVerifier: true } as any); user.isVerifier = true; }
 
     const token = this.jwtService.sign({
       sub: user.id, id: user.id, openid: user.openid, type: 'mini-program',

@@ -10,6 +10,8 @@
     "moduleResolution": "node16",
     "ignoreDeprecations": "6.0",
     "allowSyntheticDefaultImports": true,
+    "lib": ["es2017"],
+    "types": ["wechat-miniprogram"],
     "outDir": ".",
     "rootDir": "."
   },

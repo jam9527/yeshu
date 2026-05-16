@@ -23,14 +23,29 @@ export class AdminSystemController {
 
   @Get('users')
   async getUsers() {
-    return this.adminUserRepo.find({ order: { createdAt: 'DESC' } });
+    const users = await this.adminUserRepo.find({ order: { createdAt: 'DESC' } });
+    const roleIds = users.filter(u => u.roleId).map(u => Number(u.roleId));
+    const roles = roleIds.length > 0
+      ? await this.adminRoleRepo.find({ where: roleIds.map(id => ({ id })) })
+      : [];
+    const roleMap = new Map(roles.map(r => [Number(r.id), r]));
+    return users.map(u => {
+      const { passwordHash, ...rest } = u as any;
+      const role = roleMap.get(Number(u.roleId));
+      return {
+        ...rest,
+        roleName: role?.name || null,
+      };
+    });
   }
 
   @Post('users')
   async createUser(@Body() dto: { username: string; password: string; nickname?: string; roleId?: number }) {
     const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = this.adminUserRepo.create({ ...dto, passwordHash });
-    return this.adminUserRepo.save(user);
+    const saved = await this.adminUserRepo.save(user);
+    const { passwordHash: _, ...result } = saved as any;
+    return result;
   }
 
   @Put('users/:id')

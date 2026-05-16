@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { User, Document, Setting, ChatDotSquare, DataAnalysis, Tickets } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const isCollapse = ref(false)
+
+const adminNickname = computed(() => {
+  try {
+    const raw = localStorage.getItem('admin_user')
+    if (raw) {
+      const user = JSON.parse(raw)
+      return user.nickname || user.username || '管理员'
+    }
+  } catch { /* ignore */ }
+  return '管理员'
+})
 
 const menuItems = [
   { path: '/dashboard', label: '统计仪表盘', icon: DataAnalysis },
@@ -49,6 +60,7 @@ function handleSelect(index: string) {
 
 function handleLogout() {
   localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_user')
   router.push('/login')
 }
 </script>
@@ -96,7 +108,7 @@ function handleLogout() {
       <el-header style="background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: flex-end; padding: 0 20px; height: 50px;">
         <el-dropdown @command="handleLogout">
           <span style="cursor: pointer; color: #333; display: flex; align-items: center; gap: 6px;">
-            管理员
+            {{ adminNickname }}
             <el-icon><User /></el-icon>
           </span>
           <template #dropdown>

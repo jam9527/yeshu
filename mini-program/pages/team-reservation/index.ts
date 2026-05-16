@@ -21,6 +21,13 @@ interface SessionItem {
   endTime: string
 }
 
+interface CalendarDay {
+  dateStr: string
+  day: number
+  status: 'available' | 'unavailable' | 'full' | 'empty'
+  data?: DateItem
+}
+
 interface TeamType {
   value: string
   label: string
@@ -36,6 +43,12 @@ Page({
     sessions: [] as SessionItem[],
     /** 当前选中场次 */
     selectedSession: null as SessionItem | null,
+    /** 日历 */
+    calendarDays: [] as CalendarDay[],
+    /** 当前显示的年份和月份 */
+    currentYear: 0,
+    currentMonth: 0,
+    currentMonthLabel: '',
     /** 参观人数 */
     visitorCount: 10,
     /** 最大可预约人数（由剩余名额决定） */
@@ -61,7 +74,7 @@ Page({
     /** 统一社会信用代码 */
     orgCode: '',
     /** 附件文件列表 */
-    files: [] as string[],
+    files: [] as { name: string; url: string }[],
     /** 当前有效的申请表模板 */
     templateInfo: null as { name: string; fileUrl: string } | null,
     /** 团队类型选项 */
@@ -90,10 +103,14 @@ Page({
   },
 
   onLoad() {
+    const now = new Date()
+    this.setData({
+      currentYear: now.getFullYear(),
+      currentMonth: now.getMonth(),
+    })
     this.fetchNotice()
     this.fetchDates()
     this.fetchTemplate()
-    // 初始化团队类型显示
     this.updateTeamTypeDisplay()
   },
 
@@ -177,6 +194,19 @@ Page({
         pmRemaining: d.afternoon?.remainingTeam || 0,
       }))
       this.setData({ dates })
+
+      if (dates.length > 0) {
+        const firstDate = new Date(dates[0].date)
+        const curMonth = `${this.data.currentYear}-${this.data.currentMonth}`
+        const firstMonth = `${firstDate.getFullYear()}-${firstDate.getMonth()}`
+        if (firstMonth !== curMonth) {
+          this.setData({
+            currentYear: firstDate.getFullYear(),
+            currentMonth: firstDate.getMonth(),
+          })
+        }
+      }
+      this.buildCalendar(dates)
     } catch (err) {
       console.error('获取可预约日期失败', err)
     } finally {
@@ -184,16 +214,72 @@ Page({
     }
   },
 
+  buildCalendar(dates: DateItem[]) {
+    const year = this.data.currentYear
+    const month = this.data.currentMonth
+    if (!year || !month) return
+
+    this.setData({ currentMonthLabel: `${year}年${String(month + 1).padStart(2, '0')}月` })
+
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const startPad = firstDay.getDay()
+    const totalDays = lastDay.getDate()
+
+    const dateMap: Record<string, DateItem> = {}
+    dates.forEach(d => { dateMap[d.date] = d })
+
+    const days: CalendarDay[] = []
+
+    for (let i = 0; i < startPad; i++) {
+      days.push({ dateStr: '', day: 0, status: 'empty' })
+    }
+
+    for (let d = 1; d <= totalDays; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      const found = dateMap[dateStr]
+
+      let status: CalendarDay['status'] = 'unavailable'
+      if (found && found.isAvailable && found.remainingQuota > 0) {
+        status = 'available'
+      } else if (found && found.isAvailable && found.remainingQuota <= 0) {
+        status = 'full'
+      }
+
+      days.push({ dateStr, day: d, status, data: found })
+    }
+
+    this.setData({ calendarDays: days })
+  },
+
+  prevMonth() {
+    const { currentYear, currentMonth, dates } = this.data
+    let newMonth = currentMonth - 1
+    let newYear = currentYear
+    if (newMonth < 0) { newMonth = 11; newYear-- }
+    this.setData({ currentYear: newYear, currentMonth: newMonth })
+    this.buildCalendar(dates)
+  },
+
+  nextMonth() {
+    const { currentYear, currentMonth, dates } = this.data
+    let newMonth = currentMonth + 1
+    let newYear = currentYear
+    if (newMonth > 11) { newMonth = 0; newYear++ }
+    this.setData({ currentYear: newYear, currentMonth: newMonth })
+    this.buildCalendar(dates)
+  },
+
   /** 选择日期 */
   selectDate(e: any) {
     const { index } = e.currentTarget.dataset
-    const date = this.data.dates[index]
-    if (!date || !date.isAvailable) return
+    const day = this.data.calendarDays[index]
+    if (!day || day.status !== 'available' || !day.data) return
 
     this.setData({
-      selectedDate: date,
+      selectedDate: day.data,
       selectedSession: null,
-      sessions: this.buildSessions(date),
+      sessions: this.buildSessions(day.data),
       currentStep: 2,
     })
   },
@@ -304,7 +390,15 @@ Page({
       })
       const newFiles = [...this.data.files]
       for (const f of res.tempFiles) {
-        newFiles.push(f.path)
+        try {
+          wx.showLoading({ title: '上传中...' })
+          const uploadRes: any = await api.upload('/files/upload', f.path)
+          wx.hideLoading()
+          newFiles.push({ name: f.name, url: uploadRes.url || uploadRes })
+        } catch {
+          wx.hideLoading()
+          wx.showToast({ title: `${f.name} 上传失败`, icon: 'none' })
+        }
       }
       this.setData({ files: newFiles })
     } catch {
@@ -365,7 +459,7 @@ Page({
         teamType,
         orgName: orgName.trim(),
         orgCode: orgCode.trim(),
-        attachmentFiles: files.length > 0 ? JSON.stringify(files) : undefined,
+        attachmentFiles: files.length > 0 ? JSON.stringify(files.map(f => f.url)) : undefined,
       })
 
       const reservationId = res?.id || res?.reservationId
