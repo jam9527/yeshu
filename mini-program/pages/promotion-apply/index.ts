@@ -36,7 +36,8 @@ Page({
   /** 尝试获取微信昵称并更新用户资料 */
   async updateUserProfile() {
     try {
-      const userInfo = await wx.getUserInfo({ lang: 'zh_CN' })
+      const res_: any = await wx.getUserInfo({ lang: 'zh_CN' })
+      const userInfo = res_.userInfo || res_
       if (userInfo.nickName && userInfo.nickName !== '微信用户') {
         await api.put('/users/me', {
           nickname: userInfo.nickName,

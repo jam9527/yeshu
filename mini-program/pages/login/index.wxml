@@ -28,23 +28,18 @@
       <view class="loading-spinner"></view>
     </block>
 
-    <!-- 步骤2：设置昵称 -->
+    <!-- 步骤2：设置个人信息（首次登录时） -->
     <block wx:elif="{{needNicknameAuth}}">
       <text class="step-title">设置个人信息</text>
       <text class="step-desc">方便管理员识别您的身份</text>
 
-      <!-- 选择头像 -->
       <button class="avatar-pick-btn" open-type="chooseAvatar" bindchooseavatar="handleChooseAvatar">
         选择微信头像
       </button>
       <image wx:if="{{chosenAvatarUrl}}" class="preview-avatar" src="{{chosenAvatarUrl}}" mode="aspectFill" />
 
       <view class="divider"><text>昵称</text></view>
-
-      <input class="nickname-input" placeholder="输入你的昵称" maxlength="20" bindinput="onNicknameInput" value="{{nicknameInput}}" />
-
-      <view class="divider"><text>手机号（可选）</text></view>
-      <input class="nickname-input" type="number" placeholder="输入手机号" maxlength="11" bindinput="onPhoneInput" value="{{phoneInput}}" />
+      <input class="nickname-input" type="nickname" placeholder="你的微信昵称" maxlength="20" bindinput="onNicknameInput" value="{{nicknameInput}}" />
 
       <button class="login-btn" bindtap="handleSaveNickname" loading="{{saving}}">
         保存并进入

@@ -73,6 +73,13 @@ Page({
 
       wx.hideLoading()
       this.setData({ phoneLoggedIn: true })
+
+      // 已有完整资料 → 直接跳转首页
+      if (res.user?.nickname) {
+        this.goToPendingPage()
+        return
+      }
+
       await this.tryGetNickname()
     } catch (err: any) {
       wx.hideLoading()
@@ -95,6 +102,13 @@ Page({
 
       wx.hideLoading()
       this.setData({ codeLoggedIn: true })
+
+      // 已有完整资料 → 直接跳转首页
+      if (res.user?.nickname) {
+        this.goToPendingPage()
+        return
+      }
+
       await this.tryGetNickname()
     } catch (err: any) {
       wx.hideLoading()
@@ -135,7 +149,7 @@ Page({
       return
     }
     this.setData({ saving: true })
-    await this.saveNickname(nickname, this.data.chosenAvatarUrl, this.data.phoneInput.trim())
+    await this.saveNickname(nickname, this.data.chosenAvatarUrl)
     this.goToPendingPage()
   },
 
@@ -144,11 +158,10 @@ Page({
     this.goToPendingPage()
   },
 
-  /** 保存昵称/头像/手机号到后端 */
-  async saveNickname(nickname: string, avatarTempPath?: string, phone?: string) {
+  /** 保存昵称/头像到后端（手机号已在登录时从微信获取并保存） */
+  async saveNickname(nickname: string, avatarTempPath?: string) {
     try {
       let serverAvatarUrl = ''
-      // 如果选择了头像，先上传到服务器
       if (avatarTempPath) {
         try {
           const uploadRes: any = await api.upload('/files/upload', avatarTempPath)
@@ -159,13 +172,11 @@ Page({
       }
       const body: any = { nickname }
       if (serverAvatarUrl) body.avatarUrl = serverAvatarUrl
-      if (phone) body.phone = phone
       await api.put('/users/me', body)
       const app = getApp()
       if (app.globalData.userInfo) {
         app.globalData.userInfo.nickname = nickname
         if (serverAvatarUrl) app.globalData.userInfo.avatarUrl = serverAvatarUrl
-        if (phone) app.globalData.userInfo.phone = phone
       }
     } catch {}
   },

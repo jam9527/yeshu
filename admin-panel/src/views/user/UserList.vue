@@ -132,7 +132,13 @@ async function removeBlacklist(row: any) {
     <div class="page-header"><h3>用户列表</h3></div>
     <el-card>
       <el-table :data="users" v-loading="loading" stripe>
+        <el-table-column label="头像" width="60">
+          <template #default="{ row }">
+            <img v-if="row.avatarUrl" :src="row.avatarUrl" style="width:36px;height:36px;border-radius:50%;object-fit:cover" />
+          </template>
+        </el-table-column>
         <el-table-column prop="nickname" label="昵称" width="120" />
+        <el-table-column prop="openid" label="OpenID" min-width="260" show-overflow-tooltip />
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column label="黑名单" width="140">
           <template #default="{ row }">

@@ -212,7 +212,7 @@ Page({
       const allList: RealNameItem[] = res?.records || res || []
       // 只保留身份核验通过的实名记录
       const verifiedList = allList.filter(
-        (item) => item.idVerified === true || item.idVerified === 'true',
+        (item) => item.idVerified === true,
       )
       this.setData({ realNames: verifiedList })
 
