@@ -51,6 +51,11 @@ Page({
     }
   },
 
+  /** 隐私协议同意回调（耦合按钮必需） */
+  handleAgreePrivacy() {
+    // WeChat 自动处理隐私弹窗，无需额外逻辑
+  },
+
   /** 微信一键登录（含手机号授权），失败降级为普通 code 登录 */
   async handlePhoneLogin(e: any) {
     if (e.detail.errMsg !== 'getPhoneNumber:ok') {

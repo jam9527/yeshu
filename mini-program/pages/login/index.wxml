@@ -6,7 +6,7 @@
 
     <!-- 步骤1：手机号登录 -->
     <block wx:if="{{!phoneLoggedIn && !codeLoggedIn}}">
-      <button class="login-btn" open-type="getPhoneNumber" bindgetphonenumber="handlePhoneLogin">
+      <button class="login-btn" open-type="getPhoneNumber|agreePrivacyAuthorization" bindgetphonenumber="handlePhoneLogin" bindagreeprivacyauthorization="handleAgreePrivacy">
         微信一键登录
       </button>
 
