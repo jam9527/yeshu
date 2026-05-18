@@ -63,7 +63,19 @@ Page({
       const exhList = resolveImageUrls((exhibitions as any) || []) as any[]
       const actList = resolveImageUrls((activities as any) || []) as any[]
       const homeActs = actList.slice(0, 4)
-      homeActs.forEach(act => { act._startTime = formatDate(act.startTime); act._endTime = formatDate(act.endTime) })
+
+      const statusMap: Record<string, string> = {
+        UPCOMING: '即将开始',
+        ONGOING: '进行中',
+        ENDED: '已结束',
+      }
+
+      homeActs.forEach(act => {
+        act._startTime = formatDate(act.startTime).split(' ')[0]
+        act._endTime = formatDate(act.endTime).split(' ')[0]
+        act._statusLabel = statusMap[act.status] || ''
+        act._address = act.location || ''
+      })
       this.setData({
         exhibitions: exhList,
         activities: actList,

@@ -201,10 +201,24 @@ $ys-text-dim: #888;
     opacity: 0.85;
   }
 }
+.diy-grid-card-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
 .diy-grid-card-img {
   width: 100%;
   height: 110px;
   display: block;
+}
+.diy-grid-card-status {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: rgba($ys-red, 0.85);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 .diy-grid-card-info {
   padding: 10px 10px 12px;
@@ -232,6 +246,15 @@ $ys-text-dim: #888;
   color: $ys-text-dim;
   display: block;
   margin-top: 4px;
+}
+.diy-grid-card-address {
+  font-size: 11px;
+  color: $ys-text-dim;
+  display: block;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ===== 公告栏 ===== */
