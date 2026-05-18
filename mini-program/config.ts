@@ -15,4 +15,22 @@ const TUNNEL_URL = 'https://ee75006cdd3d48.lhr.life/api'
 
 /** API_BASE_URL 决定前端连接哪个后端 */
 // 开发者工具用 localhost，手机预览/扫码测试用 LAN_IP 或 TUNNEL_URL
-export const API_BASE_URL = `http://${DEV.LAN_IP}:${DEV.PORT}/api`
+const DEV_URL = `http://${DEV.LAN_IP}:${DEV.PORT}/api`
+
+/** 生产环境 API 地址（微信小程序正式版/体验版使用） */
+const PROD_URL = 'https://yeshu.weicent.cn/api'
+
+/**
+ * 自动选择 API 地址
+ * - 微信开发者工具: 使用本地地址
+ * - 体验版/正式版: 使用生产域名
+ *
+ * 如需手动切换，可在此处直接导出 DEV_URL 或 PROD_URL
+ */
+export const API_BASE_URL = (() => {
+  try {
+    const env = wx.getAccountInfoSync().miniProgram.envVersion
+    if (env === 'release' || env === 'trial') return PROD_URL
+  } catch {}
+  return DEV_URL
+})()
