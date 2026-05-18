@@ -95,7 +95,7 @@
           >
             <view class="diy-grid-card-img-wrap">
               <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="aspectFill" />
-              <text class="diy-grid-card-status" wx:if="{{act._statusLabel}}">{{act._statusLabel}}</text>
+              <text class="diy-grid-card-status" wx:if="{{act._statusLabel}}" style="background-color:{{act._statusColor}}">{{act._statusLabel}}</text>
             </view>
             <view class="diy-grid-card-info">
               <text class="diy-grid-card-title">{{act.title}}</text>

@@ -48,7 +48,6 @@ Page({
       const diyConfig = (diyPage as any)?.config
       const bg = diyConfig?.background || {} as any
       let bgStyle = ''
-      if (bg.color) bgStyle += bg.color
       if (bg.image) {
         const absBgImg = typeof bg.image === 'string' && bg.image.startsWith('/uploads/')
           ? resolveImageUrls(bg.image)
@@ -56,25 +55,27 @@ Page({
         const size = bg.size || 'cover'
         const position = bg.position || 'center center'
         const repeat = size === 'repeat' ? 'repeat' : 'no-repeat'
-        bgStyle = `background:url(${absBgImg}) ${repeat} ${position}/${size}, ${bg.color || 'transparent'}`
+        bgStyle = `background:url(${absBgImg}) ${repeat} ${position}/${size}, ${bg.color || 'transparent'};`
       } else if (bg.color) {
-        bgStyle = `background:${bg.color}`
+        bgStyle = `background:${bg.color};`
       }
 
       const exhList = resolveImageUrls((exhibitions as any) || []) as any[]
       const actList = resolveImageUrls((activities as any) || []) as any[]
       const homeActs = actList.slice(0, 4)
 
-      const statusMap: Record<string, string> = {
-        UPCOMING: '即将开始',
-        ONGOING: '进行中',
-        ENDED: '已结束',
+      const statusMap: Record<string, { label: string; color: string }> = {
+        UPCOMING: { label: '即将开始', color: '#005bac' },
+        ONGOING: { label: '进行中', color: '#07c160' },
+        ENDED: { label: '已结束', color: '#888888' },
       }
 
       homeActs.forEach(act => {
         act._startTime = formatDate(act.startTime).split(' ')[0]
         act._endTime = formatDate(act.endTime).split(' ')[0]
-        act._statusLabel = statusMap[act.status] || ''
+        const sc = statusMap[act.status] || { label: '', color: '#999' }
+        act._statusLabel = sc.label
+        act._statusColor = sc.color
         act._address = act.location || ''
       })
       const rawComponents = normalizeSwiperImages(resolveImageUrls(diyConfig?.components) || [])
