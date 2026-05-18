@@ -1,4 +1,4 @@
-<view class="container" style="{{diyBackgroundStyle}}">
+<view class="container" style="{{diyBackgroundStyle}}{{containerPaddingTop}}">
 
   <!-- ===== 全部内容由 DIY 组件驱动 ===== -->
   <block wx:for="{{diyComponents}}" wx:key="index">

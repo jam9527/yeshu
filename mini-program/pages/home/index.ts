@@ -26,6 +26,7 @@ Page({
     _homeActivities: [] as any[],
     diyComponents: [] as ComponentDef[],
     diyBackgroundStyle: '',
+    containerPaddingTop: '',
     loading: true,
   },
 
@@ -76,13 +77,24 @@ Page({
         act._statusLabel = statusMap[act.status] || ''
         act._address = act.location || ''
       })
+      const rawComponents = normalizeSwiperImages(resolveImageUrls(diyConfig?.components) || [])
+
+      // 首个组件为 spacer 时，将其高度移到容器 padding-top（规避 WXML minify 折叠空元素）
+      let containerPaddingTop = ''
+      if (rawComponents.length > 0 && rawComponents[0].type === 'spacer') {
+        const h = rawComponents[0].props?.height || 16
+        containerPaddingTop = `padding-top:${h}px;`
+        rawComponents.shift()
+      }
+
       this.setData({
         exhibitions: exhList,
         activities: actList,
         _homeExhibitions: exhList.slice(0, 4),
         _homeActivities: homeActs,
-        diyComponents: normalizeSwiperImages(resolveImageUrls(diyConfig?.components) || []),
+        diyComponents: rawComponents,
         diyBackgroundStyle: bgStyle,
+        containerPaddingTop,
       })
     } finally {
       this.setData({ loading: false })
