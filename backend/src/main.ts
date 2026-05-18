@@ -18,6 +18,9 @@ import { existsSync, mkdirSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // 信任 Nginx 反向代理的 X-Forwarded-Proto/X-Forwarded-For 头
+  app.set('trust proxy', 1);
+
   // 全局路由前缀: /api
   app.setGlobalPrefix('api');
 
