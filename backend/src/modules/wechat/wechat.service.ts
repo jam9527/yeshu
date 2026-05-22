@@ -16,18 +16,28 @@ export class WechatService {
     private readonly promotionService: PromotionService,
   ) {}
 
-  async login(code: string, encryptedData?: string, iv?: string, promoterId?: number) {
+  async login(code: string, encryptedData?: string, iv?: string, promoterId?: number, phoneCode?: string) {
     const wxSession = await this.getWechatSession(code);
     const user = await this.userService.findOrCreate(wxSession.openid);
 
     let phone: string | undefined;
-    if (encryptedData && iv) {
+    // 新API: 通过 phoneCode 换取手机号 (base library ≥2.21.2)
+    if (phoneCode) {
+      try {
+        phone = await this.getPhoneNumber(phoneCode);
+        this.logger.log(`手机号获取成功(新API): ${phone ? '***'+phone.slice(-4) : '空'}`);
+      } catch (err) {
+        this.logger.error(`手机号获取失败(新API): ${err.message}`);
+      }
+    }
+    // 旧API兼容: AES解密手机号 (base library <2.21.2)
+    if (!phone && encryptedData && iv) {
       try {
         const phoneData = this.decryptPhoneNumber(wxSession.sessionKey, encryptedData, iv);
         phone = phoneData.purePhoneNumber || phoneData.phoneNumber;
-        this.logger.log(`手机号解密成功: ${phone ? '***'+phone.slice(-4) : '空'}`);
+        this.logger.log(`手机号解密成功(旧API): ${phone ? '***'+phone.slice(-4) : '空'}`);
       } catch (err) {
-        this.logger.error(`手机号解密失败: ${err.message}`);
+        this.logger.error(`手机号解密失败(旧API): ${err.message}`);
       }
     }
 
@@ -70,6 +80,22 @@ export class WechatService {
       token,
       user: { id: user.id, nickname: user.nickname || '测试用户', avatarUrl: user.avatarUrl, phone: user.phone, isVerifier: user.isVerifier, isPromoter: user.isPromoter },
     };
+  }
+
+  /** 通过 phoneCode 获取手机号（新API，base library ≥2.21.2） */
+  async getPhoneNumber(phoneCode: string): Promise<string | undefined> {
+    const accessToken = await this.getAccessToken();
+    const url = `https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=${accessToken}`;
+    const res: any = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: phoneCode }),
+    }).then(r => r.json());
+
+    if (res.errcode !== 0) {
+      throw new Error(`获取手机号失败(errcode=${res.errcode}): ${res.errmsg}`);
+    }
+    return res.phone_info?.purePhoneNumber || res.phone_info?.phoneNumber;
   }
 
   /** 获取微信 access token（自动缓存） */

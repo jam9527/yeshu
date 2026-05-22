@@ -15,8 +15,9 @@ export class WechatController {
    * POST /api/wechat/login
    * Body: {
    *   code: string,          // wx.login() 获取的临时 code
-   *   encryptedData?: string, // getPhoneNumber 返回的加密数据
-   *   iv?: string,            // 加密算法的初始向量
+   *   phoneCode?: string,     // getPhoneNumber 返回的动态令牌（新API，base library ≥2.21.2）
+   *   encryptedData?: string, // getPhoneNumber 返回的加密数据（旧API兼容）
+   *   iv?: string,            // 加密算法的初始向量（旧API兼容）
    *   promoterId?: number     // 分享推广人ID
    * }
    */
@@ -24,11 +25,12 @@ export class WechatController {
   @Post('login')
   async login(
     @Body('code') code: string,
+    @Body('phoneCode') phoneCode?: string,
     @Body('encryptedData') encryptedData?: string,
     @Body('iv') iv?: string,
     @Body('promoterId') promoterId?: number,
   ) {
-    return this.wechatService.login(code, encryptedData, iv, promoterId);
+    return this.wechatService.login(code, encryptedData, iv, promoterId, phoneCode);
   }
 
   /**

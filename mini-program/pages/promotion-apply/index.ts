@@ -50,7 +50,12 @@ Page({
       const { code } = await wx.login()
       const { encryptedData, iv } = e.detail
 
-      const res: any = await api.post('/wechat/login', { code, encryptedData, iv })
+      // 新版API: phoneCode 优先 (base library ≥2.21.2)
+      const phoneCode = e.detail.code || undefined
+      const sendEncryptedData = phoneCode ? undefined : encryptedData
+      const sendIv = phoneCode ? undefined : iv
+
+      const res: any = await api.post('/wechat/login', { code, encryptedData: sendEncryptedData, iv: sendIv, phoneCode })
 
       const app = getApp()
       app.setToken(res.token)

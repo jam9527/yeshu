@@ -70,10 +70,16 @@ Page({
 
       const { encryptedData, iv } = e.detail
 
+      // 新版API: phoneCode 优先 (base library ≥2.21.2)
+      const phoneCode = e.detail.code || undefined
+      // 旧版兼容: 如果没有 phoneCode, 则使用 encryptedData+iv
+      const sendEncryptedData = phoneCode ? undefined : encryptedData
+      const sendIv = phoneCode ? undefined : iv
+
       const app = getApp()
       const promoterId = app.globalData.promoterId
       if (promoterId) app.globalData.promoterId = null // 用一次即清除
-      const res: any = await api.post('/wechat/login', { code, encryptedData, iv, promoterId })
+      const res: any = await api.post('/wechat/login', { code, encryptedData: sendEncryptedData, iv: sendIv, promoterId, phoneCode })
 
       app.setToken(res.token)
       app.globalData.userInfo = res.user
