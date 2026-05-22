@@ -38,8 +38,8 @@
       </button>
       <image wx:if="{{chosenAvatarUrl}}" class="preview-avatar" src="{{chosenAvatarUrl}}" mode="aspectFill" />
 
-      <view class="divider"><text>昵称</text></view>
-      <input class="nickname-input" type="nickname" placeholder="你的微信昵称" maxlength="20" bindinput="onNicknameInput" value="{{nicknameInput}}" />
+      <view class="divider"><text>选择微信昵称</text></view>
+      <input class="nickname-input" type="nickname" placeholder="点击获取微信昵称" maxlength="32" bindinput="onNicknameInput" value="{{nicknameInput}}" />
 
       <button class="login-btn" bindtap="handleSaveNickname" loading="{{saving}}">
         保存并进入
