@@ -30,6 +30,10 @@ Page({
   },
 
   onLoad(options: any) {
+    // 已登录用户直接打开分享链接时记录推广点击
+    if (options.promoterId) {
+      api.post('/promotion/click', { promoterId: Number(options.promoterId) }).catch(() => {})
+    }
     this.fetchData()
   },
 

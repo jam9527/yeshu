@@ -45,11 +45,17 @@ export class WechatService {
     if (phone) updateData.phone = phone;
     await this.userService.update(user.id, updateData);
 
-    if (promoterId && promoterId !== user.id && !user.promotedBy) {
-      await this.userService.update(user.id, { promotedBy: promoterId } as any);
-    }
-    // 关联推广记录：将访客 userId 绑定到最新的推广点击记录
+    // 推广追踪：记录点击 + 绑定用户（登录时做，避免前端 wx.request 被 redirectTo 取消）
     if (promoterId && promoterId !== user.id) {
+      // 1. 先记录推广点击
+      await this.promotionService.recordClick(promoterId, user.openid).catch(err => {
+        this.logger.warn(`记录推广点击失败: ${err.message}`);
+      });
+      // 2. 设置用户推广关系
+      if (!user.promotedBy) {
+        await this.userService.update(user.id, { promotedBy: promoterId } as any);
+      }
+      // 3. 将访客 userId 绑定到最新的推广点击记录
       await this.promotionService.bindVisitorByLogin(promoterId, user.id, user.openid).catch(err => {
         this.logger.warn(`绑定推广记录失败: ${err.message}`);
       });

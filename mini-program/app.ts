@@ -6,22 +6,31 @@
  */
 import { API_BASE_URL } from './config'
 
-// 全局 Page 构造函数拦截，自动检查登录态
+// 全局 Page 构造函数拦截，自动检查登录态 + 全局分享配置
 ;(() => {
   const _Page = Page
   ;((Page as any) as (config: any) => void) = function (config: any) {
     const originalOnLoad = config.onLoad
+
+    // 全局默认分享：未自定义 onShareAppMessage 的页面自动带上推广参数
+    if (!config.onShareAppMessage) {
+      config.onShareAppMessage = function (this: any) {
+        const app = getApp()
+        const userId = app.globalData.userInfo?.id
+        return {
+          title: '椰树集团参观预约',
+          path: userId ? `/pages/home/index?promoterId=${userId}` : '/pages/home/index',
+        }
+      }
+    }
+
     config.onLoad = function (this: any, options: any) {
       const app = getApp()
 
-      // 捕获推广人 ID（分享链接 ?promoterId=xxx）并记录点击 — 无论是否登录都要记录
+      // 捕获推广人 ID（分享链接 ?promoterId=xxx）
+      // 点击记录在后端登录接口中完成，避免此处的 wx.request 被 redirectTo 取消
       if (options && options.promoterId) {
         app.globalData.promoterId = Number(options.promoterId)
-        wx.request({
-          url: API_BASE_URL + '/promotion/click',
-          method: 'POST',
-          data: { promoterId: Number(options.promoterId) },
-        })
       }
 
       if (!app.globalData.token) {

@@ -129,7 +129,7 @@ Page({
     return {
       title: '椰树集团参观预约',
       path: `/pages/home/index?promoterId=${userId || ''}`,
-      imageUrl: `https://yeshu.weicent.cn/uploads/1779031355219-421745282.png`,
+      imageUrl: `https://yeshu.weicent.cn/uploads/1779073747940-221652702.png`,
     }
   },
 })
