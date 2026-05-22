@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Reservation } from './entities/reservation.entity';
 import { ReservationVisitor } from './entities/reservation-visitor.entity';
@@ -13,6 +13,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { FrequencyLimit } from '../reservation-config/entities/frequency-limit.entity';
 import { SystemConfig } from '../reservation-config/entities/system-config.entity';
 import { RealNameInfo } from '../real-name/entities/real-name.entity';
+import { PromotionModule } from '../promotion/promotion.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RealNameInfo } from '../real-name/entities/real-name.entity';
     ]),
     UserModule,
     NotificationModule,
+    forwardRef(() => PromotionModule),
   ],
   controllers: [ReservationController, AdminReservationController],
   providers: [ReservationService],

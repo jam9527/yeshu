@@ -30,11 +30,6 @@ Page({
   },
 
   onLoad(options: any) {
-    if (options.promoterId) {
-      wx.setStorageSync('promoterId', options.promoterId)
-      // 记录推广点击
-      api.post('/promotion/click', { promoterId: Number(options.promoterId) }).catch(() => {})
-    }
     this.fetchData()
   },
 

@@ -13,16 +13,23 @@ import { API_BASE_URL } from './config'
     const originalOnLoad = config.onLoad
     config.onLoad = function (this: any, options: any) {
       const app = getApp()
+
+      // 捕获推广人 ID（分享链接 ?promoterId=xxx）并记录点击 — 无论是否登录都要记录
+      if (options && options.promoterId) {
+        app.globalData.promoterId = Number(options.promoterId)
+        wx.request({
+          url: API_BASE_URL + '/promotion/click',
+          method: 'POST',
+          data: { promoterId: Number(options.promoterId) },
+        })
+      }
+
       if (!app.globalData.token) {
         const pages = getCurrentPages()
         const route = pages[pages.length - 1]?.route || ''
         if (route !== 'pages/login/index') {
           app.globalData.pendingRedirect = '/' + route
           app.globalData.pendingRedirectOptions = options ? { ...options } : null
-          // 捕获推广人 ID（分享链接 ?promoterId=xxx）
-          if (options && options.promoterId) {
-            app.globalData.promoterId = Number(options.promoterId)
-          }
           wx.redirectTo({ url: '/pages/login/index' })
           return
         }

@@ -1,13 +1,16 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { VerificationRecord } from './entities/verification-record.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { ReservationVisitor } from '../reservation/entities/reservation-visitor.entity';
 import { TeamReservationInfo } from '../reservation/entities/team-reservation-info.entity';
+import { PromotionService } from '../promotion/promotion.service';
 
 @Injectable()
 export class VerificationService {
+  private readonly logger = new Logger(VerificationService.name);
+
   constructor(
     @InjectRepository(VerificationRecord)
     private readonly recordRepo: Repository<VerificationRecord>,
@@ -17,6 +20,8 @@ export class VerificationService {
     private readonly visitorRepo: Repository<ReservationVisitor>,
     @InjectRepository(TeamReservationInfo)
     private readonly teamInfoRepo: Repository<TeamReservationInfo>,
+    @Inject(forwardRef(() => PromotionService))
+    private readonly promotionService: PromotionService,
   ) {}
 
   /**
@@ -95,6 +100,11 @@ export class VerificationService {
       verifiedAt: new Date(),
     });
     await this.recordRepo.save(record);
+
+    // 标记推广记录的核销状态
+    this.promotionService.markVerifiedByReservation(reservationId).catch(err => {
+      this.logger.warn(`标记推广核销失败: ${err.message}`);
+    });
 
     return { success: true, verifiedAt: record.verifiedAt };
   }

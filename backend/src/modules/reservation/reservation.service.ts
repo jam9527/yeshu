@@ -4,6 +4,9 @@ import {
   ConflictException,
   ForbiddenException,
   NotFoundException,
+  Inject,
+  forwardRef,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThan, In } from 'typeorm';
@@ -15,6 +18,7 @@ import { ReservationQuota } from './entities/reservation-quota.entity';
 import { ReservationDateConfig } from './entities/reservation-date-config.entity';
 import { TeamReservationInfo } from './entities/team-reservation-info.entity';
 import { UserService } from '../user/user.service';
+import { PromotionService } from '../promotion/promotion.service';
 import { FrequencyLimit } from '../reservation-config/entities/frequency-limit.entity';
 import { SystemConfig } from '../reservation-config/entities/system-config.entity';
 import { RealNameInfo } from '../real-name/entities/real-name.entity';
@@ -30,6 +34,8 @@ import { RealNameInfo } from '../real-name/entities/real-name.entity';
  */
 @Injectable()
 export class ReservationService {
+  private readonly logger = new Logger(ReservationService.name);
+
   constructor(
     private readonly dataSource: DataSource,
     @InjectRepository(Reservation)
@@ -49,6 +55,8 @@ export class ReservationService {
     @InjectRepository(RealNameInfo)
     private readonly realNameRepo: Repository<RealNameInfo>,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => PromotionService))
+    private readonly promotionService: PromotionService,
   ) {}
 
   /** 获取可预约日期列表（含剩余名额） */
@@ -246,6 +254,13 @@ export class ReservationService {
     );
     await this.visitorRepo.save(visitorEntities);
 
+    // 关联推广记录
+    if (user.promotedBy) {
+      this.promotionService.linkReservation(userId, saved.id).catch(err => {
+        this.logger.warn(`关联推广预约失败: ${err.message}`);
+      });
+    }
+
     return {
       id: saved.id,
       reservationNo: saved.reservationNo,
@@ -333,6 +348,14 @@ export class ReservationService {
       ...teamInfo,
     });
     await this.teamInfoRepo.save(teamEntity);
+
+    // 关联推广记录
+    const user = await this.userService.findById(userId);
+    if (user?.promotedBy) {
+      this.promotionService.linkReservation(userId, saved.id).catch(err => {
+        this.logger.warn(`关联推广预约失败: ${err.message}`);
+      });
+    }
 
     return {
       id: saved.id,

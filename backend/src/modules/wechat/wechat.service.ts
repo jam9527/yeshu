@@ -48,6 +48,12 @@ export class WechatService {
     if (promoterId && promoterId !== user.id && !user.promotedBy) {
       await this.userService.update(user.id, { promotedBy: promoterId } as any);
     }
+    // 关联推广记录：将访客 userId 绑定到最新的推广点击记录
+    if (promoterId && promoterId !== user.id) {
+      await this.promotionService.bindVisitorByLogin(promoterId, user.id, user.openid).catch(err => {
+        this.logger.warn(`绑定推广记录失败: ${err.message}`);
+      });
+    }
 
     const token = this.jwtService.sign({
       sub: user.id, id: user.id, openid: user.openid, type: 'mini-program',

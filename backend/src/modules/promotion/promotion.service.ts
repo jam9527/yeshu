@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, MoreThanOrEqual, LessThanOrEqual, Between } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual, LessThanOrEqual, Between, IsNull } from 'typeorm';
 import * as crypto from 'crypto';
 import * as qrcode from 'qrcode';
 import { PromotionRecord } from './entities/promotion-record.entity';
@@ -37,9 +37,29 @@ export class PromotionService {
     await this.recordRepo.update(recordId, { visitorUserId });
   }
 
-  /** 关联推广预约 */
+  /** 登录后根据 promoterId 找到最新未绑定用户的推广记录，关联访客 */
+  async bindVisitorByLogin(promoterId: number, visitorUserId: number, visitorOpenid: string) {
+    const record = await this.recordRepo.findOne({
+      where: { promoterId, visitorUserId: IsNull() },
+      order: { clickedAt: 'DESC' },
+    });
+    if (record) {
+      record.visitorUserId = visitorUserId;
+      record.visitorOpenid = visitorOpenid;
+      await this.recordRepo.save(record);
+    }
+  }
+
+  /** 关联推广预约（取最新的推广记录） */
   async linkReservation(visitorUserId: number, reservationId: number) {
-    await this.recordRepo.update({ visitorUserId }, { reservationId });
+    const record = await this.recordRepo.findOne({
+      where: { visitorUserId },
+      order: { clickedAt: 'DESC' },
+    });
+    if (record) {
+      record.reservationId = reservationId;
+      await this.recordRepo.save(record);
+    }
   }
 
   /** 标记推广预约已核销 */
