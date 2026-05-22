@@ -1,4 +1,4 @@
-<view class="container" style="{{diyBackgroundStyle}}{{containerPaddingTop}}">
+<view class="container" style="{{diyBackgroundStyle}}">
 
   <!-- ===== 全部内容由 DIY 组件驱动 ===== -->
   <block wx:for="{{diyComponents}}" wx:key="index">
@@ -150,7 +150,7 @@
             <view wx:elif="{{row.type === 'button'}}" class="diy-button-wrap">
               <button class="diy-button" type="{{row.props.type || 'primary'}}">{{row.props.text || '按钮'}}</button>
             </view>
-            <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;overflow:hidden"><text decode="{{true}}">&nbsp;</text></view>
+            <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;overflow:hidden">{{''}}</view>
           </view>
         </block>
         <!-- 无行内容时使用简单字段 -->
@@ -184,7 +184,7 @@
           <button class="diy-button" type="{{child.props.type || 'primary'}}">{{child.props.text || '按钮'}}</button>
         </view>
         <!-- 空白间距 -->
-        <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;overflow:hidden"><text decode="{{true}}">&nbsp;</text></view>
+        <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;overflow:hidden">{{''}}</view>
         <!-- 公告栏 -->
         <view wx:elif="{{child.type === 'notice_bar'}}" class="diy-notice-bar" style="background-color:{{child.props.backgroundColor || '#fff3e0'}}">
           <text class="diy-notice-text">{{child.props.text}}</text>
@@ -211,7 +211,7 @@
     </view>
 
     <!-- 空白间距 -->
-    <view wx:elif="{{item.type === 'spacer'}}" style="height:{{item.props.height || 16}}px;overflow:hidden"><text decode="{{true}}">&nbsp;</text></view>
+    <view wx:elif="{{item.type === 'spacer'}}" style="height:{{item.props.height || 16}}px;overflow:hidden">{{''}}</view>
 
     <!-- 媒体网格 -->
     <view wx:elif="{{item.type === 'media_grid'}}" class="diy-media-grid" style="gap:{{item.props.gap || 8}}px">

@@ -19,6 +19,10 @@ import { API_BASE_URL } from './config'
         if (route !== 'pages/login/index') {
           app.globalData.pendingRedirect = '/' + route
           app.globalData.pendingRedirectOptions = options ? { ...options } : null
+          // 捕获推广人 ID（分享链接 ?promoterId=xxx）
+          if (options && options.promoterId) {
+            app.globalData.promoterId = Number(options.promoterId)
+          }
           wx.redirectTo({ url: '/pages/login/index' })
           return
         }
@@ -37,6 +41,8 @@ App({
     userInfo: null as any,
     /** API 基础地址 */
     baseUrl: API_BASE_URL,
+    /** 推广人 ID（从分享链接进入时捕获） */
+    promoterId: null as number | null,
     /** 登录成功后待跳转页面路径 */
     pendingRedirect: '',
     /** 待跳转页面的参数 */

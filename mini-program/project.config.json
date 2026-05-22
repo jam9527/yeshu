@@ -27,6 +27,13 @@
         "packNpmRelationList": [],
         "minifyWXSS": true,
         "minifyWXML": true,
+        "minifyWXMLSetting": {
+            "global": {
+                "collapseWhitespace": true,
+                "conservativeCollapse": true,
+                "preserveLineBreaks": false
+            }
+        },
         "localPlugins": false,
         "disableUseStrict": false,
         "useCompilerPlugins": [

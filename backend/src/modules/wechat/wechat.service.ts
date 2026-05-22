@@ -94,6 +94,14 @@ export class WechatService {
     return this.cachedToken.accessToken;
   }
 
+  /** 获取当前环境对应的小程序版本 */
+  private getEnvVersion(): string {
+    const env = (process.env.MINI_ENV || process.env.NODE_ENV || 'development').toLowerCase();
+    if (env === 'production' || env === 'prod') return 'release';
+    if (env === 'staging' || env === 'trial') return 'trial';
+    return 'develop';
+  }
+
   /** 生成小程序码（wxacode.get） */
   async generateQrCode(path: string): Promise<Buffer> {
     const accessToken = await this.getAccessToken();
@@ -106,7 +114,7 @@ export class WechatService {
         path,
         width: 280,
         check_path: false,
-        env_version: 'develop',
+        env_version: this.getEnvVersion(),
       }),
     });
 
@@ -131,7 +139,7 @@ export class WechatService {
         scene,
         page,
         check_path: false,
-        env_version: 'develop',
+        env_version: this.getEnvVersion(),
         width: 280,
       }),
     });

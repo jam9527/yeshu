@@ -52,10 +52,13 @@ $ys-text-dim: #888;
 .diy-swiper-wrap {
   width: 100%;
   box-sizing: border-box;
+  // swiper 内部滑动使用 transform 会导致 overflow:hidden 在真机失效
+  transform: translateY(0);
 }
 .diy-swiper {
   width: 100%;
   height: 100%;
+  transform: translateY(0);
 }
 .diy-swiper-img {
   width: 100%;
@@ -292,7 +295,6 @@ $ys-text-dim: #888;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 6px;
 
   &:active {
     opacity: 0.85;

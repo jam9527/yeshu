@@ -70,9 +70,11 @@ Page({
 
       const { encryptedData, iv } = e.detail
 
-      const res: any = await api.post('/wechat/login', { code, encryptedData, iv })
-
       const app = getApp()
+      const promoterId = app.globalData.promoterId
+      if (promoterId) app.globalData.promoterId = null // 用一次即清除
+      const res: any = await api.post('/wechat/login', { code, encryptedData, iv, promoterId })
+
       app.setToken(res.token)
       app.globalData.userInfo = res.user
 
@@ -99,9 +101,11 @@ Page({
       const { code } = await wx.login()
       if (!code) throw new Error('获取登录凭证失败')
 
-      const res: any = await api.post('/wechat/login', { code })
-
       const app = getApp()
+      const promoterId = app.globalData.promoterId
+      if (promoterId) app.globalData.promoterId = null
+      const res: any = await api.post('/wechat/login', { code, promoterId })
+
       app.setToken(res.token)
       app.globalData.userInfo = res.user
 

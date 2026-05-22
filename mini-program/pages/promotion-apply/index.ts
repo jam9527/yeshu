@@ -26,32 +26,16 @@ Page({
     const app = getApp()
     if (app.globalData.token) {
       this.setData({ loggedIn: true, initializing: false })
-      this.updateUserProfile().then(() => this.handleApply())
+      this.handleApply()
     } else {
       // 未登录，全局 Page 拦截会跳转登录页，此处先显示加载
       this.setData({ initializing: false })
     }
   },
 
-  /** 尝试获取微信昵称并更新用户资料 */
-  async updateUserProfile() {
-    try {
-      const res_: any = await wx.getUserInfo({ lang: 'zh_CN' })
-      const userInfo = res_.userInfo || res_
-      if (userInfo.nickName && userInfo.nickName !== '微信用户') {
-        await api.put('/users/me', {
-          nickname: userInfo.nickName,
-          avatarUrl: userInfo.avatarUrl,
-        })
-        const app = getApp()
-        if (app.globalData.userInfo) {
-          app.globalData.userInfo.nickname = userInfo.nickName
-        }
-      }
-    } catch {
-      // 静默失败，不影响主流程
-    }
-  },
+
+  /** 隐私协议同意回调 */
+  handleAgreePrivacy() {},
 
   /** 微信一键登录（含手机号），失败则降级为普通登录 */
   async handlePhoneLogin(e: any) {
@@ -74,7 +58,6 @@ Page({
 
       wx.hideLoading()
       this.setData({ loggedIn: true })
-      await this.updateUserProfile()
       this.handleApply()
     } catch (err: any) {
       wx.hideLoading()
@@ -96,7 +79,6 @@ Page({
 
       wx.hideLoading()
       this.setData({ loggedIn: true })
-      await this.updateUserProfile()
       this.handleApply()
     } catch (err: any) {
       wx.hideLoading()
