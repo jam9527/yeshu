@@ -9,6 +9,9 @@ import { API_BASE_URL } from './config'
 // 全局 Page 构造函数拦截，自动检查登录态 + 全局分享配置
 ;(() => {
   const _Page = Page
+  // 不需要分享功能的页面路由
+  const noShareRoutes = ['pages/login/index', 'pages/profile/index']
+
   ;((Page as any) as (config: any) => void) = function (config: any) {
     const originalOnLoad = config.onLoad
 
@@ -26,6 +29,13 @@ import { API_BASE_URL } from './config'
 
     config.onLoad = function (this: any, options: any) {
       const app = getApp()
+      const pages = getCurrentPages()
+      const route = pages[pages.length - 1]?.route || ''
+
+      // 启用分享（除登录页和个人信息页外）
+      if (!noShareRoutes.includes(route)) {
+        wx.showShareMenu({ menus: ['shareAppMessage'] })
+      }
 
       // 捕获推广人 ID（分享链接 ?promoterId=xxx）
       // 点击记录在后端登录接口中完成，避免此处的 wx.request 被 redirectTo 取消
@@ -34,8 +44,6 @@ import { API_BASE_URL } from './config'
       }
 
       if (!app.globalData.token) {
-        const pages = getCurrentPages()
-        const route = pages[pages.length - 1]?.route || ''
         if (route !== 'pages/login/index') {
           app.globalData.pendingRedirect = '/' + route
           app.globalData.pendingRedirectOptions = options ? { ...options } : null
