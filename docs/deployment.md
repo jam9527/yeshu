@@ -106,15 +106,35 @@ INSERT INTO admin_users (username, passwordHash, nickname, isSuperAdmin, status)
 VALUES ('admin', '$2b$10$IGxCAaf6/3kKfsgpZ0saOOoTNwutAaJUtpSPqsCMY1jHoiGNFzp92', '管理员', 1, 1);
 ```
 
-### 3.6 自启动 (可选)
-
-使用 PM2 管理进程:
+### 3.6 自启动 (PM2)
 
 ```bash
 npm install -g pm2
-pm2 start dist/main.js --name yeshu-backend
+pm2 start dist/main.js --name yeshu-api
 pm2 save
 pm2 startup
+```
+
+常用 PM2 命令:
+```bash
+pm2 restart yeshu-api    # 重启服务
+pm2 logs yeshu-api       # 查看日志
+pm2 status               # 查看状态
+```
+
+### 3.7 生产环境实际部署
+
+服务器: `ubuntu@1.12.49.190`
+项目路径: `/home/ubuntu/yeshu`
+
+部署脚本 `deploy.sh`:
+```bash
+#!/bin/bash
+cd /home/ubuntu/yeshu/backend
+git pull
+npm install
+npm run build
+pm2 restart yeshu-api
 ```
 
 ---
@@ -141,13 +161,18 @@ VITE_API_BASE=https://your-domain.com/api
 
 ### 4.3 Nginx 配置
 
+生产环境使用域名 `yuyue.yeshu.com`，SSL 由 Let's Encrypt 提供。
+
 ```nginx
 server {
-    listen 80;
-    server_name admin.your-domain.com;
+    listen 443 ssl;
+    server_name yuyue.yeshu.com;
+
+    ssl_certificate     /etc/letsencrypt/live/yuyue.yeshu.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yuyue.yeshu.com/privkey.pem;
 
     # 管理后台静态文件
-    root /path/to/admin-panel/dist;
+    root /home/ubuntu/yeshu/admin-panel/dist;
     index index.html;
 
     location / {
@@ -160,6 +185,7 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # 上传文件
@@ -167,7 +193,15 @@ server {
         proxy_pass http://localhost:3000;
     }
 }
+
+server {
+    listen 80;
+    server_name yuyue.yeshu.com;
+    return 301 https://$host$request_uri;
+}
 ```
+
+Nginx 配置文件位于 `/etc/nginx/sites-available/yuyue.yeshu.com`。
 
 ---
 
@@ -175,11 +209,13 @@ server {
 
 ### 5.1 配置服务器地址
 
-在 `mini-program/utils/api.ts` 中设置 `baseUrl`:
+在 `mini-program/config.ts` 中设置 API 地址:
 
 ```typescript
-const baseUrl = 'https://your-domain.com/api'
+const PROD_URL = 'https://yuyue.yeshu.com/api'
 ```
+
+开发环境自动根据 `wx.getAccountInfoSync()` 切换环境。
 
 ### 5.2 微信开发者工具
 
@@ -201,9 +237,10 @@ const baseUrl = 'https://your-domain.com/api'
 
 | 类型 | 域名 |
 |---|---|
-| request合法域名 | `https://your-domain.com` |
-| uploadFile合法域名 | `https://your-domain.com` |
-| downloadFile合法域名 | `https://your-domain.com` |
+| request合法域名 | `https://yuyue.yeshu.com` |
+| uploadFile合法域名 | `https://yuyue.yeshu.com` |
+| downloadFile合法域名 | `https://yuyue.yeshu.com` |
+| socket合法域名 | (不涉及) |
 
 ---
 

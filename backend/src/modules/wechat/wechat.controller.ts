@@ -34,17 +34,6 @@ export class WechatController {
   }
 
   /**
-   * 测试登录（无需微信 code）
-   * POST /api/wechat/test-login
-   */
-  @Public()
-  @Post('test-login')
-  async testLogin(@Body() body?: any) {
-    const username = body?.username || undefined;
-    return this.wechatService.testLogin(username);
-  }
-
-  /**
    * 解密用户信息（昵称、头像）
    * POST /api/wechat/decode-userinfo
    * 需要用户点击 <button open-type="getUserInfo"> 授权后调用

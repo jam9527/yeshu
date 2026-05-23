@@ -18,7 +18,7 @@
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
 | id | bigint unsigned | PK, AUTO_INCREMENT | 用户ID |
-| openid | varchar(64) | UNIQUE, NOT NULL | 微信openid / 测试openid |
+| openid | varchar(64) | UNIQUE, NOT NULL | 微信openid |
 | sessionKey | varchar(128) | nullable | 微信session_key |
 | nickname | varchar(64) | nullable | 微信昵称 |
 | avatarUrl | varchar(512) | nullable | 头像URL |

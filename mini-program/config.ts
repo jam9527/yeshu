@@ -18,7 +18,7 @@ const TUNNEL_URL = 'https://ee75006cdd3d48.lhr.life/api'
 const DEV_URL = `http://${DEV.LAN_IP}:${DEV.PORT}/api`
 
 /** 生产环境 API 地址（微信小程序正式版/体验版使用） */
-const PROD_URL = 'https://yeshu.weicent.cn/api'
+const PROD_URL = 'https://yuyue.yeshu.com/api'
 
 /**
  * 自动选择 API 地址
@@ -31,6 +31,13 @@ export const API_BASE_URL = (() => {
   try {
     const env = wx.getAccountInfoSync().miniProgram.envVersion
     if (env === 'release' || env === 'trial') return PROD_URL
+    // develop → use dev URL
+    return DEV_URL
   } catch {}
-  return DEV_URL
+  // wx.getAccountInfoSync 失败时（极少发生），真机上用生产域名兜底
+  try {
+    const sys = wx.getSystemInfoSync()
+    if (sys.platform === 'devtools') return DEV_URL
+  } catch {}
+  return PROD_URL
 })()

@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "target": "ES2015",
-    "module": "Node16",
+    "module": "commonjs",
     "sourceMap": false,
     "strict": false,
     "esModuleInterop": true,
     "noEmitOnError": false,
     "skipLibCheck": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "node",
     "ignoreDeprecations": "6.0",
     "allowSyntheticDefaultImports": true,
     "lib": ["es2017"],

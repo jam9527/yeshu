@@ -193,7 +193,7 @@
     </view>
 
     <!-- 视频 -->
-    <view wx:elif="{{item.type === 'video'}}" class="diy-video-wrap" style="height:{{item.props.height || 220}}px">">
+    <view wx:elif="{{item.type === 'video'}}" class="diy-video-wrap" style="height:{{item.props.height || 220}}px">
       <video
         wx:if="{{item.props.src}}"
         class="diy-video"

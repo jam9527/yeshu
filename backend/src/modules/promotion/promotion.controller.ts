@@ -1,11 +1,15 @@
-import { Controller, Get, Post, Param, Query, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PromotionService } from './promotion.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('promotion')
 export class PromotionController {
-  constructor(private readonly promotionService: PromotionService) {}
+  constructor(
+    private readonly promotionService: PromotionService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   /** GET /api/promotion/stats - 推广统计（时间筛选） */
   @Get('stats')
@@ -47,10 +51,31 @@ export class PromotionController {
     return this.promotionService.applyPromoter(userId);
   }
 
-  /** POST /api/promotion/click - 记录分享点击（公开，无需登录） */
+  /** POST /api/promotion/click - 记录分享点击（公开，已登录用户自动提取身份） */
   @Public()
   @Post('click')
-  async recordClick(@Body('promoterId') promoterId: number, @Body('openid') openid?: string) {
-    return this.promotionService.recordClick(promoterId, openid);
+  async recordClick(
+    @Body('promoterId') promoterId: number,
+    @Body('openid') openid?: string,
+    @Req() req?: any,
+  ) {
+    // 从 JWT 中提取用户 ID（已登录用户会自动带 token）
+    let visitorUserId: number | undefined;
+    const authHeader = req?.headers?.authorization;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const payload = this.jwtService.verify(token);
+        visitorUserId = payload.sub || payload.id;
+      } catch {
+        // token 无效或过期，按匿名用户处理
+      }
+    }
+    const record = await this.promotionService.recordClick(promoterId, openid, visitorUserId);
+    // 已登录用户建立推广关系（避免依赖 /wechat/login 流程，该流程只对新用户触发）
+    if (visitorUserId) {
+      this.promotionService.associatePromoter(visitorUserId, promoterId).catch(() => {});
+    }
+    return record;
   }
 }

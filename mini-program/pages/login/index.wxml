@@ -10,14 +10,6 @@
         微信一键登录
       </button>
 
-      <view class="test-login-section">
-        <view class="divider"><text>测试环境（开发用）</text></view>
-        <input class="nickname-input" placeholder="输入测试用户名（区分不同用户）" maxlength="20" bindinput="onTestUsernameInput" value="{{testUsername}}" />
-        <button class="test-login-btn" bindtap="handleTestLogin">
-          测试登录
-        </button>
-      </view>
-
       <text class="tip">登录即表示同意《用户协议及隐私政策》</text>
     </block>
 

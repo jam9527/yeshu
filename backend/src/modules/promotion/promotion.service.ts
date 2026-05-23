@@ -22,14 +22,24 @@ export class PromotionService {
 
   // ========== 推广记录 ==========
 
-  /** 记录分享点击 */
-  async recordClick(promoterId: number, visitorOpenid?: string) {
+  /** 记录分享点击（已登录用户直接绑定 visitorUserId） */
+  async recordClick(promoterId: number, visitorOpenid?: string, visitorUserId?: number) {
     const record = this.recordRepo.create({
       promoterId,
       visitorOpenid,
+      visitorUserId,
       clickedAt: new Date(),
     });
     return this.recordRepo.save(record);
+  }
+
+  /** 为已登录用户建立推广关系（设置 promotedBy，避免依赖登录流程） */
+  async associatePromoter(visitorUserId: number, promoterId: number) {
+    if (visitorUserId === promoterId) return;
+    const user = await this.dataSource.getRepository(User).findOne({ where: { id: visitorUserId } });
+    if (user && !user.promotedBy) {
+      await this.dataSource.getRepository(User).update(visitorUserId, { promotedBy: promoterId });
+    }
   }
 
   /** 绑定被推广人用户ID */

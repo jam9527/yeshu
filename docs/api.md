@@ -64,7 +64,7 @@ GET /admin/blacklist                # 黑名单列表
 
 ---
 
-## 4. 内容管理 (需登录)
+## 4. 内容管理 (权限: content:manage)
 
 ### 4.1 展厅 (公开API供小程序调用)
 ```
@@ -162,7 +162,6 @@ PUT  /admin/config/require-real-name          # 更新实名开关
 
 ```
 POST /wechat/login              # 微信登录 { code: string }  (公开)
-POST /wechat/test-login         # 测试登录 { username?: string }  (公开, 仅开发环境)
 POST /wechat/decode-userinfo    # 解密用户信息
 ```
 

@@ -1,7 +1,6 @@
 /**
  * 登录页
  * 两步登录：code 登录 → 个人资料设置（头像/昵称/手机号）
- * 测试环境：通过用户名区分不同测试用户
  */
 import api from '../../utils/api'
 
@@ -13,7 +12,6 @@ Page({
     needNicknameAuth: false,
     nicknameInput: '',
     saving: false,
-    testUsername: '',
     chosenAvatarUrl: '',
     phoneInput: '',
   },
@@ -42,7 +40,12 @@ Page({
       }
       const tabPages = ['/pages/home/index', '/pages/quick-check/index', '/pages/profile/index']
       if (tabPages.includes(redirect)) {
-        wx.switchTab({ url: redirect })
+        // switchTab 不支持携带参数，有参数时用 reLaunch 代替
+        if (options && Object.keys(options).length > 0) {
+          wx.reLaunch({ url })
+        } else {
+          wx.switchTab({ url: redirect })
+        }
       } else {
         wx.redirectTo({ url })
       }
@@ -78,11 +81,11 @@ Page({
 
       const app = getApp()
       const promoterId = app.globalData.promoterId
-      if (promoterId) app.globalData.promoterId = null // 用一次即清除
       const res: any = await api.post('/wechat/login', { code, encryptedData: sendEncryptedData, iv: sendIv, promoterId, phoneCode })
 
       app.setToken(res.token)
       app.globalData.userInfo = res.user
+      app.globalData.promoterId = null // 登录成功后清除
 
       wx.hideLoading()
       this.setData({ phoneLoggedIn: true })
@@ -109,11 +112,11 @@ Page({
 
       const app = getApp()
       const promoterId = app.globalData.promoterId
-      if (promoterId) app.globalData.promoterId = null
       const res: any = await api.post('/wechat/login', { code, promoterId })
 
       app.setToken(res.token)
       app.globalData.userInfo = res.user
+      app.globalData.promoterId = null // 登录成功后清除
 
       wx.hideLoading()
       this.setData({ codeLoggedIn: true })
@@ -134,11 +137,6 @@ Page({
   /** 检查是否需要设置昵称（wx.getUserInfo 在新版微信已废弃，直接跳过） */
   async tryGetNickname() {
     this.setData({ needNicknameAuth: true, fetchingNickname: false })
-  },
-
-  /** 测试用户名输入 */
-  onTestUsernameInput(e: any) {
-    this.setData({ testUsername: e.detail.value })
   },
 
   /** 选择头像回调 */
@@ -196,24 +194,4 @@ Page({
     } catch {}
   },
 
-  /** 测试登录（开发环境用，支持多用户） */
-  async handleTestLogin() {
-    wx.showLoading({ title: '测试登录中...' })
-    try {
-      const username = this.data.testUsername.trim() || undefined
-      const res: any = await api.post('/wechat/test-login', { username })
-      const app = getApp()
-      app.setToken(res.token)
-      app.globalData.userInfo = res.user
-      wx.hideLoading()
-      if (res.user.nickname && res.user.nickname !== '测试用户') {
-        this.goToPendingPage()
-      } else {
-        this.setData({ codeLoggedIn: true, needNicknameAuth: true, fetchingNickname: false })
-      }
-    } catch (err: any) {
-      wx.hideLoading()
-      wx.showToast({ title: err.message || '测试登录失败', icon: 'none' })
-    }
-  },
 })

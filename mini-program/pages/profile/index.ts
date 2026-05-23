@@ -23,7 +23,6 @@ Page({
     uploadingAvatar: false,
     menuList: [
       { icon: '证', iconColor: '#005bac', title: '实名信息管理', desc: '管理参观人证件信息', url: '/pages/real-name-list/index', needLogin: true },
-      { icon: '设', iconColor: '#666', title: '系统设置', desc: '账号与通用设置', url: '', needLogin: true },
       { icon: '推', iconColor: '#f5a623', title: '推广中心', desc: '分享得奖励', url: '/pages/promotion-center/index', needLogin: true, role: 'isPromoter' },
       { icon: '核', iconColor: '#4caf50', title: '核销人员入口', desc: '扫码核销', url: '/pages-verifier/verifier-home/index', needLogin: true, role: 'isVerifier' },
       { icon: '常', iconColor: '#9c27b0', title: '常见问题', desc: '参观指南与帮助', url: '/pages/faq/index' },

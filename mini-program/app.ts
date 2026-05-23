@@ -27,18 +27,23 @@ import { API_BASE_URL } from './config'
       }
     }
 
-    config.onLoad = function (this: any, options: any) {
-      const app = getApp()
-      const pages = getCurrentPages()
-      const route = pages[pages.length - 1]?.route || ''
-
-      // 启用分享（除登录页和个人信息页外）
+    // 在 onShow 中启用分享（每次页面显示时都会触发，包括 tab 页切换）
+    const originalOnShow = config.onShow
+    config.onShow = function (this: any) {
+      const route = this.route || ''
       if (!noShareRoutes.includes(route)) {
         wx.showShareMenu({ menus: ['shareAppMessage'] })
       }
+      if (originalOnShow) return originalOnShow.call(this)
+    }
+
+    config.onLoad = function (this: any, options: any) {
+      const app = getApp()
+      const route = this.route || ''
 
       // 捕获推广人 ID（分享链接 ?promoterId=xxx）
-      // 点击记录在后端登录接口中完成，避免此处的 wx.request 被 redirectTo 取消
+      // 已登录用户：后端从 JWT 中提取用户 ID 直接绑定
+      // 未登录用户：promoterId 暂存 globalData，登录时传给后端
       if (options && options.promoterId) {
         app.globalData.promoterId = Number(options.promoterId)
       }

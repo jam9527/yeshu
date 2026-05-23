@@ -76,24 +76,6 @@ export class WechatService {
     };
   }
 
-  async testLogin(username?: string) {
-    const testOpenid = username
-      ? `test_openid_${Buffer.from(username, 'utf-8').toString('hex')}`
-      : 'test_openid_yeshu_dev';
-    let user = await this.userService.findOrCreate(testOpenid);
-    if (!user.nickname) await this.userService.update(user.id, { nickname: '测试用户' });
-
-    const token = this.jwtService.sign({
-      sub: user.id, id: user.id, openid: user.openid, type: 'mini-program',
-      isVerifier: user.isVerifier,
-    });
-
-    return {
-      token,
-      user: { id: user.id, nickname: user.nickname || '测试用户', avatarUrl: user.avatarUrl, phone: user.phone, isVerifier: user.isVerifier, isPromoter: user.isPromoter },
-    };
-  }
-
   /** 通过 phoneCode 获取手机号（新API，base library ≥2.21.2） */
   async getPhoneNumber(phoneCode: string): Promise<string | undefined> {
     const accessToken = await this.getAccessToken();

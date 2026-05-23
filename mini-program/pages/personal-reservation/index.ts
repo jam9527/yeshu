@@ -195,6 +195,12 @@ Page({
         status = 'full'
       }
 
+      // 过去日期不可预约（防止 API 返回过期数据导致历史日期显示为可预约）
+      const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
+      if (dateStr < todayStr) {
+        status = 'unavailable'
+      }
+
       days.push({
         dateStr,
         day: d,
