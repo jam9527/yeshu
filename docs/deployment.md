@@ -62,7 +62,7 @@ JWT_EXPIRES_IN=7d
 WECHAT_APPID=your_wechat_appid
 WECHAT_SECRET=your_wechat_secret
 
-# 腾讯云 (OCR/实名认证)
+# 腾讯云 (FaceID 二要素核验)
 TENCENT_SECRET_ID=your_tencent_secret_id
 TENCENT_SECRET_KEY=your_tencent_secret_key
 TENCENT_REGION=ap-guangzhou

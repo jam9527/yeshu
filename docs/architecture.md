@@ -50,7 +50,7 @@
 | 认证 | JWT (jsonwebtoken) | — |
 | 密码加密 | bcryptjs | 3.x |
 | 文件上传 | Multer | 2.x |
-| 腾讯云服务 | OCR / FaceID SDK | — |
+| 腾讯云服务 | FaceID 二要素核验 SDK | — |
 
 ## 4. 模块架构
 

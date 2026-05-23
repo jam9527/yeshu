@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { RealNameService } from './real-name.service';
-import { IdCardOcrService } from './id-card-ocr.service';
 import { IdCardVerificationService } from './id-card-verification.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -12,7 +10,6 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class RealNameController {
   constructor(
     private readonly realNameService: RealNameService,
-    private readonly ocrService: IdCardOcrService,
     private readonly verificationService: IdCardVerificationService,
   ) {}
 
@@ -64,32 +61,5 @@ export class RealNameController {
   async remove(@Param('id') id: number, @CurrentUser('id') userId: number) {
     await this.realNameService.softDelete(id, userId);
     return { success: true };
-  }
-
-  /**
-   * POST /api/real-names/ocr - 身份证 OCR 识别
-   * 上传身份证照片，返回识别到的姓名和证件号码
-   */
-  @Post('ocr')
-  @UseInterceptors(
-    FileInterceptor('image', { limits: { fileSize: 5 * 1024 * 1024 } }),
-  )
-  async ocr(@UploadedFile() file: Express.Multer.File) {
-    if (!file) {
-      return { name: '', idCard: '', idCardType: 'ID_CARD', isSimulated: true };
-    }
-    try {
-      const result = await this.ocrService.process(file.buffer, file.originalname);
-      return result;
-    } catch (err: any) {
-      return {
-        name: '',
-        idCard: '',
-        idCardType: 'ID_CARD',
-        isSimulated: false,
-        verified: false,
-        verificationMessage: err.message || 'OCR 识别失败',
-      };
-    }
   }
 }

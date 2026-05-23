@@ -218,12 +218,11 @@ PUT  /admin/promoters/applications/:id/reject  # 驳回申请
 
 ```
 GET    /real-names              # 实名列表
-POST   /real-names/verify       # 验证实名信息
+POST   /real-names/verify       # 姓名+身份证号二要素核验
 GET    /real-names/:id          # 实名详情
 POST   /real-names              # 新增实名
 PUT    /real-names/:id          # 更新实名
 DELETE /real-names/:id          # 软删除实名
-POST   /real-names/ocr          # OCR 识别身份证 (文件上传)
 ```
 
 ---
