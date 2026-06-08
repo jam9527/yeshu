@@ -7,6 +7,7 @@ import {
   Inject,
   forwardRef,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThan, In } from 'typeorm';
@@ -33,7 +34,7 @@ import { RealNameInfo } from '../real-name/entities/real-name.entity';
  * 4. 取消预约时回退配额
  */
 @Injectable()
-export class ReservationService {
+export class ReservationService implements OnModuleInit {
   private readonly logger = new Logger(ReservationService.name);
 
   constructor(
@@ -58,6 +59,10 @@ export class ReservationService {
     @Inject(forwardRef(() => PromotionService))
     private readonly promotionService: PromotionService,
   ) {}
+
+  async onModuleInit() {
+    await this.seedFrequencyLimits();
+  }
 
   /** 获取可预约日期列表（含剩余名额） */
   async getAvailableDates() {

@@ -2,6 +2,7 @@
 import { ref, onMounted, shallowRef, onBeforeUnmount } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import '@wangeditor/editor/dist/css/style.css'
 import request from '../../api/request'
 
 const list = ref([])
@@ -55,7 +56,7 @@ async function handleDelete(id: number) {
 }
 
 onMounted(fetchData)
-onBeforeUnmount(() => { if (editorRef.value) editorRef.value.destroy() })
+onBeforeUnmount(() => { if (editorRef.value) { editorRef.value.destroy(); editorRef.value = null } })
 </script>
 
 <template>
@@ -85,7 +86,7 @@ onBeforeUnmount(() => { if (editorRef.value) editorRef.value.destroy() })
         <el-form-item label="简介"><el-input v-model="editForm.description" type="textarea" :rows="3" /></el-form-item>
         <el-form-item label="详情">
           <div style="border:1px solid #dcdfe6;">
-            <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" style="border-bottom:1px solid #dcdfe6" />
+            <Toolbar v-if="editorRef" :editor="editorRef" :defaultConfig="toolbarConfig" style="border-bottom:1px solid #dcdfe6" />
             <Editor v-model="editForm.richContent" :defaultConfig="editorConfig" @onCreated="handleCreated" style="height:300px;" />
           </div>
         </el-form-item>
@@ -94,5 +95,3 @@ onBeforeUnmount(() => { if (editorRef.value) editorRef.value.destroy() })
     </el-dialog>
   </div>
 </template>
-
-<style src="@wangeditor/editor/dist/css/style.css"></style>

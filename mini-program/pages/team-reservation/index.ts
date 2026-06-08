@@ -195,15 +195,24 @@ Page({
       }))
       this.setData({ dates })
 
+      // 如果当前月份无可预约日期，自动跳转到第一个有可用日期的未来月份
       if (dates.length > 0) {
-        const firstDate = new Date(dates[0].date)
-        const curMonth = `${this.data.currentYear}-${this.data.currentMonth}`
-        const firstMonth = `${firstDate.getFullYear()}-${firstDate.getMonth()}`
-        if (firstMonth !== curMonth) {
-          this.setData({
-            currentYear: firstDate.getFullYear(),
-            currentMonth: firstDate.getMonth(),
-          })
+        const today = new Date()
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+        const firstFutureDate = dates.find((d: DateItem) => d.date >= todayStr)
+        if (firstFutureDate) {
+          const firstDate = new Date(firstFutureDate.date)
+          const firstYear = firstDate.getFullYear()
+          const firstMonth = firstDate.getMonth()
+          const curYear = this.data.currentYear
+          const curMonth = this.data.currentMonth
+          // 只向前跳转，不向后跳转到已过去的月份
+          if (firstYear > curYear || (firstYear === curYear && firstMonth > curMonth)) {
+            this.setData({
+              currentYear: firstYear,
+              currentMonth: firstMonth,
+            })
+          }
         }
       }
       this.buildCalendar(dates)
@@ -244,6 +253,12 @@ Page({
         status = 'available'
       } else if (found && found.isAvailable && found.remainingQuota <= 0) {
         status = 'full'
+      }
+
+      // 过去日期不可预约（防止 API 返回过期数据导致历史日期显示为可预约）
+      const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
+      if (dateStr < todayStr) {
+        status = 'unavailable'
       }
 
       days.push({ dateStr, day: d, status, data: found })
