@@ -18,7 +18,7 @@
     </view>
 
     <!-- 功能入口 -->
-    <view wx:elif="{{item.type === 'func_grid'}}" class="diy-func-grid">
+    <view wx:elif="{{item.type === 'func_grid'}}" class="diy-func-grid" style="background-color:{{item.props.backgroundColor || 'transparent'}};padding:{{item.props.padding || '12px 8px'}}">
       <view
         class="diy-func-item"
         wx:for="{{item.props.items}}"
@@ -29,25 +29,25 @@
         bindtap="onFuncGridTap"
         style="width:{{100 / (item.props.columns || 3)}}%"
       >
-        <view class="diy-func-icon" style="background-color:{{menuItem.color || '#005bac'}}">{{menuItem.icon || '📋'}}</view>
+        <view class="diy-func-icon" style="background-color:{{menuItem.color || '#005bac'}}"><image wx:if="{{menuItem.iconImage}}" class="diy-func-icon-img" src="{{menuItem.iconImage}}" mode="aspectFill" /><text wx:else>{{menuItem.icon || '📋'}}</text></view>
         <text class="diy-func-label">{{menuItem.text}}</text>
       </view>
     </view>
 
     <!-- 品牌标语 -->
-    <view wx:elif="{{item.type === 'slogan'}}" class="diy-slogan">
+    <view wx:elif="{{item.type === 'slogan'}}" class="diy-slogan" style="background-color:{{item.props.backgroundColor || '#0a0a0a'}}">
       <text class="diy-slogan-title" style="color:{{item.props.titleColor || '#ffd700'}}">{{item.props.title}}</text>
       <text class="diy-slogan-sub" wx:if="{{item.props.subtitle}}">{{item.props.subtitle}}</text>
       <text class="diy-slogan-text" wx:if="{{item.props.text}}">{{item.props.text}}</text>
     </view>
 
     <!-- 文本块 -->
-    <view wx:elif="{{item.type === 'text_block'}}" class="diy-text-block" style="font-size:{{(item.props.style && item.props.style.fontSize) || '14px'}};color:{{(item.props.style && item.props.style.color) || '#e0e0e0'}};padding:{{(item.props.style && item.props.style.padding) || '12px'}}">
+    <view wx:elif="{{item.type === 'text_block'}}" class="diy-text-block" style="font-size:{{(item.props.style && item.props.style.fontSize) || '14px'}};color:{{(item.props.style && item.props.style.color) || '#e0e0e0'}};padding:{{(item.props.style && item.props.style.padding) || '12px'}};background-color:{{(item.props.style && item.props.style.backgroundColor) || 'transparent'}};border-radius:{{(item.props.style && item.props.style.borderRadius) || 0}}px">
       <rich-text nodes="{{item.props.content}}" />
     </view>
 
     <!-- 图片 -->
-    <view wx:elif="{{item.type === 'image'}}" class="diy-image-wrap">
+    <view wx:elif="{{item.type === 'image'}}" class="diy-image-wrap" style="padding:{{item.props.padding || '0'}};border-radius:{{item.props.borderRadius || 0}}px;overflow:hidden">
       <image class="diy-image" src="{{item.props.src}}" mode="widthFix" data-link="{{item.props.link}}" bindtap="onDiyImageTap" style="width:{{item.props.width || '100%'}}" />
     </view>
 
@@ -119,11 +119,11 @@
 
     <!-- 按钮 -->
     <view wx:elif="{{item.type === 'button'}}" class="diy-button-wrap">
-      <button class="diy-button" type="{{item.props.type || 'primary'}}" data-link="{{item.props.link}}" bindtap="onDiyButtonTap">{{item.props.text || '按钮'}}</button>
+      <button class="diy-button" type="{{item.props.type || 'primary'}}" data-link="{{item.props.link}}" bindtap="onDiyButtonTap" style="border-radius:{{item.props.borderRadius || 8}}px;padding:{{item.props.padding || '10px'}}">{{item.props.text || '按钮'}}</button>
     </view>
 
     <!-- 底部信息 -->
-    <view wx:elif="{{item.type === 'footer'}}" class="diy-footer">
+    <view wx:elif="{{item.type === 'footer'}}" class="diy-footer" style="background-color:{{item.props.backgroundColor || '#000000'}}">
       <text class="diy-footer-brand">{{item.props.brand || '椰树集团'}}</text>
       <text class="diy-footer-copy">{{item.props.copyright || '© 椰树集团 参观预约系统'}}</text>
     </view>
@@ -148,7 +148,7 @@
               <rich-text nodes="{{row.props.content}}" />
             </view>
             <view wx:elif="{{row.type === 'button'}}" class="diy-button-wrap">
-              <button class="diy-button" type="{{row.props.type || 'primary'}}">{{row.props.text || '按钮'}}</button>
+              <button class="diy-button" type="{{row.props.type || 'primary'}}" style="border-radius:{{row.props.borderRadius || 8}}px;padding:{{row.props.padding || '10px'}}">{{row.props.text || '按钮'}}</button>
             </view>
             <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;overflow:hidden">{{''}}</view>
           </view>
@@ -181,7 +181,7 @@
         </view>
         <!-- 按钮 -->
         <view wx:elif="{{child.type === 'button'}}" class="diy-button-wrap">
-          <button class="diy-button" type="{{child.props.type || 'primary'}}">{{child.props.text || '按钮'}}</button>
+          <button class="diy-button" type="{{child.props.type || 'primary'}}" style="border-radius:{{child.props.borderRadius || 8}}px;padding:{{child.props.padding || '10px'}}">{{child.props.text || '按钮'}}</button>
         </view>
         <!-- 空白间距 -->
         <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;overflow:hidden">{{''}}</view>

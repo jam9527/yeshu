@@ -32,14 +32,12 @@ const menuItems = [
   { path: '/content/exhibition', label: '内容管理', icon: Document, children: [
     { path: '/content/exhibition', label: '展厅管理' },
     { path: '/content/activity', label: '活动管理' },
-    { path: '/content/banner', label: 'Banner管理' },
     { path: '/content/faq', label: '常见问题' },
     { path: '/content/page-links', label: '页面链接' },
     { path: '/diy/page', label: 'DIY首页编辑' },
   ]},
   { path: '/config/date', label: '预约设置', icon: Setting, children: [
     { path: '/config/date', label: '日期与名额（日历）' },
-    { path: '/config/quota', label: '名额设置' },
     { path: '/config/notice', label: '预约须知' },
     { path: '/config/frequency', label: '次数限制' },
     { path: '/config/template', label: '申请表模板' },

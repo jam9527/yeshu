@@ -52,17 +52,17 @@ const form = reactive({
 
 const componentTypes = [
   { type: 'swiper', label: '轮播图', icon: '🖼️', defaultProps: { images: [], interval: 3000, height: 180, borderRadius: 0, margin: 0, objectFit: 'cover' } },
-  { type: 'func_grid', label: '功能入口', icon: '🔲', defaultProps: { columns: 3, items: [
-    { icon: '📅', text: '个人预约', url: '/pages/personal-reservation/index', color: '#005bac' },
-    { icon: '👥', text: '团队预约', url: '/pages/team-reservation/index', color: '#2d5a2d' },
-    { icon: '🏛️', text: '展厅导览', url: '/pages/exhibitions/index', color: '#6a2a3a' },
-    { icon: '🎪', text: '活动预约', url: '/pages/activities/index', color: '#5a3a2a' },
-    { icon: '❓', text: '常见问题', url: '/pages/faq/index', color: '#3a2a5a' },
-    { icon: '📋', text: '我的预约', url: '/pages/my-reservations/index', color: '#2a3a5a' },
+  { type: 'func_grid', label: '功能入口', icon: '🔲', defaultProps: { columns: 3, padding: '12px 8px', backgroundColor: 'transparent', items: [
+    { icon: '📅', text: '个人预约', url: '/pages/personal-reservation/index', color: '#005bac', iconImage: '' },
+    { icon: '👥', text: '团队预约', url: '/pages/team-reservation/index', color: '#2d5a2d', iconImage: '' },
+    { icon: '🏛️', text: '展厅导览', url: '/pages/exhibitions/index', color: '#6a2a3a', iconImage: '' },
+    { icon: '🎪', text: '活动预约', url: '/pages/activities/index', color: '#5a3a2a', iconImage: '' },
+    { icon: '❓', text: '常见问题', url: '/pages/faq/index', color: '#3a2a5a', iconImage: '' },
+    { icon: '📋', text: '我的预约', url: '/pages/my-reservations/index', color: '#2a3a5a', iconImage: '' },
   ]}},
-  { type: 'slogan', label: '品牌标语', icon: '✨', defaultProps: { title: '椰树集团', subtitle: 'Coconut Palm Group', text: '国宴品质 · 民族品牌', titleColor: '#ffd700', bgStyle: 'dark' } },
-  { type: 'text_block', label: '文本块', icon: '📝', defaultProps: { content: '请输入文本内容', style: { fontSize: '14px', color: '#333', padding: '12px' } } },
-  { type: 'image', label: '图片', icon: '📷', defaultProps: { src: '', link: '', width: '100%' } },
+  { type: 'slogan', label: '品牌标语', icon: '✨', defaultProps: { title: '椰树集团', subtitle: 'Coconut Palm Group', text: '国宴品质 · 民族品牌', titleColor: '#ffd700', bgStyle: 'dark', backgroundColor: '#0a0a0a' } },
+  { type: 'text_block', label: '文本块', icon: '📝', defaultProps: { content: '请输入文本内容', style: { fontSize: '14px', color: '#333', padding: '12px', backgroundColor: 'transparent', borderRadius: 0 } } },
+  { type: 'image', label: '图片', icon: '📷', defaultProps: { src: '', link: '', width: '100%', padding: '0', borderRadius: 0 } },
   { type: 'exhibition_scroll', label: '展厅列表', icon: '🏛️', defaultProps: { title: '常设展厅', showMore: true } },
   { type: 'activity_list', label: '活动列表', icon: '🎪', defaultProps: { title: '活动资讯', showMore: true } },
   { type: 'notice_bar', label: '公告栏', icon: '📢', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0', textColor: '#e65100', fontSize: '13px', fontWeight: 'normal' } },
@@ -70,8 +70,8 @@ const componentTypes = [
   { type: 'video', label: '视频', icon: '🎬', defaultProps: { src: '', poster: '', controls: true, autoplay: false, loop: false, objectFit: 'contain', height: 220 } },
   { type: 'section_wrapper', label: '区块包装器', icon: '📦', defaultProps: { bgColor: '#1a1a1a', padding: '16px', borderRadius: 12, margin: '0', title: '', components: [] } },
   { type: 'columns', label: '多列布局', icon: '📐', defaultProps: { columns: 2, gap: 12, rowGap: 8, columnRatio: '1:1', items: [] } },
-  { type: 'button', label: '按钮', icon: '🔘', defaultProps: { text: '按钮', link: '', type: 'primary' } },
-  { type: 'footer', label: '底部信息', icon: '📄', defaultProps: { brand: '椰树集团', copyright: '© 椰树集团 参观预约系统' } },
+  { type: 'button', label: '按钮', icon: '🔘', defaultProps: { text: '按钮', link: '', type: 'primary', borderRadius: 8, padding: '10px' } },
+  { type: 'footer', label: '底部信息', icon: '📄', defaultProps: { brand: '椰树集团', copyright: '© 椰树集团 参观预约系统', backgroundColor: '#000000' } },
   { type: 'spacer', label: '空白间距', icon: '⬜', defaultProps: { height: 16 } },
 ]
 
@@ -79,12 +79,12 @@ const componentTypes = [
 const defaultHomeTemplate: ComponentDef[] = [
   { type: 'swiper', label: '轮播图', props: { images: [], interval: 3000, height: 220, borderRadius: 0 } },
   { type: 'func_grid', label: '功能入口', props: { columns: 3, items: [
-    { icon: '📅', text: '个人预约', url: '/pages/personal-reservation/index', color: '#005bac' },
-    { icon: '👥', text: '团队预约', url: '/pages/team-reservation/index', color: '#2d5a2d' },
-    { icon: '🏛️', text: '展厅导览', url: '/pages/exhibitions/index', color: '#6a2a3a' },
-    { icon: '🎪', text: '活动预约', url: '/pages/activities/index', color: '#5a3a2a' },
-    { icon: '❓', text: '常见问题', url: '/pages/faq/index', color: '#3a2a5a' },
-    { icon: '📋', text: '我的预约', url: '/pages/my-reservations/index', color: '#2a3a5a' },
+    { icon: '📅', text: '个人预约', url: '/pages/personal-reservation/index', color: '#005bac', iconImage: '' },
+    { icon: '👥', text: '团队预约', url: '/pages/team-reservation/index', color: '#2d5a2d', iconImage: '' },
+    { icon: '🏛️', text: '展厅导览', url: '/pages/exhibitions/index', color: '#6a2a3a', iconImage: '' },
+    { icon: '🎪', text: '活动预约', url: '/pages/activities/index', color: '#5a3a2a', iconImage: '' },
+    { icon: '❓', text: '常见问题', url: '/pages/faq/index', color: '#3a2a5a', iconImage: '' },
+    { icon: '📋', text: '我的预约', url: '/pages/my-reservations/index', color: '#2a3a5a', iconImage: '' },
   ]}},
   { type: 'slogan', label: '品牌标语', props: { title: '椰树集团', subtitle: 'Coconut Palm Group', text: '国宴品质 · 民族品牌', titleColor: '#ffd700', bgStyle: 'dark' } },
   { type: 'exhibition_scroll', label: '展厅列表', props: { title: '常设展厅', showMore: true } },
@@ -104,7 +104,7 @@ let savedColumnParentIndex = -1 // 编辑列子组件前的主组件索引
 // 菜单网格项编辑器
 const menuItemDialogVisible = ref(false)
 const editingMenuItemIndex = ref(-1)
-const editingMenuItem = reactive({ icon: '', text: '', url: '', color: '#005bac' })
+const editingMenuItem = reactive({ icon: '', text: '', url: '', color: '#005bac', iconImage: '' })
 
 // 媒体网格项编辑器
 const mediaItemDialogVisible = ref(false)
@@ -485,16 +485,16 @@ function cancelCompEdit() {
 // ===== 区块包装器子组件管理 =====
 const columnChildTypes = [
   { type: 'text_block', label: '文本块', defaultProps: { content: '文本内容', style: { fontSize: '12px', color: '#fff', padding: '4px 0' } } },
-  { type: 'image', label: '图片', defaultProps: { src: '', link: '', width: '100%' } },
-  { type: 'button', label: '按钮', defaultProps: { text: '按钮', link: '', type: 'primary' } },
+  { type: 'image', label: '图片', defaultProps: { src: '', link: '', width: '100%', padding: '0', borderRadius: 0 } },
+  { type: 'button', label: '按钮', defaultProps: { text: '按钮', link: '', type: 'primary', borderRadius: 8, padding: '10px' } },
   { type: 'divider', label: '分隔线', defaultProps: { margin: '8px 0', color: '#333' } },
   { type: 'spacer', label: '空白间距', defaultProps: { height: 12 } },
 ]
 
 const sectionChildTypes = [
   { type: 'text_block', label: '文本块', defaultProps: { content: '文本内容', style: { fontSize: '14px', color: '#333', padding: '12px' } } },
-  { type: 'image', label: '图片', defaultProps: { src: '', link: '', width: '100%' } },
-  { type: 'button', label: '按钮', defaultProps: { text: '按钮', link: '', type: 'primary' } },
+  { type: 'image', label: '图片', defaultProps: { src: '', link: '', width: '100%', padding: '0', borderRadius: 0 } },
+  { type: 'button', label: '按钮', defaultProps: { text: '按钮', link: '', type: 'primary', borderRadius: 8, padding: '10px' } },
   { type: 'divider', label: '分隔线', defaultProps: { margin: '12px 0', color: '#eee' } },
   { type: 'spacer', label: '空白间距', defaultProps: { height: 16 } },
   { type: 'notice_bar', label: '公告栏', defaultProps: { text: '公告内容', backgroundColor: '#fff3e0', textColor: '#e65100', fontSize: '13px', fontWeight: 'normal' } },
@@ -638,14 +638,14 @@ async function handleUploadLogo() {
 function openMenuItemEditor(index: number) {
   editingMenuItemIndex.value = index
   const item = editingComp.props.items[index] || {}
-  Object.assign(editingMenuItem, { icon: item.icon || '', text: item.text || '', url: item.url || '', color: item.color || '#005bac' })
+  Object.assign(editingMenuItem, { icon: item.icon || '', text: item.text || '', url: item.url || '', color: item.color || '#005bac', iconImage: item.iconImage || '' })
   menuItemDialogVisible.value = true
 }
 
 function addMenuItem() {
   if (!editingComp.props.items) editingComp.props.items = []
   editingMenuItemIndex.value = -1
-  Object.assign(editingMenuItem, { icon: '📋', text: '新菜单', url: '', color: '#005bac' })
+  Object.assign(editingMenuItem, { icon: '📋', text: '新菜单', url: '', color: '#005bac', iconImage: '' })
   menuItemDialogVisible.value = true
 }
 
@@ -661,6 +661,21 @@ function saveMenuItem() {
 
 function removeMenuItem(index: number) {
   editingComp.props.items.splice(index, 1)
+}
+
+async function handleUploadMenuItemIcon() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'image/*'
+  input.onchange = async () => {
+    const file = input.files?.[0]
+    if (!file) return
+    try {
+      const url = await uploadFile(file)
+      editingMenuItem.iconImage = url
+    } catch { ElMessage.error('上传失败') }
+  }
+  input.click()
 }
 
 // ===== 媒体网格项编辑器 =====
@@ -938,7 +953,7 @@ onMounted(fetchList)
                 <!-- 功能入口预览 -->
                 <div v-else-if="comp.type === 'func_grid'" class="mini-grid">
                   <div v-for="(item, i) in (comp.props.items || []).slice(0, 4)" :key="i" class="mini-grid-item" :style="{ width: (100 / Math.min(comp.props.columns || 3, 4)) + '%' }">
-                    <div class="mini-grid-icon" :style="{ background: item.color || '#005bac' }">{{ item.icon || '📋' }}</div>
+                    <div class="mini-grid-icon" :style="{ background: item.color || '#005bac' }"><img v-if="item.iconImage" :src="item.iconImage" style="width:100%;height:100%;object-fit:cover;border-radius:8px" /><span v-else>{{ item.icon || '📋' }}</span></div>
                     <span class="mini-grid-label">{{ item.text || '' }}</span>
                   </div>
                   <div v-if="!comp.props.items?.length" class="mini-empty">暂无菜单项</div>
@@ -1089,13 +1104,13 @@ onMounted(fetchList)
                 <!-- 功能入口 -->
                 <div v-else-if="comp.type === 'func_grid'" class="pv-func-grid">
                   <div v-for="(item, i) in comp.props.items || []" :key="i" class="pv-func-item" :style="{ width: (100 / Math.min(comp.props.columns || 3, 4)) + '%' }">
-                    <div class="pv-func-icon" :style="{ background: item.color || '#005bac' }">{{ item.icon || '📋' }}</div>
+                    <div class="pv-func-icon" :style="{ background: item.color || '#005bac' }"><img v-if="item.iconImage" :src="item.iconImage" style="width:100%;height:100%;object-fit:cover;border-radius:10px" /><span v-else>{{ item.icon || '📋' }}</span></div>
                     <span class="pv-func-label">{{ item.text || '' }}</span>
                   </div>
                 </div>
 
                 <!-- 品牌标语 -->
-                <div v-else-if="comp.type === 'slogan'" class="pv-slogan">
+                <div v-else-if="comp.type === 'slogan'" class="pv-slogan" :style="{ background: comp.props.backgroundColor || '#0a0a0a' }">
                   <div class="pv-slogan-title" :style="{ color: comp.props.titleColor || '#ffd700' }">{{ comp.props.title || '品牌名称' }}</div>
                   <div class="pv-slogan-sub" v-if="comp.props.subtitle">{{ comp.props.subtitle }}</div>
                   <div class="pv-slogan-text" v-if="comp.props.text">{{ comp.props.text }}</div>
@@ -1239,7 +1254,7 @@ onMounted(fetchList)
                 </div>
 
                 <!-- 底部信息 -->
-                <div v-else-if="comp.type === 'footer'" class="pv-footer">
+                <div v-else-if="comp.type === 'footer'" class="pv-footer" :style="{ background: comp.props.backgroundColor || '#000000' }">
                   <div class="pv-footer-brand">{{ comp.props.brand || '品牌' }}</div>
                   <div class="pv-footer-copy">{{ comp.props.copyright || '版权信息' }}</div>
                 </div>
@@ -1310,6 +1325,15 @@ onMounted(fetchList)
 
         <!-- 菜单网格 / 功能入口 -->
         <template v-if="editingComp.type === 'menu_grid' || editingComp.type === 'func_grid'">
+          <el-form-item label="内边距">
+            <el-input v-model="editingComp.props.padding" placeholder="12px 8px" style="width:200px" />
+          </el-form-item>
+          <el-form-item label="背景色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.backgroundColor" placeholder="transparent" style="width:150px" />
+              <input type="color" v-model="editingComp.props.backgroundColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
           <el-form-item label="列数">
             <el-input-number v-model="editingComp.props.columns" :min="2" :max="5" />
           </el-form-item>
@@ -1513,6 +1537,12 @@ onMounted(fetchList)
               <input type="color" v-model="editingComp.props.titleColor" style="width:36px;height:36px;border:none;cursor:pointer" />
             </div>
           </el-form-item>
+          <el-form-item label="背景色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.backgroundColor" placeholder="#0a0a0a" style="width:150px" />
+              <input type="color" v-model="editingComp.props.backgroundColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
         </template>
 
         <!-- 展厅列表 -->
@@ -1537,6 +1567,18 @@ onMounted(fetchList)
 
         <!-- 文本块 -->
         <template v-if="editingComp.type === 'text_block'">
+          <el-form-item label="内边距">
+            <el-input v-model="editingComp.props.style.padding" placeholder="12px" style="width:150px" />
+          </el-form-item>
+          <el-form-item label="背景色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.style.backgroundColor" placeholder="transparent" style="width:150px" />
+              <input type="color" v-model="editingComp.props.style.backgroundColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
+          <el-form-item label="圆角(px)">
+            <el-slider v-model="editingComp.props.style.borderRadius" :min="0" :max="24" :step="2" style="width:200px" />
+          </el-form-item>
           <el-form-item label="内容">
             <div style="border:1px solid #dcdfe6;width:100%">
               <Toolbar :editor="editorRef" :defaultConfig="toolbarConfig" style="border-bottom:1px solid #dcdfe6" />
@@ -1553,6 +1595,12 @@ onMounted(fetchList)
 
         <!-- 图片 -->
         <template v-if="editingComp.type === 'image'">
+          <el-form-item label="内边距">
+            <el-input v-model="editingComp.props.padding" placeholder="0" style="width:150px" />
+          </el-form-item>
+          <el-form-item label="圆角(px)">
+            <el-slider v-model="editingComp.props.borderRadius" :min="0" :max="24" :step="2" style="width:200px" />
+          </el-form-item>
           <el-form-item label="图片">
             <div style="display:flex;gap:8px;width:100%">
               <el-input v-model="editingComp.props.src" placeholder="图片URL或上传" style="flex:1" />
@@ -1606,6 +1654,12 @@ onMounted(fetchList)
 
         <!-- 按钮 -->
         <template v-if="editingComp.type === 'button'">
+          <el-form-item label="圆角(px)">
+            <el-slider v-model="editingComp.props.borderRadius" :min="0" :max="24" :step="2" style="width:200px" />
+          </el-form-item>
+          <el-form-item label="内边距">
+            <el-input v-model="editingComp.props.padding" placeholder="10px" style="width:150px" />
+          </el-form-item>
           <el-form-item label="按钮文字">
             <el-input v-model="editingComp.props.text" placeholder="按钮" />
           </el-form-item>
@@ -1644,6 +1698,12 @@ onMounted(fetchList)
           <el-form-item label="版权信息">
             <el-input v-model="editingComp.props.copyright" placeholder="© 椰树集团 参观预约系统" />
           </el-form-item>
+          <el-form-item label="背景色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.backgroundColor" placeholder="#000000" style="width:150px" />
+              <input type="color" v-model="editingComp.props.backgroundColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
         </template>
 
         <!-- 空白间距 -->
@@ -1662,8 +1722,18 @@ onMounted(fetchList)
     <!-- ====== 菜单项编辑弹窗 ====== -->
     <el-dialog v-model="menuItemDialogVisible" :title="editingMenuItemIndex >= 0 ? '编辑菜单项' : '添加菜单项'" width="500px">
       <el-form label-width="80px">
-        <el-form-item label="图标">
+        <el-form-item label="图标(emoji)">
           <el-input v-model="editingMenuItem.icon" placeholder="emoji图标，如 📋 📅 👥" />
+        </el-form-item>
+        <el-form-item label="自定义图标">
+          <div style="display:flex;gap:8px;width:100%">
+            <el-input v-model="editingMenuItem.iconImage" placeholder="图片URL或上传" style="flex:1" />
+            <el-button size="small" @click="handleUploadMenuItemIcon">上传</el-button>
+            <el-button v-if="editingMenuItem.iconImage" size="small" type="danger" @click="editingMenuItem.iconImage = ''">清除</el-button>
+          </div>
+          <div v-if="editingMenuItem.iconImage" style="margin-top:8px;width:60px;height:60px;border-radius:8px;overflow:hidden;border:1px solid #eee">
+            <img :src="editingMenuItem.iconImage" style="width:100%;height:100%;object-fit:cover" />
+          </div>
         </el-form-item>
         <el-form-item label="文字">
           <el-input v-model="editingMenuItem.text" placeholder="菜单文字" />

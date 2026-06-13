@@ -21,11 +21,13 @@ export class FeedbackService {
   }
 
   async findAll(page = 1, pageSize = 10) {
+    const p = Number(page) || 1;
+    const ps = Number(pageSize) || 10;
     const [records, total] = await this.repo.findAndCount({
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      skip: (p - 1) * ps,
+      take: ps,
       order: { createdAt: 'DESC' },
     });
-    return { records, total, page, pageSize };
+    return { records, total, page: p, pageSize: ps };
   }
 }

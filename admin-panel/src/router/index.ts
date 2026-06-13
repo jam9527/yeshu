@@ -31,7 +31,6 @@ const router = createRouter({
         { path: 'diy/page', name: 'DiyPageEditor', component: () => import('../views/diy/DiyPageEditor.vue') },
         // 预约设置
         { path: 'config/date', name: 'DateConfig', component: () => import('../views/config/DateConfig.vue') },
-        { path: 'config/quota', name: 'QuotaConfig', component: () => import('../views/config/QuotaConfig.vue') },
         { path: 'config/notice', name: 'NoticeConfig', component: () => import('../views/config/NoticeConfig.vue') },
         { path: 'config/frequency', name: 'FrequencyConfig', component: () => import('../views/config/FrequencyConfig.vue') },
         { path: 'config/template', name: 'TemplateConfig', component: () => import('../views/config/TemplateConfig.vue') },

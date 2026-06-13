@@ -20,6 +20,6 @@ export class FeedbackController {
   @AdminPermissions('feedback:view')
   @Get('admin/feedbacks')
   findAll(@Query('page') page = 1, @Query('pageSize') pageSize = 10) {
-    return this.feedbackService.findAll(page, pageSize);
+    return this.feedbackService.findAll(Number(page), Number(pageSize));
   }
 }
