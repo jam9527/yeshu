@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -16,7 +17,10 @@ import { existsSync, mkdirSync } from 'fs';
  * 3. 运行 npm run start:dev 启动开发服务器
  */
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 禁用 NestJS 内置 body-parser（默认 100KB 限制），自定义限制大小
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
 
   // 信任 Nginx 反向代理的 X-Forwarded-Proto/X-Forwarded-For 头
   app.set('trust proxy', 1);
@@ -35,6 +39,16 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
+  // 跨域配置（必须在 body-parser 之前，确保预检和错误响应包含 CORS 头）
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
+
+  // 自定义 body-parser 限制（富文本内容可能超过默认 100KB）
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ extended: true, limit: '10mb' }));
+
   // 全局参数校验管道
   app.useGlobalPipes(
     new ValidationPipe({
@@ -47,12 +61,6 @@ async function bootstrap() {
 
   // 全局异常过滤器
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  // 跨域配置
-  app.enableCors({
-    origin: true,
-    credentials: true,
-  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

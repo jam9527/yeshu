@@ -20,6 +20,8 @@ async function save(type: string, content: string) {
   try {
     await request.put(`/admin/config/notices/${type}`, { content })
     ElMessage.success('保存成功')
+  } catch {
+    // 错误已在请求拦截器中统一处理
   } finally { saving.value = false }
 }
 

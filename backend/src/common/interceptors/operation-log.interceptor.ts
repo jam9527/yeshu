@@ -3,6 +3,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -14,6 +15,8 @@ import { LogService } from '../../modules/log/log.service';
  */
 @Injectable()
 export class OperationLogInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(OperationLogInterceptor.name);
+
   constructor(private readonly logService: LogService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -38,6 +41,9 @@ export class OperationLogInterceptor implements NestInterceptor {
           resourceId,
           detail: { method, url, body },
           ip,
+        }).catch((err: unknown) => {
+          // 日志记录失败不影响主流程响应
+          this.logger.error('操作日志记录失败', err);
         });
       }),
     );
