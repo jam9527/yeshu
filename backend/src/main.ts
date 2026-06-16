@@ -28,10 +28,14 @@ async function bootstrap() {
   // 全局路由前缀: /api
   app.setGlobalPrefix('api');
 
-  // 确保上传目录存在
+  // 确保上传目录存在（含海报缓存子目录）
   const uploadsDir = join(__dirname, '..', 'uploads');
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
+  }
+  const postersDir = join(uploadsDir, 'posters');
+  if (!existsSync(postersDir)) {
+    mkdirSync(postersDir, { recursive: true });
   }
 
   // 静态文件服务（上传目录）

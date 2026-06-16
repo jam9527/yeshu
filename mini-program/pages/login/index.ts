@@ -1,8 +1,17 @@
 /**
  * 登录页
  * 两步登录：code 登录 → 个人资料设置（头像/昵称/手机号）
+ * 支持后台自定义背景、logo、按钮颜色
  */
 import api from '../../utils/api'
+
+interface LoginPageConfig {
+  background?: string
+  logo?: string
+  titleColor?: string
+  buttonColor?: string
+  buttonTextColor?: string
+}
 
 Page({
   data: {
@@ -14,9 +23,18 @@ Page({
     saving: false,
     chosenAvatarUrl: '',
     phoneInput: '',
+    // 动态配置
+    pageConfig: {
+      background: '',
+      logo: '',
+      titleColor: '#ffffff',
+      buttonColor: '#d92b2b',
+      buttonTextColor: '#ffffff',
+    } as LoginPageConfig,
   },
 
   onLoad() {
+    this.fetchPageConfig()
     const app = getApp()
     if (app.globalData.token) {
       this.goToPendingPage()
@@ -192,6 +210,32 @@ Page({
         if (serverAvatarUrl) app.globalData.userInfo.avatarUrl = serverAvatarUrl
       }
     } catch {}
+  },
+
+  /** 获取登录页自定义配置（公开接口，无需登录） */
+  fetchPageConfig() {
+    const app = getApp()
+    wx.request({
+      url: `${app.globalData.baseUrl}/config/login-page`,
+      method: 'GET',
+      success: (res: any) => {
+        const data = res.data?.data || res.data
+        if (data && Object.keys(data).length > 0) {
+          // 将相对路径转为绝对路径
+          const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
+          const config: LoginPageConfig = {}
+          if (data.background) config.background = `${baseUrl}${data.background}`
+          if (data.logo) config.logo = `${baseUrl}${data.logo}`
+          if (data.titleColor) config.titleColor = data.titleColor
+          if (data.buttonColor) config.buttonColor = data.buttonColor
+          if (data.buttonTextColor) config.buttonTextColor = data.buttonTextColor
+          this.setData({ pageConfig: config })
+        }
+      },
+      fail: () => {
+        // 使用默认配置
+      },
+    })
   },
 
 })

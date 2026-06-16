@@ -35,10 +35,12 @@ const router = createRouter({
         { path: 'config/frequency', name: 'FrequencyConfig', component: () => import('../views/config/FrequencyConfig.vue') },
         { path: 'config/template', name: 'TemplateConfig', component: () => import('../views/config/TemplateConfig.vue') },
         { path: 'config/require-real-name', name: 'RequireRealNameConfig', component: () => import('../views/config/RequireRealNameConfig.vue') },
+        { path: 'config/login-page', name: 'LoginPageConfig', component: () => import('../views/config/LoginPageConfig.vue') },
         // 反馈
         { path: 'feedback', name: 'FeedbackList', component: () => import('../views/feedback/FeedbackList.vue') },
         // 推广管理
         { path: 'promotion/promoters', name: 'PromoterManagement', component: () => import('../views/promotion/PromoterManagement.vue') },
+        { path: 'promotion/poster', name: 'PromotionPoster', component: () => import('../views/promotion/PromotionPoster.vue') },
         // 系统管理
         { path: 'system/admin-user', name: 'AdminUserList', component: () => import('../views/system/AdminUserList.vue') },
         { path: 'system/role', name: 'RoleList', component: () => import('../views/system/RoleList.vue') },

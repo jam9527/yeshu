@@ -1,12 +1,21 @@
-<view class="login-container">
+<view class="login-container" style="background-image: url({{pageConfig.background}})">
   <view class="login-box">
-    <image class="logo" src="/assets/images/logo.png" mode="widthFix" />
-    <text class="title">椰树集团</text>
-    <text class="subtitle">参观预约</text>
+    <!-- Logo：优先使用后台配置，否则使用默认 -->
+    <image wx:if="{{pageConfig.logo}}" class="logo" src="{{pageConfig.logo}}" mode="widthFix" />
+    <image wx:else class="logo" src="/assets/images/logo.png" mode="widthFix" />
+    <!-- 标题文字：仅无自定义 logo 时显示 -->
+    <text wx:if="{{!pageConfig.logo}}" class="title" style="color: {{pageConfig.titleColor}}">椰树集团</text>
+    <text wx:if="{{!pageConfig.logo}}" class="subtitle" style="color: {{pageConfig.titleColor}}">参观预约</text>
 
     <!-- 步骤1：手机号登录 -->
     <block wx:if="{{!phoneLoggedIn && !codeLoggedIn}}">
-      <button class="login-btn" open-type="getPhoneNumber|agreePrivacyAuthorization" bindgetphonenumber="handlePhoneLogin" bindagreeprivacyauthorization="handleAgreePrivacy">
+      <button
+        class="login-btn"
+        style="background: {{pageConfig.buttonColor}}; color: {{pageConfig.buttonTextColor}}"
+        open-type="getPhoneNumber|agreePrivacyAuthorization"
+        bindgetphonenumber="handlePhoneLogin"
+        bindagreeprivacyauthorization="handleAgreePrivacy"
+      >
         微信一键登录
       </button>
 
@@ -33,7 +42,12 @@
       <view class="divider"><text>选择微信昵称</text></view>
       <input class="nickname-input" type="nickname" placeholder="点击获取微信昵称" maxlength="32" bindinput="onNicknameInput" value="{{nicknameInput}}" />
 
-      <button class="login-btn" bindtap="handleSaveNickname" loading="{{saving}}">
+      <button
+        class="login-btn"
+        style="background: {{pageConfig.buttonColor}}; color: {{pageConfig.buttonTextColor}}"
+        bindtap="handleSaveNickname"
+        loading="{{saving}}"
+      >
         保存并进入
       </button>
 

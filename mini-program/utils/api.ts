@@ -73,6 +73,7 @@ function request<T = any>(options: RequestOptions): Promise<T> {
           }
           // Token 过期，跳转登录
           wx.removeStorageSync('token')
+          app.globalData.token = ''
           wx.reLaunch({ url: '/pages/login/index' })
           reject(new Error('登录已过期'))
         } else {

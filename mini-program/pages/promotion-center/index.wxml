@@ -26,6 +26,7 @@
       <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
         <view class="date-picker">{{endDate || '结束日期'}}</view>
       </picker>
+      <view class="query-btn" bindtap="queryDateFilter">查询</view>
       <view wx:if="{{startDate || endDate}}" class="reset-btn" bindtap="resetDateFilter">重置</view>
     </view>
 
@@ -49,8 +50,35 @@
       </view>
     </view>
 
-    <!-- 分享小程序（代替海报） -->
-    <button class="share-btn" open-type="share">
+    <!-- 推广海报 -->
+    <view class="poster-section">
+      <view class="section-title-sm">推广海报</view>
+      <!-- 有海报配置 → 可生成 -->
+      <block wx:if="{{poster}}">
+        <view class="poster-card">
+          <image wx:if="{{posterImageUrl}}" class="poster-preview" src="{{posterImageUrl}}" mode="widthFix" bindtap="previewPoster"/>
+          <view wx:elif="{{posterGenerating}}" class="poster-loading">
+            <view class="loading-spinner"></view>
+            <text>海报生成中...</text>
+          </view>
+          <view wx:else class="poster-placeholder" bindtap="generatePosterImage">
+            <text class="poster-placeholder-icon">🖼️</text>
+            <text>点击生成我的专属海报</text>
+            <text class="poster-placeholder-hint">包含您的专属二维码</text>
+          </view>
+        </view>
+        <view wx:if="{{posterImageUrl}}" class="poster-actions">
+          <button class="poster-btn poster-save" bindtap="savePoster" loading="{{savingPoster}}">保存到相册</button>
+          <button class="poster-btn poster-share" open-type="share">分享给好友</button>
+        </view>
+      </block>
+      <!-- 无海报配置 -->
+      <view wx:else class="poster-placeholder" style="padding:30px; text-align:center; color:#999; font-size:13px">
+        暂无海报配置，请联系管理员在后台设置
+      </view>
+    </view>
+
+    <button wx:if="{{!poster}}" class="share-btn" open-type="share">
       <text>分享小程序给好友</text>
     </button>
 

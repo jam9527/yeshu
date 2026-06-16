@@ -55,6 +55,14 @@
   color: #999;
 }
 
+.query-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #fff;
+  background: $ys-red;
+  border-radius: 6px;
+}
+
 .reset-btn {
   padding: 6px 12px;
   font-size: 12px;
@@ -138,6 +146,86 @@
 .stat-label {
   font-size: 13px;
   opacity: 0.85;
+}
+
+/* 海报 */
+.poster-section {
+  margin-bottom: 20px;
+}
+
+.poster-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.poster-preview {
+  width: 100%;
+  display: block;
+}
+
+.poster-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #999;
+  font-size: 14px;
+  gap: 12px;
+}
+
+.poster-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: $ys-red;
+}
+
+.poster-placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.poster-placeholder text:last-child {
+  font-size: 13px;
+}
+
+.poster-placeholder-hint {
+  font-size: 13px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.poster-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.poster-btn {
+  flex: 1;
+  height: 44px;
+  line-height: 44px;
+  font-size: 16px;
+  border-radius: 8px;
+  text-align: center;
+  color: #fff;
+}
+
+.poster-btn::after {
+  border: none;
+}
+
+.poster-save {
+  background: $ys-black;
+}
+
+.poster-share {
+  background: $ys-red;
 }
 
 /* 分享按钮 */

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
 import { ReservationQuota } from '../reservation/entities/reservation-quota.entity';
 import { SystemConfig } from './entities/system-config.entity';
+import { ReservationConfigService } from './reservation-config.service';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
 
 /**
@@ -19,6 +20,7 @@ export class AdminConfigController {
     private readonly quotaRepo: Repository<ReservationQuota>,
     @InjectRepository(SystemConfig)
     private readonly systemConfigRepo: Repository<SystemConfig>,
+    private readonly configService: ReservationConfigService,
   ) {}
 
   /** GET /api/admin/config/dates - 获取所有日期配置 */
@@ -145,6 +147,35 @@ export class AdminConfigController {
       });
     }
     await this.systemConfigRepo.save(config);
+    return { success: true };
+  }
+
+  /** GET /api/admin/config/login-page — 获取登录页自定义配置 */
+  @Get('login-page')
+  async getLoginPageConfig() {
+    const config = await this.systemConfigRepo.findOne({ where: { configKey: 'loginPage' } });
+    if (!config) return {};
+    try {
+      return JSON.parse(config.configValue);
+    } catch {
+      return {};
+    }
+  }
+
+  /** PUT /api/admin/config/login-page — 保存登录页自定义配置 */
+  @Put('login-page')
+  async setLoginPageConfig(@Body() dto: {
+    background?: string;
+    logo?: string;
+    titleColor?: string;
+    buttonColor?: string;
+    buttonTextColor?: string;
+  }) {
+    await this.configService.setConfig(
+      'loginPage',
+      JSON.stringify(dto),
+      '小程序登录页自定义配置',
+    );
     return { success: true };
   }
 }

@@ -78,4 +78,18 @@ export class PromotionController {
     }
     return record;
   }
+
+  /** GET /api/promotion/poster - 获取当前激活的海报模板配置 */
+  @Get('poster')
+  async getPoster() {
+    const poster = await this.promotionService.getActivePoster();
+    return poster || null;
+  }
+
+  /** GET /api/promotion/poster-image - 获取当前用户的专属海报图片 */
+  @Get('poster-image')
+  async getPosterImage(@CurrentUser('id') userId: number) {
+    const result = await this.promotionService.generatePosterImage(userId);
+    return { url: result.url };
+  }
 }

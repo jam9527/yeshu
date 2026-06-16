@@ -3,8 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThanOrEqual, LessThanOrEqual, Between, IsNull } from 'typeorm';
 import * as crypto from 'crypto';
 import * as qrcode from 'qrcode';
+import * as path from 'path';
+import * as fs from 'fs';
+import sharp from 'sharp';
 import { PromotionRecord } from './entities/promotion-record.entity';
 import { PromoterApplication } from './entities/promoter-application.entity';
+import { PromotionPoster } from './entities/promotion-poster.entity';
 import { User } from '../user/entities/user.entity';
 import { WechatService } from '../wechat/wechat.service';
 
@@ -15,6 +19,8 @@ export class PromotionService {
     private readonly recordRepo: Repository<PromotionRecord>,
     @InjectRepository(PromoterApplication)
     private readonly applicationRepo: Repository<PromoterApplication>,
+    @InjectRepository(PromotionPoster)
+    private readonly posterRepo: Repository<PromotionPoster>,
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => WechatService))
     private readonly wechatService: WechatService,
@@ -258,5 +264,134 @@ export class PromotionService {
     app.userId = userId;
     await this.applicationRepo.save(app);
     return app;
+  }
+
+  // ========== 推广海报 ==========
+
+  /** 获取所有海报模板 */
+  async getPosters() {
+    return this.posterRepo.find({ order: { createdAt: 'DESC' } });
+  }
+
+  /** 创建海报模板 */
+  async createPoster(data: { name: string; backgroundUrl: string; textConfig: string; qrConfig: string }) {
+    const poster = this.posterRepo.create(data);
+    return this.posterRepo.save(poster);
+  }
+
+  /** 更新海报模板 */
+  async updatePoster(id: number, data: Partial<PromotionPoster>) {
+    const poster = await this.posterRepo.findOne({ where: { id } });
+    if (!poster) throw new BadRequestException('海报不存在');
+    Object.assign(poster, data);
+    const saved = await this.posterRepo.save(poster);
+    // 模板变更后清除缓存，下次请求重新生成
+    this.clearPosterCache().catch(() => {});
+    return saved;
+  }
+
+  /** 激活海报（同时停用其他） */
+  async activatePoster(id: number) {
+    await this.posterRepo.update({ isActive: true }, { isActive: false });
+    await this.posterRepo.update(id, { isActive: true });
+    // 切换激活后清除缓存
+    this.clearPosterCache().catch(() => {});
+    return { success: true };
+  }
+
+  /** 删除海报（不能删除激活中的） */
+  async deletePoster(id: number) {
+    const poster = await this.posterRepo.findOne({ where: { id } });
+    if (!poster) throw new BadRequestException('海报不存在');
+    if (poster.isActive) throw new BadRequestException('请先停用再删除');
+    await this.posterRepo.delete(id);
+    return { success: true };
+  }
+
+  /** 获取当前激活的海报 */
+  async getActivePoster() {
+    return this.posterRepo.findOne({ where: { isActive: true } });
+  }
+
+  /** 生成推广员专属海报图片（带缓存） */
+  async generatePosterImage(promoterId: number): Promise<{ url: string }> {
+    const poster = await this.getActivePoster();
+    if (!poster) throw new BadRequestException('暂未配置推广海报');
+
+    const uploadsDir = path.join(__dirname, '..', '..', '..', 'uploads');
+    const postersDir = path.join(uploadsDir, 'posters');
+    const filename = `poster_${promoterId}_${poster.id}.png`;
+    const outputPath = path.join(postersDir, filename);
+
+    // 缓存命中直接返回
+    if (fs.existsSync(outputPath)) {
+      return { url: `/uploads/posters/${filename}` };
+    }
+
+    // 1. 加载背景图
+    const bgPath = path.join(uploadsDir, poster.backgroundUrl.replace(/^\/uploads\//, ''));
+    if (!fs.existsSync(bgPath)) {
+      throw new BadRequestException('海报背景图不存在，请联系管理员');
+    }
+
+    try {
+      // 2. 获取背景图尺寸
+      const bgMetadata = await sharp(bgPath).metadata();
+      const bgWidth = bgMetadata.width || 750;
+      const bgHeight = bgMetadata.height || 1334;
+
+      // 3. 生成小程序二维码
+      const qrConfig = JSON.parse(poster.qrConfig || '{}');
+      const qrBuffer = await this.wechatService.generateQrCode(
+        `pages/home/index?promoterId=${promoterId}`,
+      );
+      const qrSize = qrConfig.size || 200;
+      const qrResized = await sharp(qrBuffer).resize(qrSize, qrSize).png().toBuffer();
+
+      // 4. 构建文字 SVG overlay
+      const textConfig: Array<{
+        content: string; x: number; y: number; fontSize: number;
+        color: string; fontWeight: string; textAlign: string;
+      }> = JSON.parse(poster.textConfig || '[]');
+
+      const svgTexts = textConfig.map((t) => {
+        const anchor = t.textAlign === 'center' ? 'middle' : t.textAlign === 'right' ? 'end' : 'start';
+        return `<text x="${t.x}" y="${t.y}" font-size="${t.fontSize}" fill="${t.color}" font-weight="${t.fontWeight || 'normal'}" text-anchor="${anchor}" font-family="Noto Sans CJK SC, Noto Sans SC, sans-serif">${t.content}</text>`;
+      }).join('\n');
+
+      const svgOverlay = `<svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">${svgTexts}</svg>`;
+
+      // 5. 合成：背景 + 文字SVG + 二维码
+      const qrX = qrConfig.x || 0;
+      const qrY = qrConfig.y || 0;
+
+      await sharp(bgPath)
+        .composite([
+          { input: Buffer.from(svgOverlay), top: 0, left: 0 },
+          { input: qrResized, top: qrY, left: qrX },
+        ])
+        .png()
+        .toFile(outputPath);
+
+      return { url: `/uploads/posters/${filename}` };
+    } catch (err: any) {
+      this.logger.error('海报合成失败', err);
+      throw new BadRequestException('海报生成失败: ' + (err.message || '未知错误'));
+    }
+  }
+
+  /** 清除海报缓存目录 */
+  private async clearPosterCache() {
+    const postersDir = path.join(__dirname, '..', '..', '..', 'uploads', 'posters');
+    try {
+      if (fs.existsSync(postersDir)) {
+        const files = fs.readdirSync(postersDir);
+        for (const file of files) {
+          fs.unlinkSync(path.join(postersDir, file));
+        }
+      }
+    } catch (err) {
+      this.logger.warn('清除海报缓存失败', err);
+    }
   }
 }

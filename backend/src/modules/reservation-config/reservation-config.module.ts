@@ -9,10 +9,11 @@ import { ReservationQuota } from '../reservation/entities/reservation-quota.enti
 import { ReservationConfigService } from './reservation-config.service';
 import { ReservationConfigController } from './reservation-config.controller';
 import { AdminConfigController } from './admin-config.controller';
+import { PublicConfigController } from './public-config.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([FrequencyLimit, NoticeConfig, ReservationTemplate, ReservationDateConfig, ReservationQuota, SystemConfig])],
-  controllers: [ReservationConfigController, AdminConfigController],
+  controllers: [ReservationConfigController, AdminConfigController, PublicConfigController],
   providers: [ReservationConfigService],
 })
 export class ReservationConfigModule {}

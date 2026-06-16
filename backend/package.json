@@ -43,6 +43,7 @@
     "redis": "^5.12.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.35.1",
     "tencentcloud-sdk-nodejs-faceid": "^4.1.217",
     "tencentcloud-sdk-nodejs-ocr": "^4.1.229",
     "typeorm": "^0.3.29",
