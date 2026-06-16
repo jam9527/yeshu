@@ -68,7 +68,7 @@ backend/src/
 │   ├── reservation-config/ # 预约配置 (日期/配额/模板/须知)
 │   ├── verification/     # 核销 (扫码核销)
 │   ├── content/          # 内容管理 (展厅/活动/Banner/FAQ)
-│   ├── promotion/        # 推广员系统
+│   ├── promotion/        # 推广员系统 + 推广海报
 │   ├── real-name/        # 实名认证
 │   ├── diy-page/         # DIY首页装修
 │   ├── notification/     # 消息通知
@@ -132,6 +132,12 @@ backend/src/
   → 用户完成预约 → 自动关联推广记录
   → 核销完成 → 标记推广核销状态
   → 推广员查看漏斗统计（访问/注册/预约/核销）
+
+推广海报生成流程:
+  管理员在后台配置海报模板（背景图 + 文字层 + 二维码位置）
+  → 推广员请求个人海报 → 服务端合层（sharp: 背景+SVG文字+小程序码）
+  → 缓存至 uploads/posters/ → 返回图片URL
+  → 模板变更/切换激活时清空缓存
 ```
 
 ## 7. 部署架构
@@ -172,3 +178,7 @@ backend/src/
 | 核销码 MD5 生成 | 基于预约编号+用户ID+日期生成唯一核销码 |
 | 软删除 | 实名信息表使用 isDeleted 字段而非物理删除 |
 | TypeORM synchronize | 开发环境自动同步表结构，生产环境应关闭 |
+| 推广海报合成 | 服务端使用 sharp 合成背景图 + SVG文字 + 小程序二维码，结果缓存至 uploads/posters/ |
+| 登录页自定义 | 配置存储在 system_config(key=loginPage)，Redis 缓存 5 分钟，通过 PublicConfigController 公开访问 |
+| 中文海报渲染 | 依赖系统安装 fonts-noto-cjk，SVG 使用 Noto Sans CJK SC 字体族 |
+| 微信手机号 | 新用户走新版 phoneCode 方式获取手机号，旧用户兼容 encryptedData+iv 流程 |

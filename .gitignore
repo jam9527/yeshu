@@ -49,3 +49,4 @@ backend/uploads/*
 # Ignore all PNGs except mini-program tab bar icons
 *.png
 !mini-program/assets/icons/*.png
+bash.exe.stackdump

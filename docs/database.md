@@ -7,7 +7,7 @@
 - 字符集: `utf8mb4`
 - 时区: `+08:00`
 - ORM: TypeORM 0.3.x (开发环境自动同步表结构)
-- 表数量: 25 张
+- 表数量: 26 张
 
 ---
 
@@ -273,6 +273,12 @@ permissions 字段示例:
 | configValue | text | 配置值 |
 | description | varchar(255) nullable | 说明 |
 
+目前已使用的 configKey:
+| key | 说明 |
+|---|---|
+| requireRealName | 个人预约是否需要实名核验 (true/false) |
+| loginPage | 登录页自定义配置 JSON: {background,logo,titleColor,buttonColor,buttonTextColor} |
+
 ---
 
 ## 5. 核销与推广表
@@ -311,6 +317,19 @@ permissions 字段示例:
 | status | varchar | PENDING / APPROVED / REJECTED |
 | approvedBy | bigint nullable | 审批人 |
 | remark | varchar nullable | 备注 |
+
+### 5.4 promotion_posters — 推广海报模板
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| id | bigint unsigned PK | |
+| name | varchar(100) | 海报名称（管理后台标识） |
+| backgroundUrl | varchar(500) | 背景图路径 (/uploads/...) |
+| textConfig | text | 文字层 JSON: [{content,x,y,fontSize,color,fontWeight,textAlign}] |
+| qrConfig | text | 二维码配置 JSON: {x,y,size} |
+| isActive | boolean default false | 是否启用（全局仅一张） |
+| createdAt | datetime | |
+| updatedAt | datetime | |
 
 ---
 
@@ -388,5 +407,6 @@ reservation_date_config ─── reservation_quota
 
 独立表: exhibitions, activities, banners, faqs,
        reservation_notices, reservation_templates,
-       frequency_limits, system_config, diy_pages
+       frequency_limits, system_config, diy_pages,
+       promotion_posters
 ```

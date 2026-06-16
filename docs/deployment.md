@@ -6,9 +6,10 @@
 |---|---|---|
 | Node.js | >= 18.x | 推荐 20.x LTS |
 | MySQL | >= 8.0 | 主数据库 |
-| Redis | >= 6.x | 可选，用于队列和缓存 |
+| Redis | >= 6.x | 用于缓存和队列 |
 | npm | >= 9.x | 包管理器 |
 | Nginx | >= 1.20 | 反向代理 (生产环境) |
+| fonts-noto-cjk | — | 中文海报文字渲染依赖 (Ubuntu/Debian) |
 
 ---
 
@@ -49,7 +50,7 @@ DB_USERNAME=root
 DB_PASSWORD=your_secure_password
 DB_DATABASE=yeshu_reservation
 
-# Redis (可选)
+# Redis (登录页缓存 5min TTL + 队列)
 REDIS_HOST=localhost
 REDIS_PORT=6379
 REDIS_PASSWORD=
@@ -72,7 +73,19 @@ THROTTLE_TTL=60
 THROTTLE_LIMIT=100
 ```
 
-### 3.3 创建数据库
+### 3.3 安装中文字体（推广海报依赖）
+
+```bash
+# Debian/Ubuntu
+sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
+# 验证安装
+fc-list | grep -i "noto.*cjk"
+```
+
+推广海报生成使用 sharp 合成图片，SVG 文字层依赖系统中文字体。未安装字体则海报中文显示为乱码或方框。
+
+### 3.4 创建数据库
 
 ```sql
 CREATE DATABASE yeshu_reservation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -81,7 +94,7 @@ CREATE DATABASE yeshu_reservation CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_
 > 开发环境 TypeORM 会自动同步表结构 (`synchronize: true`)。
 > **生产环境务必关闭 `synchronize`**，使用 Migration 管理数据库变更。
 
-### 3.4 编译与启动
+### 3.5 编译与启动
 
 ```bash
 # 编译
@@ -96,7 +109,7 @@ npm run start:dev
 
 编译输出在 `backend/dist/` 目录。服务监听 `http://localhost:3000`。
 
-### 3.5 首次初始化
+### 3.6 首次初始化
 
 启动后，需要创建超级管理员账号。可用数据库脚本或临时 API:
 
@@ -106,7 +119,7 @@ INSERT INTO admin_users (username, passwordHash, nickname, isSuperAdmin, status)
 VALUES ('admin', '$2b$10$IGxCAaf6/3kKfsgpZ0saOOoTNwutAaJUtpSPqsCMY1jHoiGNFzp92', '管理员', 1, 1);
 ```
 
-### 3.6 自启动 (PM2)
+### 3.7 自启动 (PM2)
 
 ```bash
 npm install -g pm2
@@ -122,7 +135,7 @@ pm2 logs yeshu-api       # 查看日志
 pm2 status               # 查看状态
 ```
 
-### 3.7 生产环境实际部署
+### 3.8 生产环境实际部署
 
 服务器: `ubuntu@1.12.49.190`
 项目路径: `/home/ubuntu/yeshu`
@@ -250,6 +263,8 @@ const PROD_URL = 'https://yuyue.yeshu.com/api'
 - [ ] `JWT_SECRET` 已更换为强随机字符串
 - [ ] 数据库密码已设置
 - [ ] TypeORM `synchronize` 已关闭
+- [ ] fonts-noto-cjk 已安装（fc-list | grep noto）
+- [ ] uploads/posters/ 目录存在且可写
 - [ ] Nginx HTTPS 已配置
 - [ ] 微信小程序服务器域名已配置
 - [ ] 腾讯云密钥权限已最小化

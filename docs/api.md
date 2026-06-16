@@ -154,7 +154,16 @@ PUT  /admin/config/frequency-limits/:id       # 更新限制
 
 GET  /admin/config/require-real-name          # 实名开关状态
 PUT  /admin/config/require-real-name          # 更新实名开关
+
+GET  /config/login-page                       # 登录页自定义配置 (公开)
+GET  /admin/config/login-page                 # 管理端获取登录页配置
+PUT  /admin/config/login-page                 # 保存登录页配置
 ```
+登录页配置 Body:
+```json
+{ "background": string, "logo": string, "titleColor": string, "buttonColor": string, "buttonTextColor": string }
+```
+配置存储在 system_config 表 (key=loginPage)，使用 Redis 缓存（5分钟TTL），保存时自动失效。
 
 ---
 
@@ -164,6 +173,8 @@ PUT  /admin/config/require-real-name          # 更新实名开关
 POST /wechat/login              # 微信登录 { code: string }  (公开)
 POST /wechat/decode-userinfo    # 解密用户信息
 ```
+
+> 手机号获取：新用户使用微信新版 getPhoneNumber API（phoneCode 方式），旧用户可能仍走 encryptedData+iv 旧流程。
 
 ---
 
@@ -199,6 +210,8 @@ GET  /promotion/records         # 推广记录
 POST /promotion/apply           # 申请推广员
 POST /promotion/apply-by-token  # 通过邀请码申请
 POST /promotion/click           # 记录推广点击 (公开)
+GET  /promotion/poster          # 获取当前激活的海报模板配置
+GET  /promotion/poster-image    # 生成当前用户的专属海报图片
 ```
 
 ### 9.2 管理端 (权限: promotion:manage)
@@ -210,7 +223,23 @@ POST /admin/promoters/generate-qr              # 生成推广二维码
 POST /admin/promoters/applications             # 创建推广申请
 PUT  /admin/promoters/applications/:id/approve # 通过申请
 PUT  /admin/promoters/applications/:id/reject  # 驳回申请
+GET  /admin/promotion-poster                   # 海报模板列表
+POST /admin/promotion-poster                   # 创建海报模板
+PUT  /admin/promotion-poster/:id               # 更新海报模板
+DELETE /admin/promotion-poster/:id             # 删除海报模板（不可删除已激活的）
+PUT  /admin/promotion-poster/:id/activate      # 激活海报（同时停用其他）
 ```
+
+### 9.3 海报模板数据说明
+```
+创建/更新 Poster Body: {
+  name: string,           // 海报名称
+  backgroundUrl: string,  // 背景图路径 /uploads/...
+  textConfig: string,     // 文字层 JSON: [{content,x,y,fontSize,color,fontWeight,textAlign}]
+  qrConfig: string        // 二维码 JSON: {x,y,size}
+}
+```
+海报图片由服务端使用 sharp 合成：背景图 + SVG 文字层 + 小程序二维码，输出带缓存到 `uploads/posters/` 目录。
 
 ---
 
