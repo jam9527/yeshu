@@ -5,12 +5,14 @@ import * as crypto from 'crypto';
 import * as qrcode from 'qrcode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { get } from 'https';
 import sharp from 'sharp';
 import { PromotionRecord } from './entities/promotion-record.entity';
 import { PromoterApplication } from './entities/promoter-application.entity';
 import { PromotionPoster } from './entities/promotion-poster.entity';
 import { User } from '../user/entities/user.entity';
 import { WechatService } from '../wechat/wechat.service';
+import { CosService } from '../file/cos.service';
 
 @Injectable()
 export class PromotionService {
@@ -24,6 +26,7 @@ export class PromotionService {
     private readonly dataSource: DataSource,
     @Inject(forwardRef(() => WechatService))
     private readonly wechatService: WechatService,
+    private readonly cosService: CosService,
   ) {}
 
   // ========== 推广记录 ==========
@@ -313,30 +316,32 @@ export class PromotionService {
     return this.posterRepo.findOne({ where: { isActive: true } });
   }
 
-  /** 生成推广员专属海报图片（带缓存） */
+  /** 生成推广员专属海报图片（带本地缓存 + COS 存储） */
   async generatePosterImage(promoterId: number): Promise<{ url: string }> {
     const poster = await this.getActivePoster();
     if (!poster) throw new BadRequestException('暂未配置推广海报');
 
     const uploadsDir = path.join(__dirname, '..', '..', '..', 'uploads');
     const postersDir = path.join(uploadsDir, 'posters');
+    if (!fs.existsSync(postersDir)) {
+      fs.mkdirSync(postersDir, { recursive: true });
+    }
+
     const filename = `poster_${promoterId}_${poster.id}.png`;
     const outputPath = path.join(postersDir, filename);
+    const cosKey = `uploads/posters/${filename}`;
 
-    // 缓存命中直接返回
+    // 本地缓存命中 → 直接返回 COS URL
     if (fs.existsSync(outputPath)) {
-      return { url: `/uploads/posters/${filename}` };
+      return { url: `${this.cosService.baseUrl}/${cosKey}` };
     }
 
-    // 1. 加载背景图
-    const bgPath = path.join(uploadsDir, poster.backgroundUrl.replace(/^\/uploads\//, ''));
-    if (!fs.existsSync(bgPath)) {
-      throw new BadRequestException('海报背景图不存在，请联系管理员');
-    }
+    // 1. 加载背景图（支持 COS URL / 外部 HTTP URL / 本地路径）
+    const bgBuffer = await this.loadImageBuffer(poster.backgroundUrl);
 
     try {
       // 2. 获取背景图尺寸
-      const bgMetadata = await sharp(bgPath).metadata();
+      const bgMetadata = await sharp(bgBuffer).metadata();
       const bgWidth = bgMetadata.width || 750;
       const bgHeight = bgMetadata.height || 1334;
 
@@ -365,19 +370,57 @@ export class PromotionService {
       const qrX = qrConfig.x || 0;
       const qrY = qrConfig.y || 0;
 
-      await sharp(bgPath)
+      const resultBuffer = await sharp(bgBuffer)
         .composite([
           { input: Buffer.from(svgOverlay), top: 0, left: 0 },
           { input: qrResized, top: qrY, left: qrX },
         ])
         .png()
-        .toFile(outputPath);
+        .toBuffer();
 
-      return { url: `/uploads/posters/${filename}` };
+      // 6. 保存本地缓存 + 上传 COS
+      fs.writeFileSync(outputPath, resultBuffer);
+      await this.cosService.upload(cosKey, resultBuffer, 'image/png');
+
+      return { url: `${this.cosService.baseUrl}/${cosKey}` };
     } catch (err: any) {
       this.logger.error('海报合成失败', err);
       throw new BadRequestException('海报生成失败: ' + (err.message || '未知错误'));
     }
+  }
+
+  /** 根据 URL 加载图片 Buffer（支持 COS 内部 / HTTP / 本地路径） */
+  private async loadImageBuffer(bgUrl: string): Promise<Buffer> {
+    // COS 内部 URL → SDK 下载
+    const cosKey = this.cosService.keyFromUrl(bgUrl);
+    if (cosKey) {
+      return this.cosService.download(cosKey);
+    }
+
+    // 外部 HTTP/HTTPS URL → HTTP GET
+    if (/^https?:\/\//.test(bgUrl)) {
+      return new Promise((resolve, reject) => {
+        get(bgUrl, (res) => {
+          if (res.statusCode && res.statusCode >= 400) {
+            return reject(new Error(`下载背景图失败: HTTP ${res.statusCode}`));
+          }
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => resolve(Buffer.concat(chunks)));
+          res.on('error', reject);
+        });
+      });
+    }
+
+    // 本地路径（兼容旧数据 /uploads/xxx）
+    const localPath = path.join(
+      __dirname, '..', '..', '..', 'uploads',
+      bgUrl.replace(/^\/uploads\//, ''),
+    );
+    if (!fs.existsSync(localPath)) {
+      throw new BadRequestException('海报背景图不存在，请联系管理员');
+    }
+    return fs.readFileSync(localPath);
   }
 
   /** 清除海报缓存目录 */
