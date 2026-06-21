@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, shallowRef, onBeforeUnmount } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import '@wangeditor/editor/dist/css/style.css'
 import request from '../../api/request'
+
+const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
+const uploadHeaders = { Authorization: 'Bearer ' + (localStorage.getItem('admin_token') || '') }
 
 const list = ref([])
 const loading = ref(false)
@@ -11,6 +15,11 @@ const editVisible = ref(false)
 const editForm = ref({ name: '', coverImage: '', description: '', richContent: '' })
 const isEdit = ref(false)
 const editId = ref(0)
+
+function handleCoverUpload(res: any) {
+  const url = res?.data?.url || res?.url || res
+  if (url) editForm.value.coverImage = url
+}
 
 // wangEditor
 const editorRef = shallowRef()
@@ -80,7 +89,18 @@ onBeforeUnmount(() => { if (editorRef.value) { editorRef.value.destroy(); editor
       <el-form :model="editForm" label-width="80px">
         <el-form-item label="名称"><el-input v-model="editForm.name" /></el-form-item>
         <el-form-item label="缩略图">
-          <el-input v-model="editForm.coverImage" placeholder="图片URL" />
+          <div style="display:flex;align-items:center;gap:12px">
+            <el-input v-model="editForm.coverImage" placeholder="图片URL" style="flex:1" />
+            <el-upload
+              :action="baseUrl + '/files/upload'"
+              :headers="uploadHeaders"
+              :show-file-list="false"
+              :on-success="handleCoverUpload"
+              accept="image/*"
+            >
+              <el-button :icon="Upload">上传</el-button>
+            </el-upload>
+          </div>
           <div style="color:#999;font-size:12px;margin-top:4px">建议尺寸 750×400px</div>
         </el-form-item>
         <el-form-item label="简介"><el-input v-model="editForm.description" type="textarea" :rows="3" /></el-form-item>

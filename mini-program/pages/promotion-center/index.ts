@@ -45,7 +45,6 @@ Page({
       if (isPromoter) {
         await Promise.all([
           this.fetchStats(),
-          this.fetchRecords(1, true),
           this.fetchPoster(),
         ])
       }
@@ -125,13 +124,11 @@ Page({
       return
     }
     this.fetchStats()
-    this.fetchRecords(1, true)
   },
 
   resetDateFilter() {
     this.setData({ startDate: '', endDate: '' }, () => {
       this.fetchStats()
-      this.fetchRecords(1, true)
     })
   },
 

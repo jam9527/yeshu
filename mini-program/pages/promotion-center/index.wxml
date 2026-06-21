@@ -82,42 +82,5 @@
       <text>分享小程序给好友</text>
     </button>
 
-    <!-- 推广记录 -->
-    <view class="records-section">
-      <view class="section-title-sm">推广记录</view>
-
-      <view wx:if="{{records.length === 0}}" class="empty-records">
-        <text>暂无推广记录</text>
-      </view>
-
-      <view wx:else class="records-list">
-        <view
-          class="card record-item"
-          wx:for="{{records}}"
-          wx:for-item="record"
-          wx:key="id"
-        >
-          <view class="record-top">
-            <text class="record-user">{{record.visitorUserId ? '已注册用户' : '未注册'}}</text>
-            <text class="record-status {{record.verified ? 'verified' : record.reservationId ? 'pending' : ''}}">
-              {{record.verified ? '已核销' : record.reservationId ? '已预约' : '仅点击'}}
-            </text>
-          </view>
-          <view class="record-time">{{record.clickedAt ? record.clickedAt.slice(0, 19).replace('T', ' ') : ''}}</view>
-        </view>
-
-        <!-- 加载更多 -->
-        <view
-          wx:if="{{hasMore}}"
-          class="load-more"
-          bindtap="loadMore"
-        >
-          <text>加载更多</text>
-        </view>
-        <view wx:elif="{{records.length > 0}}" class="no-more">
-          <text>没有更多了</text>
-        </view>
-      </view>
-    </view>
   </view>
 </view>
