@@ -95,7 +95,7 @@
         <view class="visitor-info">
           <text class="visitor-name">{{item.name}}</text>
           <text class="visitor-idcard">{{item.idCard}}</text>
-          <text class="visitor-address">{{item.province}} {{item.city}}</text>
+          <text class="visitor-address">{{item.province}} {{item.city}} · {{item.visitorType === 'OFF_ISLAND' ? '岛外游客' : '岛内游客'}}</text>
         </view>
       </view>
     </view>

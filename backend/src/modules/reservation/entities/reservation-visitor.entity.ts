@@ -30,6 +30,9 @@ export class ReservationVisitor {
   @Column({ length: 32, comment: '城市' })
   city: string;
 
+  @Column({ length: 16, comment: '岛内游客/岛外游客', default: 'ON_ISLAND' })
+  visitorType: string;
+
   @Column({ default: false, comment: '是否已通过身份证核验' })
   idVerified: boolean;
 

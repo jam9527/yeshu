@@ -32,7 +32,7 @@ export class ReservationController {
     @Body() dto: {
       dateConfigId: number;
       sessionType: string;
-      visitors: { name: string; idCard: string; province: string; city: string }[];
+      visitors: { name: string; idCard: string; province: string; city: string; visitorType: string }[];
     },
   ) {
     return this.reservationService.createPersonal(userId, dto);

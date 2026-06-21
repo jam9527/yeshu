@@ -5,6 +5,7 @@ interface Visitor {
   idCard: string
   province: string
   city: string
+  visitorType: string
 }
 
 interface DateItem {
@@ -45,7 +46,7 @@ Page({
     sessions: [] as SessionItem[],
     selectedSession: null as SessionItem | null,
     visitorCount: 1,
-    visitors: [{ name: '', idCard: '', province: '', city: '' }] as Visitor[],
+    visitors: [{ name: '', idCard: '', province: '', city: '', visitorType: 'ON_ISLAND' }] as Visitor[],
     /** 省份列表 */
     provinces: [] as string[],
     /** 各参观人对应的城市列表（二维，index 对应参观人顺序） */
@@ -70,6 +71,11 @@ Page({
     countdownTimer: null as any,
     /** 实名核验未通过，阻止提交 */
     realNameBlocked: false,
+    /** 游客类型选项 */
+    visitorTypeOptions: [
+      { label: '岛内游客', value: 'ON_ISLAND' },
+      { label: '岛外游客', value: 'OFF_ISLAND' },
+    ],
   },
 
   onLoad() {
@@ -359,7 +365,7 @@ Page({
     const visitors = [...this.data.visitors]
     const pickerCities = [...this.data.pickerCities]
     while (visitors.length < count) {
-      visitors.push({ name: '', idCard: '', province: '', city: '' })
+      visitors.push({ name: '', idCard: '', province: '', city: '', visitorType: 'ON_ISLAND' })
       pickerCities.push([])
     }
     while (visitors.length > count) {
@@ -379,6 +385,15 @@ Page({
     const { value } = e.detail
     const key = `visitors[${index}].${field}`
     this.setData({ [key]: value })
+  },
+
+  onVisitorTypeChange(e: any) {
+    const { index } = e.currentTarget.dataset
+    const pickerIdx = e.detail.value as number
+    const options: any[] = (this.data as any).visitorTypeOptions || []
+    const visitorType = options[pickerIdx]?.value || 'ON_ISLAND'
+    const key = `visitors[${index}].visitorType`
+    this.setData({ [key]: visitorType })
   },
 
   openRealNamePicker(e: any) {
@@ -409,6 +424,7 @@ Page({
         idCard: realName.idCard,
         province: this.data.visitors[visitorIndex]?.province || '',
         city: this.data.visitors[visitorIndex]?.city || '',
+        visitorType: this.data.visitors[visitorIndex]?.visitorType || 'ON_ISLAND',
       },
       showRealNamePicker: false,
       editingVisitorIndex: -1,
@@ -426,6 +442,7 @@ Page({
       }
       if (!v.province.trim()) return `请输入第 ${i + 1} 位参观人的省份`
       if (!v.city.trim()) return `请输入第 ${i + 1} 位参观人的城市`
+      if (!v.visitorType) return `请选择第 ${i + 1} 位参观人的游客类型`
     }
     return null
   },
@@ -471,6 +488,7 @@ Page({
           idCard: v.idCard.trim(),
           province: v.province.trim(),
           city: v.city.trim(),
+          visitorType: v.visitorType,
         })),
       })
 

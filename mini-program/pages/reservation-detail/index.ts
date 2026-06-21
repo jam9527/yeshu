@@ -10,6 +10,7 @@ interface Visitor {
   idCard: string
   province: string
   city: string
+  visitorType?: string
 }
 
 interface TeamInfo {

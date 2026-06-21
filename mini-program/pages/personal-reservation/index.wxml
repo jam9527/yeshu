@@ -240,6 +240,20 @@
             </picker>
           </view>
         </view>
+
+        <view class="form-group">
+          <text class="form-label">游客类型 <text style="color:red">*</text></text>
+          <picker
+            mode="selector"
+            range="{{visitorTypeOptions}}"
+            range-key="label"
+            value="{{item.visitorType === 'OFF_ISLAND' ? 1 : 0}}"
+            data-index="{{vIndex}}"
+            bindchange="onVisitorTypeChange"
+          >
+            <view class="form-input picker-value {{item.visitorType ? 'has-value' : ''}}">{{item.visitorType === 'OFF_ISLAND' ? '岛外游客' : '岛内游客'}}</view>
+          </picker>
+        </view>
       </view>
     </view>
 
