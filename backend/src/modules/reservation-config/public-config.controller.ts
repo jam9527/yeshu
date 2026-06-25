@@ -1,11 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 import { ReservationConfigService } from './reservation-config.service';
 
 /**
  * 公开配置接口（无需登录）
  * 供小程序登录页等未认证场景使用
  */
+@SkipThrottle()
 @Public()
 @Controller('config')
 export class PublicConfigController {

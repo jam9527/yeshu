@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Param, Query, Body, Res } from '@nestjs/com
 import { ReservationService } from './reservation.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 
 /**
@@ -25,7 +26,8 @@ export class ReservationController {
     return this.reservationService.getDateQuota(date);
   }
 
-  /** POST /api/reservations/personal - 创建个人预约 */
+  /** POST /api/reservations/personal - 创建个人预约（限流: 10次/分钟/IP） */
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('personal')
   async createPersonal(
     @CurrentUser('id') userId: number,
@@ -38,7 +40,8 @@ export class ReservationController {
     return this.reservationService.createPersonal(userId, dto);
   }
 
-  /** POST /api/reservations/team - 创建团队预约 */
+  /** POST /api/reservations/team - 创建团队预约（限流: 10次/分钟/IP） */
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('team')
   async createTeam(
     @CurrentUser('id') userId: number,

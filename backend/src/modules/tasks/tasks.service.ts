@@ -17,11 +17,12 @@ export class TasksService {
 
   /**
    * 每日凌晨 1:00 滚动创建未来 30 天可预约日期
+   * jobId 固定，防止 cluster 模式下多进程重复入队
    */
   @Cron('0 1 * * *')
   async handleRollingDateCreation() {
     this.logger.log('入队: 滚动创建可预约日期');
-    await this.tasksQueue.add('create-dates', {}, { removeOnComplete: true });
+    await this.tasksQueue.add('create-dates', {}, { jobId: 'create-dates', removeOnComplete: true });
   }
 
   /**
@@ -30,7 +31,7 @@ export class TasksService {
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async handleExpiredReservations() {
     this.logger.log('入队: 处理过期预约');
-    await this.tasksQueue.add('expire-reservations', {}, { removeOnComplete: true });
+    await this.tasksQueue.add('expire-reservations', {}, { jobId: 'expire-reservations', removeOnComplete: true });
   }
 
   /**
@@ -39,6 +40,6 @@ export class TasksService {
   @Cron('30 2 * * *')
   async handleAutoBlacklist() {
     this.logger.log('入队: 自动拉黑处理');
-    await this.tasksQueue.add('auto-blacklist', {}, { removeOnComplete: true });
+    await this.tasksQueue.add('auto-blacklist', {}, { jobId: 'auto-blacklist', removeOnComplete: true });
   }
 }

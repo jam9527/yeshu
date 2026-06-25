@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/
 import { ContentService } from './content.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 
 /**
  * 内容展示与管理接口
@@ -9,6 +10,7 @@ import { AdminPermissions } from '../../common/decorators/admin-permissions.deco
  * 公开接口（小程序端）: 无需认证
  * 管理接口（管理后台）: 需 content:manage 权限
  */
+@SkipThrottle() // 公开内容读取不限流，已被 Redis 缓存
 @Controller()
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}

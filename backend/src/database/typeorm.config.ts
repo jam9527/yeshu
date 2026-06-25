@@ -26,5 +26,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   charset: 'utf8mb4',
   logging: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   timezone: '+08:00',
-  extra: { charset: 'utf8mb4' },
+  extra: { charset: 'utf8mb4', connectionLimit: 20 },
 };

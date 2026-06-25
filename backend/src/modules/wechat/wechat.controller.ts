@@ -2,6 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { WechatService } from './wechat.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 /**
  * 微信认证接口
@@ -22,6 +23,7 @@ export class WechatController {
    * }
    */
   @Public()
+  @Throttle({ default: { ttl: 60000, limit: 20 } }) // 登录: 20次/分钟/IP
   @Post('login')
   async login(
     @Body('code') code: string,

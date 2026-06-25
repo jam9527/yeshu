@@ -5,6 +5,7 @@ import { Exhibition } from './entities/exhibition.entity';
 import { Activity } from './entities/activity.entity';
 import { Banner } from './entities/banner.entity';
 import { Faq } from './entities/faq.entity';
+import { RedisService } from '../../redis/redis.service';
 
 /**
  * 内容管理服务
@@ -13,6 +14,9 @@ import { Faq } from './entities/faq.entity';
 @Injectable()
 export class ContentService implements OnModuleInit {
   private readonly logger = new Logger(ContentService.name);
+
+  // Redis 缓存 TTL（秒）
+  private readonly CACHE_TTL = 300; // 5 分钟
 
   constructor(
     @InjectRepository(Exhibition)
@@ -23,6 +27,7 @@ export class ContentService implements OnModuleInit {
     private readonly bannerRepo: Repository<Banner>,
     @InjectRepository(Faq)
     private readonly faqRepo: Repository<Faq>,
+    private readonly redis: RedisService,
   ) {}
 
   async onModuleInit() {
@@ -52,20 +57,32 @@ export class ContentService implements OnModuleInit {
 
   // ========== 公开接口（小程序端调用） ==========
 
-  /** 获取已发布的 Banner 列表 */
+  /** 获取已发布的 Banner 列表（Redis 缓存 5 分钟） */
   async getBanners() {
-    return this.bannerRepo.find({
+    const key = 'cache:content:banners';
+    const cached = await this.redis.getJson(key);
+    if (cached) return cached;
+
+    const data = await this.bannerRepo.find({
       where: { isPublished: true },
       order: { sortOrder: 'ASC' },
     });
+    await this.redis.setJson(key, data, this.CACHE_TTL);
+    return data;
   }
 
-  /** 获取已发布的展厅列表 */
+  /** 获取已发布的展厅列表（Redis 缓存 5 分钟） */
   async getExhibitions() {
-    return this.exhibitionRepo.find({
+    const key = 'cache:content:exhibitions';
+    const cached = await this.redis.getJson(key);
+    if (cached) return cached;
+
+    const data = await this.exhibitionRepo.find({
       where: { isPublished: true },
       order: { sortOrder: 'ASC' },
     });
+    await this.redis.setJson(key, data, this.CACHE_TTL);
+    return data;
   }
 
   /** 获取展厅详情 */
@@ -75,12 +92,18 @@ export class ContentService implements OnModuleInit {
     return item;
   }
 
-  /** 获取已发布的活动列表 */
+  /** 获取已发布的活动列表（Redis 缓存 5 分钟） */
   async getActivities() {
-    return this.activityRepo.find({
+    const key = 'cache:content:activities';
+    const cached = await this.redis.getJson(key);
+    if (cached) return cached;
+
+    const data = await this.activityRepo.find({
       where: { isPublished: true },
       order: { sortOrder: 'ASC' },
     });
+    await this.redis.setJson(key, data, this.CACHE_TTL);
+    return data;
   }
 
   /** 获取活动详情 */
@@ -90,18 +113,30 @@ export class ContentService implements OnModuleInit {
     return item;
   }
 
-  /** 获取已发布的 FAQ */
+  /** 获取已发布的 FAQ（Redis 缓存 5 分钟） */
   async getFaqs() {
-    return this.faqRepo.find({
+    const key = 'cache:content:faqs';
+    const cached = await this.redis.getJson(key);
+    if (cached) return cached;
+
+    const data = await this.faqRepo.find({
       where: { isPublished: true },
       order: { sortOrder: 'ASC' },
     });
+    await this.redis.setJson(key, data, this.CACHE_TTL);
+    return data;
+  }
+
+  /** 清除内容缓存（管理后台写操作后调用） */
+  private async invalidateCache() {
+    await this.redis.delPattern('cache:content:*');
   }
 
   // ========== 管理后台接口 ==========
 
   // -- 展厅管理 --
   async createExhibition(data: Partial<Exhibition>) {
+    await this.invalidateCache();
     return this.exhibitionRepo.save(this.exhibitionRepo.create(data));
   }
 
@@ -109,16 +144,19 @@ export class ContentService implements OnModuleInit {
     const item = await this.exhibitionRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('展厅不存在');
     Object.assign(item, data);
+    await this.invalidateCache();
     return this.exhibitionRepo.save(item);
   }
 
   async deleteExhibition(id: number) {
     const result = await this.exhibitionRepo.delete(id);
     if (result.affected === 0) throw new NotFoundException('展厅不存在');
+    await this.invalidateCache();
   }
 
   // -- 活动管理 --
   async createActivity(data: Partial<Activity>) {
+    await this.invalidateCache();
     return this.activityRepo.save(this.activityRepo.create(data));
   }
 
@@ -126,16 +164,19 @@ export class ContentService implements OnModuleInit {
     const item = await this.activityRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('活动不存在');
     Object.assign(item, data);
+    await this.invalidateCache();
     return this.activityRepo.save(item);
   }
 
   async deleteActivity(id: number) {
     const result = await this.activityRepo.delete(id);
     if (result.affected === 0) throw new NotFoundException('活动不存在');
+    await this.invalidateCache();
   }
 
   // -- Banner 管理 --
   async createBanner(data: Partial<Banner>) {
+    await this.invalidateCache();
     return this.bannerRepo.save(this.bannerRepo.create(data));
   }
 
@@ -143,16 +184,19 @@ export class ContentService implements OnModuleInit {
     const item = await this.bannerRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('Banner不存在');
     Object.assign(item, data);
+    await this.invalidateCache();
     return this.bannerRepo.save(item);
   }
 
   async deleteBanner(id: number) {
     const result = await this.bannerRepo.delete(id);
     if (result.affected === 0) throw new NotFoundException('Banner不存在');
+    await this.invalidateCache();
   }
 
   // -- FAQ 管理 --
   async createFaq(data: Partial<Faq>) {
+    await this.invalidateCache();
     return this.faqRepo.save(this.faqRepo.create(data));
   }
 
@@ -160,11 +204,13 @@ export class ContentService implements OnModuleInit {
     const item = await this.faqRepo.findOne({ where: { id } });
     if (!item) throw new NotFoundException('FAQ不存在');
     Object.assign(item, data);
+    await this.invalidateCache();
     return this.faqRepo.save(item);
   }
 
   async deleteFaq(id: number) {
     const result = await this.faqRepo.delete(id);
     if (result.affected === 0) throw new NotFoundException('FAQ不存在');
+    await this.invalidateCache();
   }
 }

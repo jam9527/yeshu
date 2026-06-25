@@ -5,7 +5,7 @@
 #
 # 前置条件:
 #   1. git 已配置可拉取远程仓库
-#   2. PM2 已配置（yeshu-api）
+#   2. PM2 已配置（yeshu-api，cluster 模式）
 #   3. Nginx 已配置
 
 set -e
@@ -17,6 +17,34 @@ ADMIN_DIR="$PROJECT_DIR/admin-panel"
 echo "=== 1. 拉取最新代码 ==="
 cd "$PROJECT_DIR"
 git pull origin master
+
+# 环境变量校验，防止配置缺失导致 PM2 重启风暴
+echo "=== 1.5 环境变量校验 ==="
+REQUIRED_VARS=(
+  "DB_HOST" "DB_PORT" "DB_USERNAME" "DB_PASSWORD" "DB_DATABASE"
+  "REDIS_HOST" "REDIS_PORT" "REDIS_PASSWORD"
+  "JWT_SECRET"
+  "WECHAT_APPID" "WECHAT_SECRET"
+  "TENCENT_SECRET_ID" "TENCENT_SECRET_KEY" "COS_BUCKET" "TENCENT_REGION"
+)
+
+MISSING_VARS=()
+for var in "${REQUIRED_VARS[@]}"; do
+  value=$(grep -E "^${var}=" "$BACKEND_DIR/.env" 2>/dev/null | cut -d'=' -f2-)
+  if [ -z "$value" ] || [ "$value" = '""' ]; then
+    MISSING_VARS+=("$var")
+  fi
+done
+
+if [ ${#MISSING_VARS[@]} -gt 0 ]; then
+  echo "  ❌ 以下 .env 变量缺失或为空，请先配置:"
+  for var in "${MISSING_VARS[@]}"; do
+    echo "     - $var"
+  done
+  echo "  部署已中止"
+  exit 1
+fi
+echo "  ✅ 所有必要环境变量已配置"
 
 # 检测哪些模块有变更
 BACKEND_CHANGED=false
@@ -33,10 +61,10 @@ echo "=== 2. 更新后端 ==="
 if [ "$BACKEND_CHANGED" = true ]; then
   echo "  检测到后端变更，重新构建..."
   cd "$BACKEND_DIR"
-  npm install --production
+  npm install                    # 需要 devDependencies（@nestjs/cli）才能 build
   npm run build
-  pm2 restart yeshu-api
-  echo "  ✅ 后端更新完成"
+  pm2 startOrReload ecosystem.config.js
+  echo "  ✅ 后端更新完成（cluster 零停机重载）"
 else
   echo "  后端无变更，跳过"
 fi
