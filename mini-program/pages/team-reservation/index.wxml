@@ -68,20 +68,14 @@
           wx:key="dateStr"
           class="calendar-cell {{item.status}}"
           data-index="{{index}}"
-          bindtap="selectDate"
-          wx:if="{{item.status !== 'empty'}}"
+          bindtap="{{item.status === 'empty' ? '' : 'selectDate'}}"
         >
-          <text class="cell-day">{{item.day}}</text>
-          <text class="cell-status">
-            {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
-          </text>
-        </view>
-        <view
-          wx:for="{{calendarDays}}"
-          wx:key="dateStr"
-          class="calendar-cell empty"
-          wx:if="{{item.status === 'empty'}}"
-        >
+          <block wx:if="{{item.status !== 'empty'}}">
+            <text class="cell-day">{{item.day}}</text>
+            <text class="cell-status">
+              {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
+            </text>
+          </block>
         </view>
       </view>
     </view>

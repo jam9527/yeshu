@@ -73,6 +73,7 @@ const componentTypes = [
   { type: 'button', label: '按钮', icon: '🔘', defaultProps: { text: '按钮', link: '', type: 'primary', borderRadius: 8, padding: '10px' } },
   { type: 'footer', label: '底部信息', icon: '📄', defaultProps: { brand: '椰树集团', copyright: '© 椰树集团 参观预约系统', backgroundColor: '#000000' } },
   { type: 'spacer', label: '空白间距', icon: '⬜', defaultProps: { height: 16 } },
+  { type: 'navigation', label: '导航', icon: '📍', defaultProps: { label: '导航到椰树集团', latitude: 20.017, longitude: 110.358, name: '椰树集团', address: '海南省海口市龙华路41号' } },
 ]
 
 // 默认首页模板（模拟当前硬编码布局）
@@ -1710,6 +1711,25 @@ onMounted(fetchList)
         <template v-if="editingComp.type === 'spacer'">
           <el-form-item label="高度(px)">
             <el-input-number v-model="editingComp.props.height" :min="4" :max="200" />
+          </el-form-item>
+        </template>
+
+        <!-- 导航 -->
+        <template v-if="editingComp.type === 'navigation'">
+          <el-form-item label="按钮文字">
+            <el-input v-model="editingComp.props.label" placeholder="导航到椰树集团" />
+          </el-form-item>
+          <el-form-item label="地点名称">
+            <el-input v-model="editingComp.props.name" placeholder="椰树集团" />
+          </el-form-item>
+          <el-form-item label="详细地址">
+            <el-input v-model="editingComp.props.address" placeholder="海南省海口市龙华路41号" />
+          </el-form-item>
+          <el-form-item label="纬度(lat)">
+            <el-input-number v-model="editingComp.props.latitude" :min="-90" :max="90" :precision="6" />
+          </el-form-item>
+          <el-form-item label="经度(lng)">
+            <el-input-number v-model="editingComp.props.longitude" :min="-180" :max="180" :precision="6" />
           </el-form-item>
         </template>
       </el-form>

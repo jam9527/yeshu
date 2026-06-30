@@ -67,7 +67,7 @@
             data-id="{{exh.id}}"
             bindtap="goExhibitionDetail"
           >
-            <image class="diy-grid-card-img" src="{{exh.coverImage}}" mode="aspectFill" />
+            <image class="diy-grid-card-img" src="{{exh.coverImage}}" mode="widthFix" />
             <view class="diy-grid-card-info">
               <text class="diy-grid-card-title">{{exh.name}}</text>
               <text class="diy-grid-card-desc" wx:if="{{exh.description}}">{{exh.description}}</text>
@@ -94,7 +94,7 @@
             bindtap="goActivityDetail"
           >
             <view class="diy-grid-card-img-wrap">
-              <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="aspectFill" />
+              <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="widthFix" />
               <text class="diy-grid-card-status" wx:if="{{act._statusLabel}}" style="background-color:{{act._statusColor}}">{{act._statusLabel}}</text>
             </view>
             <view class="diy-grid-card-info">
@@ -208,6 +208,16 @@
       <view wx:else class="diy-video-placeholder">
         <text class="diy-video-placeholder-text">暂无视频</text>
       </view>
+    </view>
+
+    <!-- 导航 -->
+    <view wx:elif="{{item.type === 'navigation'}}" class="diy-navigation" bindtap="onDiyNavigationTap" data-latitude="{{item.props.latitude}}" data-longitude="{{item.props.longitude}}" data-name="{{item.props.name}}" data-address="{{item.props.address}}">
+      <view class="diy-navigation-icon">📍</view>
+      <view class="diy-navigation-info">
+        <text class="diy-navigation-label">{{item.props.label || '导航到目的地'}}</text>
+        <text class="diy-navigation-addr">{{item.props.address || ''}}</text>
+      </view>
+      <view class="diy-navigation-arrow">›</view>
     </view>
 
     <!-- 空白间距 -->

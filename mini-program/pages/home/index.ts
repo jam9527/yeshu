@@ -142,6 +142,23 @@ Page({
     }
   },
 
+  onDiyNavigationTap(e: any) {
+    const { latitude, longitude, name, address } = e.currentTarget.dataset
+    const lat = parseFloat(latitude)
+    const lng = parseFloat(longitude)
+    if (isNaN(lat) || isNaN(lng)) {
+      wx.showToast({ title: '地点坐标无效', icon: 'none' })
+      return
+    }
+    wx.openLocation({
+      latitude: lat,
+      longitude: lng,
+      name: name || '',
+      address: address || '',
+      scale: 16,
+    })
+  },
+
   goExhibitionDetail(e: any) {
     const { id } = e.currentTarget.dataset
     wx.navigateTo({ url: `/pages/exhibition-detail/index?id=${id}` })
