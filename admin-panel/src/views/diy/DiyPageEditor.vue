@@ -73,7 +73,7 @@ const componentTypes = [
   { type: 'button', label: '按钮', icon: '🔘', defaultProps: { text: '按钮', link: '', type: 'primary', borderRadius: 8, padding: '10px' } },
   { type: 'footer', label: '底部信息', icon: '📄', defaultProps: { brand: '椰树集团', copyright: '© 椰树集团 参观预约系统', backgroundColor: '#000000' } },
   { type: 'spacer', label: '空白间距', icon: '⬜', defaultProps: { height: 16 } },
-  { type: 'navigation', label: '导航', icon: '📍', defaultProps: { label: '导航到椰树集团', latitude: 20.017, longitude: 110.358, name: '椰树集团', address: '海南省海口市龙华路41号' } },
+  { type: 'navigation', label: '导航', icon: '📍', defaultProps: { label: '导航到椰树集团', latitude: 20.017, longitude: 110.358, name: '椰树集团', address: '海南省海口市龙华路41号', backgroundColor: '#1a3a2a', textColor: '#ffd700' } },
 ]
 
 // 默认首页模板（模拟当前硬编码布局）
@@ -1730,6 +1730,18 @@ onMounted(fetchList)
           </el-form-item>
           <el-form-item label="经度(lng)">
             <el-input-number v-model="editingComp.props.longitude" :min="-180" :max="180" :precision="6" />
+          </el-form-item>
+          <el-form-item label="背景色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.backgroundColor" placeholder="#1a3a2a" style="width:150px" />
+              <input type="color" v-model="editingComp.props.backgroundColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
+          </el-form-item>
+          <el-form-item label="文字颜色">
+            <div style="display:flex;gap:8px;align-items:center">
+              <el-input v-model="editingComp.props.textColor" placeholder="#ffd700" style="width:150px" />
+              <input type="color" v-model="editingComp.props.textColor" style="width:36px;height:36px;border:none;cursor:pointer" />
+            </div>
           </el-form-item>
         </template>
       </el-form>

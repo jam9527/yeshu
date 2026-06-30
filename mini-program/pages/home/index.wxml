@@ -211,13 +211,13 @@
     </view>
 
     <!-- 导航 -->
-    <view wx:elif="{{item.type === 'navigation'}}" class="diy-navigation" bindtap="onDiyNavigationTap" data-latitude="{{item.props.latitude}}" data-longitude="{{item.props.longitude}}" data-name="{{item.props.name}}" data-address="{{item.props.address}}">
+    <view wx:elif="{{item.type === 'navigation'}}" class="diy-navigation" style="background:{{item.props.backgroundColor || '#1a3a2a'}}" bindtap="onDiyNavigationTap" data-latitude="{{item.props.latitude}}" data-longitude="{{item.props.longitude}}" data-name="{{item.props.name}}" data-address="{{item.props.address}}">
       <view class="diy-navigation-icon">📍</view>
       <view class="diy-navigation-info">
-        <text class="diy-navigation-label">{{item.props.label || '导航到目的地'}}</text>
+        <text class="diy-navigation-label" style="color:{{item.props.textColor || '#ffd700'}}">{{item.props.label || '导航到目的地'}}</text>
         <text class="diy-navigation-addr">{{item.props.address || ''}}</text>
       </view>
-      <view class="diy-navigation-arrow">›</view>
+      <view class="diy-navigation-arrow" style="color:{{item.props.textColor || '#ffd700'}}">›</view>
     </view>
 
     <!-- 空白间距 -->
