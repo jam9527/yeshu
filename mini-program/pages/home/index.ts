@@ -144,18 +144,27 @@ Page({
 
   onDiyNavigationTap(e: any) {
     const { latitude, longitude, name, address } = e.currentTarget.dataset
+    console.log('[导航] dataset:', { latitude, longitude, name, address })
     const lat = parseFloat(latitude)
     const lng = parseFloat(longitude)
     if (isNaN(lat) || isNaN(lng)) {
-      wx.showToast({ title: '地点坐标无效', icon: 'none' })
+      wx.showModal({
+        title: '导航调试',
+        content: `坐标无效\nlat=${latitude} (${typeof latitude})\nlng=${longitude} (${typeof longitude})\nname=${name}\naddr=${address}`,
+      })
       return
     }
+    wx.showToast({ title: '正在打开地图...', icon: 'loading', duration: 1000 })
     wx.openLocation({
       latitude: lat,
       longitude: lng,
       name: name || '',
       address: address || '',
       scale: 16,
+      fail: (err) => {
+        console.error('[导航] openLocation 失败:', err)
+        wx.showModal({ title: '打开地图失败', content: JSON.stringify(err) })
+      },
     })
   },
 
