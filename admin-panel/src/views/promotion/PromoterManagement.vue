@@ -109,8 +109,8 @@ onMounted(() => fetchPromoters())
               <template #default="{ row }">
                 <span style="margin-right:12px">分享: {{ row.stats?.totalClicks || 0 }}</span>
                 <span style="margin-right:12px">注册: {{ row.stats?.totalRegisters || 0 }}</span>
-                <span style="margin-right:12px">预约: {{ row.stats?.totalReservations || 0 }}</span>
-                <span>核销: {{ row.stats?.totalVerified || 0 }}</span>
+                <span style="margin-right:12px">预约: 个人{{ row.stats?.totalReservationsPersonal || 0 }} 团队{{ row.stats?.totalReservationsTeam || 0 }}</span>
+                <span>核销: 个人{{ row.stats?.totalVerifiedPersonal || 0 }} 团队{{ row.stats?.totalVerifiedTeam || 0 }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="createdAt" label="成为推广员时间" width="170">

@@ -1,8 +1,7 @@
 import { Injectable, BadRequestException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, MoreThanOrEqual, LessThanOrEqual, Between, IsNull } from 'typeorm';
+import { Repository, DataSource, MoreThanOrEqual, LessThanOrEqual, Between, IsNull, In } from 'typeorm';
 import * as crypto from 'crypto';
-import * as qrcode from 'qrcode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { get } from 'https';
@@ -11,6 +10,7 @@ import { PromotionRecord } from './entities/promotion-record.entity';
 import { PromoterApplication } from './entities/promoter-application.entity';
 import { PromotionPoster } from './entities/promotion-poster.entity';
 import { User } from '../user/entities/user.entity';
+import { Reservation } from '../reservation/entities/reservation.entity';
 import { WechatService } from '../wechat/wechat.service';
 import { CosService } from '../file/cos.service';
 
@@ -95,7 +95,7 @@ export class PromotionService {
     }
   }
 
-  /** 获取推广统计（按时间筛选） */
+  /** 获取推广统计（按时间筛选，区分个人/团队预约与核销） */
   async getStats(promoterId: number, startDate?: string, endDate?: string) {
     const where: any = { promoterId };
     if (startDate && endDate) {
@@ -107,11 +107,45 @@ export class PromotionService {
     }
 
     const records = await this.recordRepo.find({ where });
+
+    // 收集有预约关联的记录，查询预约类型（个人/团队）
+    const reservationIds = records.filter(r => r.reservationId).map(r => r.reservationId);
+    const reservationMap = new Map<number, string>();
+    if (reservationIds.length > 0) {
+      const reservations = await this.dataSource.getRepository(Reservation).find({
+        where: { id: In(reservationIds) },
+        select: ['id', 'type'],
+      });
+      reservations.forEach(r => reservationMap.set(Number(r.id), r.type));
+    }
+
+    // 按预约类型拆分统计
+    let personalReservations = 0;
+    let teamReservations = 0;
+    let personalVerified = 0;
+    let teamVerified = 0;
+
+    for (const r of records) {
+      if (!r.reservationId) continue;
+      const type = reservationMap.get(r.reservationId);
+      if (type === 'PERSONAL') {
+        personalReservations++;
+        if (r.verified) personalVerified++;
+      } else if (type === 'TEAM') {
+        teamReservations++;
+        if (r.verified) teamVerified++;
+      }
+    }
+
     return {
       totalClicks: records.length,
       totalRegisters: records.filter(r => r.visitorUserId).length,
       totalReservations: records.filter(r => r.reservationId).length,
       totalVerified: records.filter(r => r.verified).length,
+      totalReservationsPersonal: personalReservations,
+      totalReservationsTeam: teamReservations,
+      totalVerifiedPersonal: personalVerified,
+      totalVerifiedTeam: teamVerified,
     };
   }
 
@@ -243,9 +277,8 @@ export class PromotionService {
         );
         qrDataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
       } catch (err2) {
-        // 方案三：降级为普通二维码（仅开发调试用）
-        this.logger.warn(`微信小程序码生成失败，降级为普通二维码: ${err1.message} / ${err2.message}`);
-        qrDataUrl = await qrcode.toDataURL(token, { width: 300, margin: 2 });
+        this.logger.error(`微信小程序码生成全部失败: ${err1.message} / ${err2.message}`);
+        throw new BadRequestException('小程序码生成失败，请稍后重试');
       }
     }
 
@@ -287,18 +320,14 @@ export class PromotionService {
     const poster = await this.posterRepo.findOne({ where: { id } });
     if (!poster) throw new BadRequestException('海报不存在');
     Object.assign(poster, data);
-    const saved = await this.posterRepo.save(poster);
-    // 模板变更后清除缓存，下次请求重新生成
-    this.clearPosterCache().catch(() => {});
-    return saved;
+    // 保存后 updatedAt 自动刷新 → 下次 generatePosterImage 的缓存 key 自动变化
+    return this.posterRepo.save(poster);
   }
 
   /** 激活海报（同时停用其他） */
   async activatePoster(id: number) {
     await this.posterRepo.update({ isActive: true }, { isActive: false });
     await this.posterRepo.update(id, { isActive: true });
-    // 切换激活后清除缓存
-    this.clearPosterCache().catch(() => {});
     return { success: true };
   }
 
@@ -316,6 +345,9 @@ export class PromotionService {
     return this.posterRepo.findOne({ where: { isActive: true } });
   }
 
+  /** 海报缓存版本号 — 修改海报生成逻辑后 bump 此值强制全局刷新 */
+  private readonly POSTER_CACHE_VERSION = 3;
+
   /** 生成推广员专属海报图片（带本地缓存 + COS 存储） */
   async generatePosterImage(promoterId: number): Promise<{ url: string }> {
     const poster = await this.getActivePoster();
@@ -327,7 +359,8 @@ export class PromotionService {
       fs.mkdirSync(postersDir, { recursive: true });
     }
 
-    const filename = `poster_${promoterId}_${poster.id}.png`;
+    // 缓存 key = promoterId + posterId + 缓存版本 + 模板更新时间 → 任一变化自动刷新
+    const filename = `poster_${promoterId}_${poster.id}_v${this.POSTER_CACHE_VERSION}_${new Date(poster.updatedAt).getTime()}.png`;
     const outputPath = path.join(postersDir, filename);
     const cosKey = `uploads/posters/${filename}`;
 
@@ -345,10 +378,11 @@ export class PromotionService {
       const bgWidth = bgMetadata.width || 750;
       const bgHeight = bgMetadata.height || 1334;
 
-      // 3. 生成小程序二维码
+      // 3. 生成小程序二维码（getUnlimited — 不受发布状态影响，比 wxacode.get 更稳定）
       const qrConfig = JSON.parse(poster.qrConfig || '{}');
-      const qrBuffer = await this.wechatService.generateQrCode(
-        `pages/home/index?promoterId=${promoterId}`,
+      const qrBuffer = await this.wechatService.generateWxCode(
+        String(promoterId),
+        'pages/home/index',
       );
       const qrSize = qrConfig.size || 200;
       const qrResized = await sharp(qrBuffer).resize(qrSize, qrSize).png().toBuffer();
@@ -378,14 +412,34 @@ export class PromotionService {
         .png()
         .toBuffer();
 
-      // 6. 保存本地缓存 + 上传 COS
-      fs.writeFileSync(outputPath, resultBuffer);
+      // 6. 原子写入（防 PM2 集群竞态）+ 上传 COS
+      const tmpPath = outputPath + '.' + Date.now() + '.tmp';
+      fs.writeFileSync(tmpPath, resultBuffer);
+      fs.renameSync(tmpPath, outputPath);
       await this.cosService.upload(cosKey, resultBuffer, 'image/png');
+
+      // 7. 清理同 promoter+poster 的旧版本缓存（避免磁盘堆积）
+      this.cleanupStaleCache(postersDir, promoterId, poster.id, filename);
 
       return { url: `${this.cosService.baseUrl}/${cosKey}` };
     } catch (err: any) {
       this.logger.error('海报合成失败', err);
       throw new BadRequestException('海报生成失败: ' + (err.message || '未知错误'));
+    }
+  }
+
+  /** 清理同一 promoter+poster 的旧版本缓存文件 */
+  private cleanupStaleCache(postersDir: string, promoterId: number, posterId: number, currentFilename: string) {
+    try {
+      const prefix = `poster_${promoterId}_${posterId}_v`;
+      const files = fs.readdirSync(postersDir);
+      for (const file of files) {
+        if (file.startsWith(prefix) && file !== currentFilename) {
+          fs.unlinkSync(path.join(postersDir, file));
+        }
+      }
+    } catch (err) {
+      this.logger.warn('清理旧海报缓存失败', err);
     }
   }
 
@@ -423,18 +477,4 @@ export class PromotionService {
     return fs.readFileSync(localPath);
   }
 
-  /** 清除海报缓存目录 */
-  private async clearPosterCache() {
-    const postersDir = path.join(__dirname, '..', '..', '..', 'uploads', 'posters');
-    try {
-      if (fs.existsSync(postersDir)) {
-        const files = fs.readdirSync(postersDir);
-        for (const file of files) {
-          fs.unlinkSync(path.join(postersDir, file));
-        }
-      }
-    } catch (err) {
-      this.logger.warn('清除海报缓存失败', err);
-    }
-  }
 }

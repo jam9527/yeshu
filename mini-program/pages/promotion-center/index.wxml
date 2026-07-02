@@ -41,12 +41,20 @@
         <text class="stat-label">注册人数</text>
       </view>
       <view class="stat-card">
-        <text class="stat-num">{{stats.totalReservations || 0}}</text>
-        <text class="stat-label">预约数</text>
+        <text class="stat-num">{{stats.totalReservationsPersonal || 0}}</text>
+        <text class="stat-label">个人预约</text>
       </view>
       <view class="stat-card">
-        <text class="stat-num">{{stats.totalVerified || 0}}</text>
-        <text class="stat-label">核销数</text>
+        <text class="stat-num">{{stats.totalReservationsTeam || 0}}</text>
+        <text class="stat-label">团队预约</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalVerifiedPersonal || 0}}</text>
+        <text class="stat-label">个人核销</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalVerifiedTeam || 0}}</text>
+        <text class="stat-label">团队核销</text>
       </view>
     </view>
 
