@@ -107,7 +107,7 @@ export class VerificationService {
     return { success: true, verifiedAt: record.verifiedAt };
   }
 
-  /** 获取核销人员的核销记录（含预约详情） */
+  /** 获取核销人员的核销记录（含预约详情 + 预约人信息） */
   async findByVerifier(verifierId: number, page = 1, pageSize = 10, date?: string) {
     const where: any = { verifierId };
     if (date) {
@@ -122,7 +122,7 @@ export class VerificationService {
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: { verifiedAt: 'DESC' },
-      relations: ['reservation'],
+      relations: ['reservation', 'reservation.user'],
     });
 
     const list = records.map((r) => ({
@@ -138,6 +138,8 @@ export class VerificationService {
       district: r.reservation?.district || '',
       visitorType: r.reservation?.visitorType || '',
       childrenCount: r.reservation?.childrenCount || 0,
+      userNickname: r.reservation?.user?.nickname || '',
+      userPhone: r.reservation?.user?.phone || '',
     }));
 
     return { records: list, total, page, pageSize };
