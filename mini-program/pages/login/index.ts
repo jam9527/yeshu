@@ -254,11 +254,12 @@ Page({
       success: (res: any) => {
         const data = res.data?.data || res.data
         if (data && Object.keys(data).length > 0) {
-          // 将相对路径转为绝对路径
+          // 将相对路径转为绝对路径（已是绝对路径的不重复拼接）
           const baseUrl = app.globalData.baseUrl.replace(/\/api$/, '')
+          const toAbsUrl = (url: string) => url.startsWith('http') ? url : `${baseUrl}${url}`
           const config: LoginPageConfig = {}
-          if (data.background) config.background = `${baseUrl}${data.background}`
-          if (data.logo) config.logo = `${baseUrl}${data.logo}`
+          if (data.background) config.background = toAbsUrl(data.background)
+          if (data.logo) config.logo = toAbsUrl(data.logo)
           if (data.titleColor) config.titleColor = data.titleColor
           if (data.buttonColor) config.buttonColor = data.buttonColor
           if (data.buttonTextColor) config.buttonTextColor = data.buttonTextColor
