@@ -1,7 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Reservation } from './entities/reservation.entity';
-import { ReservationVisitor } from './entities/reservation-visitor.entity';
 import { ReservationQuota } from './entities/reservation-quota.entity';
 import { ReservationDateConfig } from './entities/reservation-date-config.entity';
 import { TeamReservationInfo } from './entities/team-reservation-info.entity';
@@ -19,7 +18,6 @@ import { PromotionModule } from '../promotion/promotion.module';
   imports: [
     TypeOrmModule.forFeature([
       Reservation,
-      ReservationVisitor,
       ReservationQuota,
       ReservationDateConfig,
       TeamReservationInfo,

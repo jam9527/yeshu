@@ -163,7 +163,6 @@ $ys-blue: #005bac;
 }
 
 .calendar-cell {
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -674,7 +673,9 @@ $ys-blue: #005bac;
 .notice-popup-body {
   padding: 16px 20px;
   flex: 1;
-  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden auto;
   font-size: 14px;
   color: #333;
   line-height: 1.7;
@@ -717,4 +718,80 @@ $ys-blue: #005bac;
 .empty-text {
   font-size: 14px;
   color: #ccc;
+}
+
+/* ===== 步骤 3 表单控件（新增） ===== */
+.form-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.form-card-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.picker-display {
+  height: 40px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+}
+
+.picker-display .placeholder {
+  color: #999;
+}
+
+.picker-display .has-value {
+  color: #333;
+}
+
+/* 岛内/岛外单选 */
+.radio-group {
+  display: flex;
+  gap: 24px;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.radio-item.active {
+  color: #e60012;
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+}
+
+.radio-circle.checked {
+  border-color: #e60012;
+  background: #e60012;
+}
+
+.count-hint {
+  font-size: 11px;
+  color: #999;
+  display: block;
+  text-align: right;
+  margin-top: -4px;
+  margin-bottom: 12px;
+  padding: 0 4px;
 }

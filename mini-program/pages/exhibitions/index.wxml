@@ -12,7 +12,7 @@
       data-id="{{item.id}}"
       bindtap="goDetail"
     >
-      <image class="card-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      <image class="card-cover" src="{{item.coverImage}}" mode="widthFix" />
       <view class="card-body">
         <text class="card-name">{{item.name}}</text>
         <text class="card-desc">{{item.description}}</text>

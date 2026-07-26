@@ -69,14 +69,15 @@ onMounted(fetchData)
           <template #default="{ row }">{{ row.sessionType === 'AM' ? '上午' : '下午' }}</template>
         </el-table-column>
         <el-table-column prop="visitorCount" label="人数" width="60" />
-        <el-table-column label="参观人" min-width="200">
+        <el-table-column label="区域/类型" width="140">
           <template #default="{ row }">
-            <div v-if="row.visitors && row.visitors.length > 0">
-              <div v-for="(v, i) in row.visitors" :key="i" style="font-size:12px;line-height:1.6">
-                {{ v.name }} <span style="color:#999">{{ v.idCard }}</span>
-                <span style="color:#909399;font-size:11px">{{ v.province }} {{ v.city }} · {{ v.visitorType === 'OFF_ISLAND' ? '岛外' : '岛内' }}</span>
+            <template v-if="row.type === 'PERSONAL'">
+              <div>{{ row.district || '—' }}</div>
+              <div style="font-size:12px;color:#999">
+                {{ row.visitorType === 'ON_ISLAND' ? '岛内' : row.visitorType === 'OFF_ISLAND' ? '岛外' : '—' }}
+                <span v-if="row.childrenCount > 0"> / 儿童{{ row.childrenCount }}</span>
               </div>
-            </div>
+            </template>
             <span v-else style="color:#ccc">—</span>
           </template>
         </el-table-column>

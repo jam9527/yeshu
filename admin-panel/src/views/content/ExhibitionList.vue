@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, shallowRef, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, shallowRef, onBeforeUnmount } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import '@wangeditor/editor/dist/css/style.css'
 import request from '../../api/request'
+import { useUpload } from '../../composables/useUpload'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
 const uploadHeaders = { Authorization: 'Bearer ' + (localStorage.getItem('admin_token') || '') }
@@ -23,9 +24,27 @@ function handleCoverUpload(res: any) {
 
 // wangEditor
 const editorRef = shallowRef()
+const { uploadFile } = useUpload()
 const toolbarConfig = {}
-const editorConfig = { placeholder: '请输入详细内容...' }
+const editorConfig = {
+  placeholder: '请输入详细内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file: File, insertFn: (url: string) => void) {
+        try {
+          const url = await uploadFile(file)
+          insertFn(url)
+        } catch { ElMessage.error('图片上传失败') }
+      },
+    },
+  },
+}
 const handleCreated = (editor: any) => { editorRef.value = editor }
+
+// 对话框关闭时清理 editorRef，避免下次打开时 Toolbar 拿到已销毁的 editor
+watch(editVisible, (val) => {
+  if (!val) editorRef.value = null
+})
 
 async function fetchData() {
   loading.value = true

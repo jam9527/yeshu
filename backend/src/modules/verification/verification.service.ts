@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { VerificationRecord } from './entities/verification-record.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
-import { ReservationVisitor } from '../reservation/entities/reservation-visitor.entity';
 import { TeamReservationInfo } from '../reservation/entities/team-reservation-info.entity';
 import { PromotionService } from '../promotion/promotion.service';
 
@@ -16,8 +15,6 @@ export class VerificationService {
     private readonly recordRepo: Repository<VerificationRecord>,
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
-    @InjectRepository(ReservationVisitor)
-    private readonly visitorRepo: Repository<ReservationVisitor>,
     @InjectRepository(TeamReservationInfo)
     private readonly teamInfoRepo: Repository<TeamReservationInfo>,
     @Inject(forwardRef(() => PromotionService))
@@ -47,12 +44,10 @@ export class VerificationService {
     //   throw new BadRequestException('核销码仅限预约当天使用');
     // }
 
-    // 获取参观人明细（个人预约）
+    // 个人预约不再逐条存储参观人，仅返回人数
     let visitors: any[] = [];
     let teamInfo: any = null;
-    if (reservation.type === 'PERSONAL') {
-      visitors = await this.visitorRepo.find({ where: { reservationId: reservation.id } });
-    } else if (reservation.type === 'TEAM') {
+    if (reservation.type === 'TEAM') {
       teamInfo = await this.teamInfoRepo.findOne({ where: { reservationId: reservation.id } });
     }
 
@@ -79,7 +74,7 @@ export class VerificationService {
   /**
    * 确认核销
    */
-  async confirm(reservationId: number, verifierId: number) {
+  async confirm(reservationId: number, verifierId: number, actualCount?: number) {
     const reservation = await this.reservationRepo.findOne({ where: { id: reservationId } });
     if (!reservation) throw new NotFoundException('预约记录不存在');
 
@@ -98,8 +93,11 @@ export class VerificationService {
       qrCode: reservation.qrCode,
       verifyResult: 'SUCCESS',
       verifiedAt: new Date(),
+      actualCount: actualCount || reservation.visitorCount,
     });
     await this.recordRepo.save(record);
+
+    this.logger.log(`[confirm] 预约核销完成 reservationId=${reservationId} type=${reservation.type} status=${reservation.status}→VERIFIED`);
 
     // 标记推广记录的核销状态
     this.promotionService.markVerifiedByReservation(reservationId).catch(err => {
@@ -128,6 +126,7 @@ export class VerificationService {
       session: r.reservation?.sessionType || '',
       type: r.reservation?.type || '',
       visitorCount: r.reservation?.visitorCount || 0,
+      actualCount: r.actualCount || 0,
     }));
 
     return { records: list, total, page, pageSize };

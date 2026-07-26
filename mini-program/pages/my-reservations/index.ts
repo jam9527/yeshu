@@ -65,6 +65,12 @@ Page({
   },
 
   onLoad() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/my-reservations/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     this.fetchData()
   },
 

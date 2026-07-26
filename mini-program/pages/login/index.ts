@@ -23,6 +23,7 @@ Page({
     saving: false,
     chosenAvatarUrl: '',
     phoneInput: '',
+    agreedToPrivacy: false,
     // 动态配置
     pageConfig: {
       background: '',
@@ -75,6 +76,38 @@ Page({
   /** 隐私协议同意回调（耦合按钮必需） */
   handleAgreePrivacy() {
     // WeChat 自动处理隐私弹窗，无需额外逻辑
+  },
+
+  /** 协议区域统一点击处理：链接打开弹窗，其他区域切换勾选 */
+  handleAgreementTap(e: any) {
+    const action = e.target.dataset.action
+    if (action === 'openTerms') {
+      this.openTerms()
+    } else if (action === 'openPrivacyPolicy') {
+      this.openPrivacyPolicy()
+    } else {
+      this.setData({ agreedToPrivacy: !this.data.agreedToPrivacy })
+    }
+  },
+
+  /** 查看隐私政策 */
+  openPrivacyPolicy() {
+    wx.showModal({
+      title: '隐私政策',
+      content: '椰树集团参观预约小程序尊重并保护您的个人隐私。\n\n1. 我们仅在您授权后收集您的微信昵称、头像和手机号码，用于预约身份识别。\n2. 您的位置信息仅用于参观导航功能。\n3. 您的个人信息不会被分享或出售给第三方。\n4. 您可以随时在小程序中编辑或删除您的个人信息。\n\n如您对本隐私政策有任何疑问，请联系我们。',
+      showCancel: false,
+      confirmText: '我知道了',
+    })
+  },
+
+  /** 查看用户协议 */
+  openTerms() {
+    wx.showModal({
+      title: '用户服务协议',
+      content: '欢迎使用椰树集团参观预约小程序。\n\n1. 本小程序提供展厅参观预约、活动报名等服务。\n2. 用户须提供真实有效的个人信息进行预约。\n3. 预约成功后请按时到馆参观，如需取消请提前操作。\n4. 团队预约需上传相关证明材料。\n5. 本集团保留对预约规则的最终解释权。\n\n使用本小程序即表示您同意以上条款。',
+      showCancel: false,
+      confirmText: '我知道了',
+    })
   },
 
   /** 微信一键登录（含手机号授权），失败降级为普通 code 登录 */

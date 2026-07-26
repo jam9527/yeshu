@@ -128,12 +128,6 @@ onMounted(fetchData)
           </el-descriptions-item>
         </el-descriptions>
 
-        <!-- 参观人列表 -->
-        <el-descriptions border v-if="currentDetail.visitors && currentDetail.visitors.length" title="参观人" :column="1">
-          <el-descriptions-item v-for="(v, i) in currentDetail.visitors" :key="i" :label="'#' + (i+1)">
-            {{ v.name }} / {{ v.idCard }} / {{ v.province }} {{ v.city }} / {{ v.visitorType === 'OFF_ISLAND' ? '岛外游客' : '岛内游客' }}
-          </el-descriptions-item>
-        </el-descriptions>
       </template>
     </el-dialog>
   </div>

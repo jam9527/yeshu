@@ -42,4 +42,13 @@ export class StatisticsController {
   ) {
     return this.statisticsService.reservationStats(startDate, endDate);
   }
+
+  @Get('traffic-source')
+  async trafficSource(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('granularity') granularity: 'day' | 'week' | 'month' = 'day',
+  ) {
+    return this.statisticsService.trafficSource(startDate, endDate, granularity);
+  }
 }

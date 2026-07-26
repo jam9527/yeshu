@@ -11,6 +11,12 @@ Page({
   },
 
   onShow() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/real-name-list/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     this.fetchRecords()
   },
 
@@ -18,7 +24,22 @@ Page({
     this.setData({ loading: true })
     try {
       const res: any = await api.get('/real-names')
-      this.setData({ records: res?.records || res || [] })
+      const rawList: any[] = res?.records || res || []
+      // 预处理：为每条记录生成脱敏证件号，避免 WXML 函数调用兼容性问题
+      const records = rawList.map((item: any) => {
+        const idCard = item.idCard || ''
+        const idCardType = item.idCardType || 'ID_CARD'
+        let maskedIdCard = idCard
+        if (idCard) {
+          if (idCardType === 'ID_CARD' && idCard.length >= 10) {
+            maskedIdCard = idCard.substring(0, 4) + '********' + idCard.substring(idCard.length - 4)
+          } else if (idCard.length > 8) {
+            maskedIdCard = idCard.substring(0, 2) + '****' + idCard.substring(idCard.length - 2)
+          }
+        }
+        return { ...item, maskedIdCard }
+      })
+      this.setData({ records })
     } catch {
       this.setData({ records: [] })
     } finally {

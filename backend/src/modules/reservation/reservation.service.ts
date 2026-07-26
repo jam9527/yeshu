@@ -14,7 +14,6 @@ import { Repository, DataSource, MoreThan, In } from 'typeorm';
 import * as crypto from 'crypto';
 import * as qrcode from 'qrcode';
 import { Reservation } from './entities/reservation.entity';
-import { ReservationVisitor } from './entities/reservation-visitor.entity';
 import { ReservationQuota } from './entities/reservation-quota.entity';
 import { ReservationDateConfig } from './entities/reservation-date-config.entity';
 import { TeamReservationInfo } from './entities/team-reservation-info.entity';
@@ -41,8 +40,6 @@ export class ReservationService implements OnModuleInit {
     private readonly dataSource: DataSource,
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
-    @InjectRepository(ReservationVisitor)
-    private readonly visitorRepo: Repository<ReservationVisitor>,
     @InjectRepository(ReservationQuota)
     private readonly quotaRepo: Repository<ReservationQuota>,
     @InjectRepository(ReservationDateConfig)
@@ -154,6 +151,7 @@ export class ReservationService implements OnModuleInit {
 
   /**
    * 创建个人预约
+   * 仅预约人本人需实名认证，其余参观人只记人数
    * 使用乐观锁扣减配额，防止超售
    */
   async createPersonal(
@@ -161,15 +159,28 @@ export class ReservationService implements OnModuleInit {
     dto: {
       dateConfigId: number;
       sessionType: string;
-      visitors: { name: string; idCard: string; province: string; city: string }[];
+      visitorCount: number;
+      district?: string;
+      visitorType?: string;
+      childrenCount?: number;
     },
   ) {
-    const { dateConfigId, sessionType, visitors } = dto;
-    const count = visitors.length;
+    const { dateConfigId, sessionType, visitorCount, district, visitorType, childrenCount } = dto;
 
-    // 校验人数（1-5人）
-    if (count < 1 || count > 5) {
+    // 校验人数（1-5人，含本人）
+    if (visitorCount < 1 || visitorCount > 5) {
       throw new BadRequestException('个人预约人数应在1-5人之间');
+    }
+
+    // 校验儿童人数
+    const childCountNum = childrenCount ?? 0;
+    if (childCountNum < 0 || childCountNum >= visitorCount) {
+      throw new BadRequestException('儿童人数不能为负数，且必须小于参观总人数（至少1名成人）');
+    }
+
+    // 校验岛内外类型
+    if (visitorType && !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
+      throw new BadRequestException('无效的游客类型');
     }
 
     // 获取日期配置
@@ -207,7 +218,7 @@ export class ReservationService implements OnModuleInit {
       ? dateConfig.amPersonalQuota - quota.usedPersonal
       : dateConfig.pmPersonalQuota - quota.usedPersonal;
 
-    if (remaining < count) {
+    if (remaining < visitorCount) {
       throw new ConflictException('预约名额不足');
     }
 
@@ -216,11 +227,11 @@ export class ReservationService implements OnModuleInit {
       .createQueryBuilder()
       .update()
       .set({
-        usedPersonal: () => `\`usedPersonal\` + ${count}`,
+        usedPersonal: () => `\`usedPersonal\` + ${visitorCount}`,
         version: () => '`version` + 1',
       })
       .where('id = :id', { id: quota.id })
-      .andWhere('`totalPersonal` - `usedPersonal` >= :count', { count })
+      .andWhere('`totalPersonal` - `usedPersonal` >= :visitorCount', { visitorCount })
       .andWhere('version = :version', { version: quota.version })
       .execute();
 
@@ -239,25 +250,23 @@ export class ReservationService implements OnModuleInit {
       .digest('hex');
 
     // 创建预约记录
-    const reservation = this.reservationRepo.create({
+    const reservationData: any = {
       reservationNo,
       userId,
       type: 'PERSONAL',
       sessionType,
       reservationDate: dateConfig.date,
       dateConfigId,
-      visitorCount: count,
+      visitorCount,
+      district: district || null,
+      visitorType: visitorType || null,
+      childrenCount: childCountNum,
       status: 'PENDING',
       qrCode,
       qrCodeExpireAt: new Date(`${dateConfig.date}T23:59:59`),
-    });
-    const saved = await this.reservationRepo.save(reservation);
-
-    // 创建参观人明细
-    const visitorEntities = visitors.map((v) =>
-      this.visitorRepo.create({ ...v, reservationId: saved.id }),
-    );
-    await this.visitorRepo.save(visitorEntities);
+    };
+    const reservation = this.reservationRepo.create(reservationData);
+    const saved: any = await this.reservationRepo.save(reservation);
 
     // 关联推广记录
     if (user.promotedBy) {
@@ -333,7 +342,7 @@ export class ReservationService implements OnModuleInit {
       .digest('hex');
 
     // 创建预约（状态=APPROVING，不扣减配额）
-    const reservation = this.reservationRepo.create({
+    const reservationData: any = {
       reservationNo,
       userId,
       type: 'TEAM',
@@ -344,8 +353,9 @@ export class ReservationService implements OnModuleInit {
       status: 'APPROVING',
       qrCode,
       qrCodeExpireAt: new Date(`${dateConfig.date}T23:59:59`),
-    });
-    const saved = await this.reservationRepo.save(reservation);
+    };
+    const reservation = this.reservationRepo.create(reservationData);
+    const saved: any = await this.reservationRepo.save(reservation);
 
     // 创建团队附加信息
     const teamEntity = this.teamInfoRepo.create({
@@ -412,13 +422,13 @@ export class ReservationService implements OnModuleInit {
     const reservation = await this.reservationRepo.findOne({ where: { id } });
     if (!reservation) throw new NotFoundException('预约记录不存在');
 
-    const visitors = await this.visitorRepo.find({ where: { reservationId: id } });
     let teamInfo: TeamReservationInfo | null = null;
     if (reservation.type === 'TEAM') {
       teamInfo = await this.teamInfoRepo.findOne({ where: { reservationId: id } });
     }
 
-    return { ...reservation, visitors, teamInfo };
+    // 个人预约仅返回预约人数，不再逐条返回参观人明细
+    return { ...reservation, visitors: [], teamInfo };
   }
 
   /** 取消预约 */

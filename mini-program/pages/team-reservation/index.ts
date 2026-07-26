@@ -103,6 +103,12 @@ Page({
   },
 
   onLoad() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/team-reservation/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     const now = new Date()
     this.setData({
       currentYear: now.getFullYear(),
@@ -152,17 +158,30 @@ Page({
       wx.showToast({ title: '暂无可用模板', icon: 'none' })
       return
     }
+
+    // 通过后端代理下载，规避小程序 downloadFile 域名白名单限制
+    const app = getApp()
+    const proxyUrl = `${app.globalData.baseUrl}/files/download-proxy?url=${encodeURIComponent(templateInfo.fileUrl)}`
+
+    wx.showLoading({ title: '下载中...' })
     wx.downloadFile({
-      url: templateInfo.fileUrl,
+      url: proxyUrl,
       success(res) {
+        wx.hideLoading()
         if (res.statusCode === 200) {
           wx.openDocument({
             filePath: res.tempFilePath,
             showMenu: true,
+            fail() {
+              wx.showToast({ title: '无法打开文件', icon: 'none' })
+            },
           })
+        } else {
+          wx.showToast({ title: '下载模板失败', icon: 'none' })
         }
       },
       fail() {
+        wx.hideLoading()
         wx.showToast({ title: '下载模板失败', icon: 'none' })
       },
     })

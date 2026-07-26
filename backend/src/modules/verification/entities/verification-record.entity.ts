@@ -27,6 +27,9 @@ export class VerificationRecord {
   @Column({ length: 255, nullable: true, comment: '失败原因' })
   failReason: string;
 
+  @Column({ default: 0, comment: '实际到场人数' })
+  actualCount: number;
+
   @Column({ type: 'datetime', comment: '核销时间' })
   verifiedAt: Date;
 

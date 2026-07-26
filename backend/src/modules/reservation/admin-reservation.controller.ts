@@ -2,7 +2,6 @@ import { Controller, Get, Put, Param, Query, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Reservation } from './entities/reservation.entity';
-import { ReservationVisitor } from './entities/reservation-visitor.entity';
 import { TeamReservationInfo } from './entities/team-reservation-info.entity';
 import { ReservationQuota } from './entities/reservation-quota.entity';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
@@ -18,8 +17,6 @@ export class AdminReservationController {
   constructor(
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
-    @InjectRepository(ReservationVisitor)
-    private readonly visitorRepo: Repository<ReservationVisitor>,
     @InjectRepository(TeamReservationInfo)
     private readonly teamInfoRepo: Repository<TeamReservationInfo>,
     @InjectRepository(ReservationQuota)
@@ -56,17 +53,7 @@ export class AdminReservationController {
       : [];
     const verifierMap = new Map(verifiers.map(v => [Number(v.id), v.nickname || v.phone || '核销员']));
 
-    // 获取参观人信息
-    const reservationIds = records.map(r => r.id);
-    const allVisitors = reservationIds.length > 0
-      ? await this.visitorRepo.find({ where: { reservationId: In(reservationIds) } })
-      : [];
-    const visitorMap = new Map<number, { name: string; idCard: string }[]>();
-    allVisitors.forEach(v => {
-      if (!visitorMap.has(v.reservationId)) visitorMap.set(v.reservationId, []);
-      visitorMap.get(v.reservationId)!.push({ name: v.name, idCard: v.idCard });
-    });
-
+    // 个人预约不再逐条存储参观人明细，仅返回预约人数
     const list = records.map(r => ({
       id: r.id,
       reservationNo: r.reservationNo,
@@ -74,6 +61,9 @@ export class AdminReservationController {
       sessionType: r.sessionType,
       reservationDate: r.reservationDate,
       visitorCount: r.visitorCount,
+      district: r.district,
+      visitorType: r.visitorType,
+      childrenCount: r.childrenCount,
       status: r.status,
       qrCode: r.qrCode,
       rejectReason: r.rejectReason,
@@ -91,7 +81,6 @@ export class AdminReservationController {
         avatarUrl: r.user.avatarUrl,
         isBlacklisted: r.user.isBlacklisted,
       } : null,
-      visitors: visitorMap.get(r.id) || [],
     }));
 
     return { records: list, total, page, pageSize };
@@ -116,12 +105,12 @@ export class AdminReservationController {
     const reservation = await this.reservationRepo.findOne({ where: { id } });
     if (!reservation) return null;
 
-    const visitors = await this.visitorRepo.find({ where: { reservationId: id } });
     let teamInfo: TeamReservationInfo | null = null;
     if (reservation.type === 'TEAM') {
       teamInfo = await this.teamInfoRepo.findOne({ where: { reservationId: id } });
     }
-    return { ...reservation, visitors, teamInfo };
+    // 个人预约不再逐条存储参观人明细
+    return { ...reservation, visitors: [], teamInfo };
   }
 
   /** PUT /api/admin/reservations/:id/approve - 审核通过（团队预约） */

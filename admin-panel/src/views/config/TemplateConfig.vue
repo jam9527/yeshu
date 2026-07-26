@@ -44,7 +44,7 @@ async function handleFileUpload(options: any) {
     const res: any = await request.post('/files/upload', fd, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    form.value.fileUrl = res.url
+    form.value.fileUrl = res.data?.url || res.url
     ElMessage.success('文件已上传')
   } catch {
     ElMessage.error('文件上传失败')

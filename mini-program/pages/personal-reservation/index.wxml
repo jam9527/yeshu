@@ -21,7 +21,7 @@
   <!-- 页面标题 -->
   <view class="page-header">
     <text class="page-title-main">个人预约</text>
-    <text class="page-title-sub">本集团实行全员在线实名制预约</text>
+    <text class="page-title-sub">预约人须完成实名认证，每次最多预约5人</text>
   </view>
 
   <!-- ===== 步骤指示器 ===== -->
@@ -74,20 +74,14 @@
           wx:key="dateStr"
           class="calendar-cell {{item.status}}"
           data-index="{{index}}"
-          bindtap="selectDate"
-          wx:if="{{item.status !== 'empty'}}"
+          bindtap="{{item.status === 'empty' ? '' : 'selectDate'}}"
         >
-          <text class="cell-day">{{item.day}}</text>
-          <text class="cell-status">
-            {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
-          </text>
-        </view>
-        <view
-          wx:for="{{calendarDays}}"
-          wx:key="dateStr"
-          class="calendar-cell empty"
-          wx:if="{{item.status === 'empty'}}"
-        >
+          <block wx:if="{{item.status !== 'empty'}}">
+            <text class="cell-day">{{item.day}}</text>
+            <text class="cell-status">
+              {{item.status === 'available' ? '可预约' : item.status === 'full' ? '已约滿' : item.status === 'unavailable' ? '未开放' : ''}}
+            </text>
+          </block>
         </view>
       </view>
     </view>
@@ -96,21 +90,9 @@
       <text class="empty-text">暂无可预约日期</text>
     </view>
 
-    <!-- 预约须知 -->
-    <view class="notice-section">
-      <view class="notice-title">购票须知</view>
-      <view class="notice-item">
-        <text class="notice-label">（一）预约须知</text>
-        <text class="notice-text">为方便您预约门票并顺利参观，请在预约前仔细阅读本须知。</text>
-      </view>
-      <view class="notice-item">
-        <text class="notice-label">1.预约方式：</text>
-        <text class="notice-text">本集团实行线上预约订票，不接受现场预约。观众可提前3天（比如：周四参观，周一开放预约）9:00开始预约。通过"椰树集团"微信公众号、小程序、官网进行预约。</text>
-      </view>
-      <view class="notice-item">
-        <text class="notice-label">2.实名预约：</text>
-        <text class="notice-text">本集团实行全员在线实名制预约，每人一张门票（尚未办理实体居民身份证件的儿童，须使用身份证件号码实名预约）。中国大陆公民须录入本人第二代居民身份证信息，港澳台同胞须录入港澳台通行证/居住证信息。</text>
-      </view>
+    <!-- 购票须知（后台可配置） -->
+    <view class="notice-section" wx:if="{{ticketingNotice}}">
+      <rich-text nodes="{{ticketingNotice}}"></rich-text>
     </view>
   </view>
 
@@ -147,7 +129,7 @@
 
   <!-- ===== 步骤 3: 填写信息 ===== -->
   <view class="step-content" wx:if="{{currentStep === 3}}">
-    <view class="section-title">填写参观人信息</view>
+    <view class="section-title">填写预约信息</view>
     <view class="selected-summary">
       {{selectedDate.date}} · {{selectedSession.label}} ({{selectedSession.startTime}}-{{selectedSession.endTime}})
     </view>
@@ -155,107 +137,73 @@
     <!-- 实名核验未通过警告 -->
     <view class="real-name-warning" wx:if="{{realNameBlocked}}">
       <text class="warning-icon">⚠️</text>
-      <text class="warning-text">您的身份核验未通过，请先完成实名认证</text>
+      <text class="warning-text">您的身份核验未通过，请先完成实名认证后再预约</text>
       <view class="warning-btn" bindtap="goToRealName">去认证</view>
     </view>
 
-    <view class="count-section">
-      <text class="count-label">参观人数</text>
-      <view class="count-stepper">
-        <view
-          class="stepper-btn {{visitorCount <= 1 ? 'disabled' : ''}}"
-          data-value="{{visitorCount - 1}}"
-          bindtap="onVisitorCountChange"
-        >−</view>
-        <text class="stepper-value">{{visitorCount}}</text>
-        <view
-          class="stepper-btn {{visitorCount >= 5 ? 'disabled' : ''}}"
-          data-value="{{visitorCount + 1}}"
-          bindtap="onVisitorCountChange"
-        >+</view>
+    <block wx:if="{{!realNameBlocked}}">
+      <!-- 行政分区选择 -->
+      <view class="form-card">
+        <text class="form-card-title">行政分区</text>
+        <picker mode="region" value="{{district}}" bindchange="onDistrictChange">
+          <view class="picker-display">
+            <text class="{{district.length > 0 ? 'has-value' : 'placeholder'}}">{{district.length > 0 ? district[0] + ' ' + district[1] + ' ' + district[2] : '请选择省/市/区'}}</text>
+          </view>
+        </picker>
       </view>
-    </view>
 
-    <view class="visitors-section">
-      <view class="visitor-card" wx:for="{{visitors}}" wx:for-index="vIndex" wx:key="vIndex">
-        <view class="visitor-header">
-          <text class="visitor-number">参观人 {{vIndex + 1}}</text>
+      <!-- 岛内/岛外选择 -->
+      <view class="form-card">
+        <text class="form-card-title">游客类型</text>
+        <view class="radio-group">
+          <view class="radio-item {{visitorType === 'ON_ISLAND' ? 'active' : ''}}" data-value="ON_ISLAND" bindtap="onVisitorTypeChange">
+            <view class="radio-circle {{visitorType === 'ON_ISLAND' ? 'checked' : ''}}"></view>
+            <text>岛内</text>
+          </view>
+          <view class="radio-item {{visitorType === 'OFF_ISLAND' ? 'active' : ''}}" data-value="OFF_ISLAND" bindtap="onVisitorTypeChange">
+            <view class="radio-circle {{visitorType === 'OFF_ISLAND' ? 'checked' : ''}}"></view>
+            <text>岛外</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 参观总人数 -->
+      <view class="count-section">
+        <text class="count-label">参观人数（1-5人）</text>
+        <view class="count-stepper">
           <view
-            class="real-name-btn"
-            data-index="{{vIndex}}"
-            bindtap="openRealNamePicker"
-            wx:if="{{realNames.length > 0}}"
-          >
-            选择实名
-          </view>
-        </view>
-
-        <view class="form-group">
-          <text class="form-label">姓名</text>
-          <input
-            class="form-input"
-            placeholder="请输入姓名"
-            value="{{item.name}}"
-            data-index="{{vIndex}}"
-            data-field="name"
-            bindinput="onVisitorInput"
-          />
-        </view>
-
-        <view class="form-group">
-          <text class="form-label">身份证号</text>
-          <input
-            class="form-input"
-            placeholder="请输入身份证号"
-            value="{{item.idCard}}"
-            data-index="{{vIndex}}"
-            data-field="idCard"
-            bindinput="onVisitorInput"
-          />
-        </view>
-
-        <view class="form-row">
-          <view class="form-group half">
-            <text class="form-label">省份</text>
-            <picker
-              mode="selector"
-              range="{{provinces}}"
-              value="{{0}}"
-              data-index="{{vIndex}}"
-              bindchange="onProvinceChange"
-            >
-              <view class="form-input picker-value {{item.province ? 'has-value' : ''}}">{{item.province || '请选择省份'}}</view>
-            </picker>
-          </view>
-          <view class="form-group half">
-            <text class="form-label">城市</text>
-            <picker
-              mode="selector"
-              range="{{pickerCities[vIndex] || []}}"
-              value="{{0}}"
-              data-index="{{vIndex}}"
-              bindchange="onCityChange"
-            >
-              <view class="form-input picker-value {{item.city ? 'has-value' : ''}}">{{item.city || '请选择城市'}}</view>
-            </picker>
-          </view>
-        </view>
-
-        <view class="form-group">
-          <text class="form-label">游客类型 <text style="color:red">*</text></text>
-          <picker
-            mode="selector"
-            range="{{visitorTypeOptions}}"
-            range-key="label"
-            value="{{item.visitorType === 'OFF_ISLAND' ? 1 : 0}}"
-            data-index="{{vIndex}}"
-            bindchange="onVisitorTypeChange"
-          >
-            <view class="form-input picker-value {{item.visitorType ? 'has-value' : ''}}">{{item.visitorType === 'OFF_ISLAND' ? '岛外游客' : '岛内游客'}}</view>
-          </picker>
+            class="stepper-btn {{visitorCount <= 1 ? 'disabled' : ''}}"
+            data-value="{{visitorCount - 1}}"
+            bindtap="onVisitorCountChange"
+          >−</view>
+          <text class="stepper-value">{{visitorCount}}</text>
+          <view
+            class="stepper-btn {{visitorCount >= 5 ? 'disabled' : ''}}"
+            data-value="{{visitorCount + 1}}"
+            bindtap="onVisitorCountChange"
+          >+</view>
         </view>
       </view>
-    </view>
+
+      <!-- 儿童人数 -->
+      <view class="count-section">
+        <text class="count-label">12岁以下儿童</text>
+        <view class="count-stepper">
+          <view
+            class="stepper-btn {{childrenCount <= 0 ? 'disabled' : ''}}"
+            data-value="{{childrenCount - 1}}"
+            bindtap="onChildrenCountChange"
+          >−</view>
+          <text class="stepper-value">{{childrenCount}}</text>
+          <view
+            class="stepper-btn {{childrenCount >= visitorCount - 1 ? 'disabled' : ''}}"
+            data-value="{{childrenCount + 1}}"
+            bindtap="onChildrenCountChange"
+          >+</view>
+        </view>
+        <text class="count-hint">至少保留1名成人陪同</text>
+      </view>
+    </block>
 
     <view class="step-back" bindtap="prevStep">
       <text>‹ 返回选择场次</text>
@@ -264,33 +212,9 @@
     <button
       class="btn-primary submit-btn"
       loading="{{submitting}}"
-      disabled="{{submitting}}"
+      disabled="{{submitting || realNameBlocked}}"
       bindtap="submit"
     >提交预约</button>
-  </view>
-
-  <!-- ===== 实名选择半屏弹窗 ===== -->
-  <view class="real-name-mask" wx:if="{{showRealNamePicker}}" bindtap="closeRealNamePicker"></view>
-  <view class="real-name-picker {{showRealNamePicker ? 'show' : ''}}">
-    <view class="picker-header">
-      <text class="picker-title">选择实名信息</text>
-      <text class="picker-close" bindtap="closeRealNamePicker">关闭</text>
-    </view>
-    <scroll-view class="picker-list" scroll-y>
-      <view
-        class="picker-item"
-        wx:for="{{realNames}}"
-        wx:key="id"
-        data-index="{{index}}"
-        bindtap="selectRealName"
-      >
-        <text class="picker-name">{{item.name}}</text>
-        <text class="picker-idcard">{{item.idCard}}</text>
-      </view>
-      <view class="empty-state" wx:if="{{realNames.length === 0}}">
-        <text class="empty-text">暂无实名信息，请手动填写</text>
-      </view>
-    </scroll-view>
   </view>
 
   </view>

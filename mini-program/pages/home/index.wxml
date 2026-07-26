@@ -67,7 +67,7 @@
             data-id="{{exh.id}}"
             bindtap="goExhibitionDetail"
           >
-            <image class="diy-grid-card-img" src="{{exh.coverImage}}" mode="aspectFill" />
+            <image class="diy-grid-card-img" src="{{exh.coverImage}}" mode="widthFix" />
             <view class="diy-grid-card-info">
               <text class="diy-grid-card-title">{{exh.name}}</text>
               <text class="diy-grid-card-desc" wx:if="{{exh.description}}">{{exh.description}}</text>
@@ -94,7 +94,7 @@
             bindtap="goActivityDetail"
           >
             <view class="diy-grid-card-img-wrap">
-              <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="aspectFill" />
+              <image class="diy-grid-card-img" src="{{act.coverImage}}" mode="widthFix" />
               <text class="diy-grid-card-status" wx:if="{{act._statusLabel}}" style="background-color:{{act._statusColor}}">{{act._statusLabel}}</text>
             </view>
             <view class="diy-grid-card-info">
@@ -148,7 +148,7 @@
               <rich-text nodes="{{row.props.content}}" />
             </view>
             <view wx:elif="{{row.type === 'button'}}" class="diy-button-wrap">
-              <button class="diy-button" type="{{row.props.type || 'primary'}}" style="border-radius:{{row.props.borderRadius || 8}}px;padding:{{row.props.padding || '10px'}}">{{row.props.text || '按钮'}}</button>
+              <button class="diy-button" type="{{row.props.type || 'primary'}}" data-link="{{row.props.link}}" bindtap="onDiyButtonTap" style="border-radius:{{row.props.borderRadius || 8}}px;padding:{{row.props.padding || '10px'}}">{{row.props.text || '按钮'}}</button>
             </view>
             <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;overflow:hidden">{{''}}</view>
           </view>
@@ -181,7 +181,7 @@
         </view>
         <!-- 按钮 -->
         <view wx:elif="{{child.type === 'button'}}" class="diy-button-wrap">
-          <button class="diy-button" type="{{child.props.type || 'primary'}}" style="border-radius:{{child.props.borderRadius || 8}}px;padding:{{child.props.padding || '10px'}}">{{child.props.text || '按钮'}}</button>
+          <button class="diy-button" type="{{child.props.type || 'primary'}}" data-link="{{child.props.link}}" bindtap="onDiyButtonTap" style="border-radius:{{child.props.borderRadius || 8}}px;padding:{{child.props.padding || '10px'}}">{{child.props.text || '按钮'}}</button>
         </view>
         <!-- 空白间距 -->
         <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;overflow:hidden">{{''}}</view>
@@ -208,6 +208,21 @@
       <view wx:else class="diy-video-placeholder">
         <text class="diy-video-placeholder-text">暂无视频</text>
       </view>
+    </view>
+
+    <!-- 导航 -->
+    <view wx:elif="{{item.type === 'navigation'}}" class="diy-navigation" style="background:{{item.props.backgroundColor || '#1a3a2a'}}" bindtap="onDiyNavigationTap" data-latitude="{{item.props.latitude}}" data-longitude="{{item.props.longitude}}" data-name="{{item.props.name}}" data-address="{{item.props.address}}">
+      <view class="diy-navigation-icon">📍</view>
+      <view class="diy-navigation-info">
+        <text class="diy-navigation-label" style="color:{{item.props.textColor || '#ffd700'}}">{{item.props.label || '导航到目的地'}}</text>
+        <text class="diy-navigation-addr">{{item.props.address || ''}}</text>
+      </view>
+      <view class="diy-navigation-arrow" style="color:{{item.props.textColor || '#ffd700'}}">›</view>
+    </view>
+
+    <!-- 微信小店 -->
+    <view wx:elif="{{item.type === 'wechat_store'}}" class="diy-wechat-store" style="padding:{{item.props.padding || '0'}}">
+      <store-home appid="{{item.props.appid}}" />
     </view>
 
     <!-- 空白间距 -->
