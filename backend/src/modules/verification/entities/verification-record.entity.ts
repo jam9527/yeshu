@@ -12,7 +12,7 @@ export class VerificationRecord {
   reservationId: number;
 
   @ManyToOne(() => Reservation)
-  @JoinColumn({ name: 'reservation_id' })
+  @JoinColumn({ name: 'reservationId' })
   reservation: Reservation;
 
   @Column({ type: 'bigint', unsigned: true, comment: '核销人员用户ID' })
