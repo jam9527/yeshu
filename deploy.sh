@@ -63,6 +63,8 @@ if [ "$BACKEND_CHANGED" = true ]; then
   cd "$BACKEND_DIR"
   npm install                    # 需要 devDependencies（@nestjs/cli）才能 build
   npm run build
+  # 清除海报缓存（部署后强制重新生成，旧版 key 结构不兼容）
+  rm -f /home/ubuntu/yeshu/backend/uploads/posters/*.png
   pm2 startOrReload ecosystem.config.js
   echo "  ✅ 后端更新完成（cluster 零停机重载）"
 else
@@ -75,7 +77,6 @@ if [ "$ADMIN_CHANGED" = true ]; then
   cd "$ADMIN_DIR"
   npm install --legacy-peer-deps
   npm run build
-  echo "  ✅ 管理后台更新完成"
 else
   echo "  管理后台无变更，跳过"
 fi
