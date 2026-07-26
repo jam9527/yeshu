@@ -42,6 +42,15 @@ export class Reservation {
   @Column({ comment: '参观人数' })
   visitorCount: number;
 
+  @Column({ length: 128, nullable: true, comment: '行政分区（省-市-区）' })
+  district: string;
+
+  @Column({ length: 16, nullable: true, comment: '岛内/岛外: ON_ISLAND/OFF_ISLAND' })
+  visitorType: string;
+
+  @Column({ default: 0, comment: '12岁以下儿童人数' })
+  childrenCount: number;
+
   @Column({ length: 20, default: 'PENDING', comment: '预约状态' })
   status: string;
 

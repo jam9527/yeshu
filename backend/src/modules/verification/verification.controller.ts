@@ -21,9 +21,10 @@ export class VerificationController {
   @Post('confirm')
   async confirm(
     @Body('reservationId') reservationId: number,
+    @Body('actualCount') actualCount: number,
     @CurrentUser('id') verifierId: number,
   ) {
-    return this.verificationService.confirm(reservationId, verifierId);
+    return this.verificationService.confirm(reservationId, verifierId, actualCount);
   }
 
   /** GET /api/verification/records - 核销记录 */

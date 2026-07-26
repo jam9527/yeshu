@@ -12,6 +12,8 @@ Page({
     /** 开发模式：手动输入核销码 */
     devQrCode: '',
     showDevInput: false,
+    /** 个人预约 - 实到人数 */
+    actualCount: 0,
   },
 
   onLoad() {
@@ -69,6 +71,7 @@ Page({
         scanning: false,
         result: display,
         error: null,
+        actualCount: res.visitorCount || 1,
       })
     } catch (err: any) {
       this.setData({
@@ -79,6 +82,15 @@ Page({
     }
   },
 
+  /** 实到人数变更 */
+  onActualCountChange(e: any) {
+    const value = parseInt(e.currentTarget.dataset.value, 10)
+    const max = this.data.result?.visitorCount || 1
+    if (isNaN(value) || value < 1) return
+    if (value > max) return
+    this.setData({ actualCount: value })
+  },
+
   /** 确认核销 */
   async confirmVerify() {
     const { reservationId } = this.data.result || {}
@@ -86,7 +98,10 @@ Page({
 
     wx.showLoading({ title: '核销中...' })
     try {
-      await api.post('/verification/confirm', { reservationId })
+      await api.post('/verification/confirm', {
+        reservationId,
+        actualCount: this.data.actualCount,
+      })
       wx.hideLoading()
       // 更新本地结果显示为已核销，不必重新扫码
       this.setData({
@@ -101,6 +116,7 @@ Page({
 
   /** 重置，重新扫码 */
   reset() {
+    this.setData({ actualCount: 0 })
     this.startScan()
   },
 

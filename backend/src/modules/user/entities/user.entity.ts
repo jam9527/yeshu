@@ -33,6 +33,9 @@ export class User {
   @Column({ default: false, comment: '是否为推广员' })
   isPromoter: boolean;
 
+  @Column({ length: 8, nullable: true, comment: '推广员短码（8位 hex）' })
+  shortCode: string;
+
   @Column({ type: 'bigint', unsigned: true, nullable: true, comment: '推广人用户ID' })
   promotedBy: number;
 

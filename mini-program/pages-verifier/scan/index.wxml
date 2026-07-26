@@ -91,6 +91,24 @@
         </view>
       </view>
 
+      <!-- 个人预约 - 实到人数 -->
+      <view class="actual-count-section" wx:if="{{result.type === 'PERSONAL' && !result.isVerified}}">
+        <text class="actual-count-label">实到人数</text>
+        <view class="actual-count-stepper">
+          <view
+            class="stepper-btn {{actualCount <= 1 ? 'disabled' : ''}}"
+            data-value="{{actualCount - 1}}"
+            bindtap="onActualCountChange"
+          >-</view>
+          <text class="stepper-value">{{actualCount}}</text>
+          <view
+            class="stepper-btn {{actualCount >= result.visitorCount ? 'disabled' : ''}}"
+            data-value="{{actualCount + 1}}"
+            bindtap="onActualCountChange"
+          >+</view>
+        </view>
+      </view>
+
       <!-- 操作按钮 -->
       <view class="result-actions">
         <button

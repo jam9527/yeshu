@@ -30,6 +30,12 @@
       <view wx:if="{{startDate || endDate}}" class="reset-btn" bindtap="resetDateFilter">重置</view>
     </view>
 
+    <!-- 推广短码 -->
+    <view class="short-code-bar" wx:if="{{userInfo.shortCode}}">
+      <text class="short-code-label">我的推广码</text>
+      <text class="short-code-value">{{userInfo.shortCode}}</text>
+    </view>
+
     <!-- 统计卡片 -->
     <view class="stats-row">
       <view class="stat-card">

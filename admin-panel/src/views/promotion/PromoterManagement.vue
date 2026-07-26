@@ -105,6 +105,7 @@ onMounted(() => fetchPromoters())
             <el-table-column prop="id" label="ID" width="60" />
             <el-table-column prop="nickname" label="昵称" width="120" />
             <el-table-column prop="phone" label="手机号" width="130" />
+            <el-table-column prop="shortCode" label="短码" width="120" />
             <el-table-column label="推广数据" min-width="300">
               <template #default="{ row }">
                 <span style="margin-right:12px">分享: {{ row.stats?.totalClicks || 0 }}</span>
@@ -131,7 +132,7 @@ onMounted(() => fetchPromoters())
           <el-table :data="applications" v-loading="loading && activeTab === 'pending'" stripe>
             <el-table-column prop="id" label="ID" width="60" />
             <el-table-column label="申请人" width="150">
-              <template #default="{ row }">{{ row.user?.nickname || row.user?.phone || (row.userId === 0 ? '未扫码' : '用户' + row.userId) }}</template>
+              <template #default="{ row }">{{ row.user?.nickname || row.user?.phone || (row.userId == 0 ? '未扫码' : '用户' + row.userId) }}</template>
             </el-table-column>
             <el-table-column label="申请时间" width="170">
               <template #default="{ row }">{{ row.createdAt ? new Date(row.createdAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }).replace(/\//g, '-') : '' }}</template>

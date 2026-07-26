@@ -6,6 +6,7 @@ import api from '../../utils/api'
 
 Page({
   data: {
+    userInfo: null as any,
     stats: null as any,
     records: [] as any[],
     page: 1,
@@ -27,6 +28,12 @@ Page({
   },
 
   onShow() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/promotion-center/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     this.checkPromoterStatus()
   },
 
@@ -40,7 +47,7 @@ Page({
 
       const isPromoter = userInfo?.isPromoter || false
       console.log('[推广中心] 用户推广状态:', isPromoter ? '是推广员' : '非推广员')
-      this.setData({ isPromoter })
+      this.setData({ isPromoter, userInfo })
 
       if (isPromoter) {
         await Promise.all([

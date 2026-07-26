@@ -1,13 +1,5 @@
 import api from '../../utils/api'
 
-interface Visitor {
-  name: string
-  idCard: string
-  province: string
-  city: string
-  visitorType: string
-}
-
 interface DateItem {
   id: string
   date: string
@@ -25,13 +17,6 @@ interface SessionItem {
   endTime: string
 }
 
-interface RealNameItem {
-  id: string
-  name: string
-  idCard: string
-  idVerified?: boolean
-}
-
 interface CalendarDay {
   dateStr: string
   day: number
@@ -45,21 +30,13 @@ Page({
     selectedDate: null as DateItem | null,
     sessions: [] as SessionItem[],
     selectedSession: null as SessionItem | null,
+    /** 参观总人数（含本人，1-5人） */
     visitorCount: 1,
-    visitors: [{ name: '', idCard: '', province: '', city: '', visitorType: 'ON_ISLAND' }] as Visitor[],
-    /** 省份列表 */
-    provinces: [] as string[],
-    /** 各参观人对应的城市列表（二维，index 对应参观人顺序） */
-    pickerCities: [] as string[][],
-    realNames: [] as RealNameItem[],
     loading: false,
     submitting: false,
     currentStep: 1,
-    showRealNamePicker: false,
-    editingVisitorIndex: -1,
     /** 日历 */
     calendarDays: [] as CalendarDay[],
-    /** 当前显示的年份和月份 */
     currentYear: 0,
     currentMonth: 0,
     currentMonthLabel: '',
@@ -69,16 +46,25 @@ Page({
     countdown: 5,
     agreed: false,
     countdownTimer: null as any,
-    /** 实名核验未通过，阻止提交 */
+    /** 本人实名核验未通过，阻止提交 */
     realNameBlocked: false,
-    /** 游客类型选项 */
-    visitorTypeOptions: [
-      { label: '岛内游客', value: 'ON_ISLAND' },
-      { label: '岛外游客', value: 'OFF_ISLAND' },
-    ],
+    /** 购票须知（后台可配置，显示在日历下方） */
+    ticketingNotice: '',
+    /** 行政分区 ['省', '市', '区'] */
+    district: [] as string[],
+    /** 岛内/岛外 */
+    visitorType: '' as string,
+    /** 12岁以下儿童人数 */
+    childrenCount: 0,
   },
 
   onLoad() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/personal-reservation/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     const now = new Date()
     this.setData({
       currentYear: now.getFullYear(),
@@ -86,8 +72,12 @@ Page({
     })
     this.fetchNotice()
     this.fetchDates()
-    this.fetchRealNames()
-    this.fetchProvinces()
+    this.checkRealNameStatus()
+  },
+
+  onShow() {
+    // 从实名认证页面返回时，重新检查实名状态
+    this.checkRealNameStatus()
   },
 
   onUnload() {
@@ -98,13 +88,18 @@ Page({
 
   async fetchNotice() {
     try {
-      const res: any = await api.get('/notices/personal')
-      if (res?.content) {
-        this.setData({ noticeContent: res.content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false, countdown: 5 })
+      const [noticeRes, ticketingRes] = await Promise.all([
+        api.get('/notices/personal'),
+        api.get('/notices/TICKETING'),
+      ])
+      if ((noticeRes as any)?.content) {
+        this.setData({ noticeContent: (noticeRes as any).content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false, countdown: 5 })
         this.startCountdown()
       } else {
-        // 没有配置须知内容，直接跳过
         this.setData({ agreed: true })
+      }
+      if ((ticketingRes as any)?.content) {
+        this.setData({ ticketingNotice: (ticketingRes as any).content })
       }
     } catch {
       this.setData({ agreed: true })
@@ -132,6 +127,18 @@ Page({
     this.setData({ showNotice: false, agreed: true, countdownTimer: null })
   },
 
+  /** 仅检查本人是否已有核验通过的实名记录 */
+  async checkRealNameStatus() {
+    try {
+      const res: any = await api.get('/real-names')
+      const allList: any[] = res?.records || res || []
+      const hasVerified = allList.some((item) => item.idVerified === true)
+      this.setData({ realNameBlocked: !hasVerified })
+    } catch {
+      // ignore
+    }
+  },
+
   async fetchDates() {
     this.setData({ loading: true })
     try {
@@ -147,7 +154,6 @@ Page({
       }))
       this.setData({ dates })
 
-      // 如果当前月份无可预约日期，自动跳转到第一个有可用日期的未来月份
       if (dates.length > 0) {
         const today = new Date()
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -158,7 +164,6 @@ Page({
           const firstMonth = firstDate.getMonth()
           const curYear = this.data.currentYear
           const curMonth = this.data.currentMonth
-          // 只向前跳转，不向后跳转到已过去的月份
           if (firstYear > curYear || (firstYear === curYear && firstMonth > curMonth)) {
             this.setData({
               currentYear: firstYear,
@@ -184,7 +189,7 @@ Page({
 
     const firstDay = new Date(year, month, 1)
     const lastDay = new Date(year, month + 1, 0)
-    const startPad = firstDay.getDay() // 0=Sun
+    const startPad = firstDay.getDay()
     const totalDays = lastDay.getDate()
 
     const dateMap: Record<string, DateItem> = {}
@@ -192,12 +197,10 @@ Page({
 
     const days: CalendarDay[] = []
 
-    // Empty cells before first day
     for (let i = 0; i < startPad; i++) {
       days.push({ dateStr: '', day: 0, status: 'empty' })
     }
 
-    // Calendar days — availability controlled by admin panel, no hardcoded closure
     for (let d = 1; d <= totalDays; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
       const found = dateMap[dateStr]
@@ -209,7 +212,6 @@ Page({
         status = 'full'
       }
 
-      // 过去日期不可预约（防止 API 返回过期数据导致历史日期显示为可预约）
       const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`
       if (dateStr < todayStr) {
         status = 'unavailable'
@@ -226,68 +228,6 @@ Page({
     this.setData({ calendarDays: days })
   },
 
-  async fetchRealNames() {
-    try {
-      const res: any = await api.get('/real-names')
-      const allList: RealNameItem[] = res?.records || res || []
-      // 只保留身份核验通过的实名记录
-      const verifiedList = allList.filter(
-        (item) => item.idVerified === true,
-      )
-      this.setData({ realNames: verifiedList })
-
-      if (verifiedList.length === 0) {
-        this.setData({ realNameBlocked: true })
-      }
-    } catch {
-      // ignore
-    }
-  },
-
-  async fetchProvinces() {
-    try {
-      const res: any = await api.get('/regions/provinces')
-      const provinces: string[] = res || []
-      this.setData({ provinces })
-    } catch {
-      // ignore
-    }
-  },
-
-  /** 省份选择 */
-  async onProvinceChange(e: any) {
-    const { index } = e.currentTarget.dataset
-    const provinceIdx = e.detail.value as number
-    const province = this.data.provinces[provinceIdx]
-    if (!province) return
-
-    // 获取该省份的城市列表
-    try {
-      const res: any = await api.get('/regions/cities', { province })
-      const cities: string[] = res || []
-      const pickerCities = [...this.data.pickerCities]
-      pickerCities[index] = cities
-      const key = `visitors[${index}]`
-      this.setData({
-        [key]: { ...this.data.visitors[index], province, city: cities[0] || '' },
-        pickerCities,
-      })
-    } catch {
-      // ignore
-    }
-  },
-
-  /** 城市选择 */
-  onCityChange(e: any) {
-    const { index } = e.currentTarget.dataset
-    const cityIdx = e.detail.value as number
-    const cities = this.data.pickerCities[index] || []
-    const city = cities[cityIdx]
-    if (!city) return
-    const key = `visitors[${index}]`
-    this.setData({ [key]: { ...this.data.visitors[index], city } })
-  },
-
   selectDate(e: any) {
     const { index } = e.currentTarget.dataset
     const day = this.data.calendarDays[index]
@@ -298,6 +238,9 @@ Page({
       selectedSession: null,
       sessions: this.buildSessions(day.data),
       currentStep: 2,
+      district: [],
+      visitorType: '',
+      childrenCount: 0,
     })
   },
 
@@ -321,7 +264,6 @@ Page({
 
   buildSessions(date: DateItem): SessionItem[] {
     const sessions: SessionItem[] = []
-    // 上午场
     sessions.push({
       type: 'AM',
       label: '上午场',
@@ -329,7 +271,6 @@ Page({
       startTime: '09:00',
       endTime: '12:00',
     })
-    // 下午场
     sessions.push({
       type: 'PM',
       label: '下午场',
@@ -361,100 +302,41 @@ Page({
     let count = parseInt(e.currentTarget.dataset.value, 10)
     if (isNaN(count) || count < 1) count = 1
     if (count > 5) count = 5
+    // 如果新总人数 <= 儿童人数，clamp 儿童人数
+    let childrenCount = this.data.childrenCount
+    if (childrenCount >= count) childrenCount = count - 1
+    this.setData({ visitorCount: count, childrenCount })
+  },
 
-    const visitors = [...this.data.visitors]
-    const pickerCities = [...this.data.pickerCities]
-    while (visitors.length < count) {
-      visitors.push({ name: '', idCard: '', province: '', city: '', visitorType: 'ON_ISLAND' })
-      pickerCities.push([])
-    }
-    while (visitors.length > count) {
-      visitors.pop()
-      pickerCities.pop()
-    }
+  onDistrictChange(e: any) {
+    this.setData({ district: e.detail.value })
+  },
 
-    this.setData({ visitorCount: count, visitors, pickerCities })
+  onVisitorTypeChange(e: any) {
+    const value = e.currentTarget.dataset.value
+    this.setData({ visitorType: this.data.visitorType === value ? '' : value })
+  },
+
+  onChildrenCountChange(e: any) {
+    let count = parseInt(e.currentTarget.dataset.value, 10)
+    if (isNaN(count) || count < 0) count = 0
+    const max = this.data.visitorCount - 1
+    if (count > max) count = max
+    this.setData({ childrenCount: count })
   },
 
   goToRealName() {
     wx.navigateTo({ url: '/pages/real-name-list/index' })
   },
 
-  onVisitorInput(e: any) {
-    const { index, field } = e.currentTarget.dataset
-    const { value } = e.detail
-    const key = `visitors[${index}].${field}`
-    this.setData({ [key]: value })
-  },
-
-  onVisitorTypeChange(e: any) {
-    const { index } = e.currentTarget.dataset
-    const pickerIdx = e.detail.value as number
-    const options: any[] = (this.data as any).visitorTypeOptions || []
-    const visitorType = options[pickerIdx]?.value || 'ON_ISLAND'
-    const key = `visitors[${index}].visitorType`
-    this.setData({ [key]: visitorType })
-  },
-
-  openRealNamePicker(e: any) {
-    const { index } = e.currentTarget.dataset
-    this.setData({
-      showRealNamePicker: true,
-      editingVisitorIndex: index,
-    })
-  },
-
-  closeRealNamePicker() {
-    this.setData({
-      showRealNamePicker: false,
-      editingVisitorIndex: -1,
-    })
-  },
-
-  selectRealName(e: any) {
-    const { index } = e.currentTarget.dataset
-    const realName = this.data.realNames[index]
-    if (!realName || this.data.editingVisitorIndex < 0) return
-
-    const visitorIndex = this.data.editingVisitorIndex
-    const key = `visitors[${visitorIndex}]`
-    this.setData({
-      [key]: {
-        name: realName.name,
-        idCard: realName.idCard,
-        province: this.data.visitors[visitorIndex]?.province || '',
-        city: this.data.visitors[visitorIndex]?.city || '',
-        visitorType: this.data.visitors[visitorIndex]?.visitorType || 'ON_ISLAND',
-      },
-      showRealNamePicker: false,
-      editingVisitorIndex: -1,
-    })
-  },
-
-  validateVisitors(): string | null {
-    const { visitors } = this.data
-    for (let i = 0; i < visitors.length; i++) {
-      const v = visitors[i]
-      if (!v.name.trim()) return `请输入第 ${i + 1} 位参观人的姓名`
-      if (!v.idCard.trim()) return `请输入第 ${i + 1} 位参观人的身份证号`
-      if (v.idCard.trim().length !== 18 && v.idCard.trim().length !== 15) {
-        return `第 ${i + 1} 位参观人的身份证号格式不正确`
-      }
-      if (!v.province.trim()) return `请输入第 ${i + 1} 位参观人的省份`
-      if (!v.city.trim()) return `请输入第 ${i + 1} 位参观人的城市`
-      if (!v.visitorType) return `请选择第 ${i + 1} 位参观人的游客类型`
-    }
-    return null
-  },
-
   async submit() {
     if (this.data.submitting) return
 
-    // 未实名核验通过的不允许提交
+    // 本人未实名核验通过的不允许提交
     if (this.data.realNameBlocked) {
       wx.showModal({
         title: '实名认证提示',
-        content: '请先完成实名认证（身份核验通过）后再进行个人预约',
+        content: '请先完成实名认证（身份核验通过）后再进行预约',
         confirmText: '去认证',
         cancelText: '取消',
         success: (res) => {
@@ -466,15 +348,14 @@ Page({
       return
     }
 
-    const { selectedDate, selectedSession, visitors } = this.data
+    const { selectedDate, selectedSession, visitorCount } = this.data
     if (!selectedDate || !selectedSession) {
       wx.showToast({ title: '请选择日期和场次', icon: 'none' })
       return
     }
 
-    const error = this.validateVisitors()
-    if (error) {
-      wx.showToast({ title: error, icon: 'none' })
+    if (visitorCount < 1 || visitorCount > 5) {
+      wx.showToast({ title: '参观人数应在1-5人之间', icon: 'none' })
       return
     }
 
@@ -483,13 +364,10 @@ Page({
       const res: any = await api.post('/reservations/personal', {
         dateConfigId: selectedDate.id,
         sessionType: selectedSession.type,
-        visitors: visitors.map((v) => ({
-          name: v.name.trim(),
-          idCard: v.idCard.trim(),
-          province: v.province.trim(),
-          city: v.city.trim(),
-          visitorType: v.visitorType,
-        })),
+        visitorCount: this.data.visitorCount,
+        district: this.data.district.length > 0 ? this.data.district.join('-') : undefined,
+        visitorType: this.data.visitorType || undefined,
+        childrenCount: this.data.childrenCount,
       })
 
       const reservationId = res?.id || res?.reservationId

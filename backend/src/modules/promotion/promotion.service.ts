@@ -78,6 +78,9 @@ export class PromotionService {
     if (record) {
       record.reservationId = reservationId;
       await this.recordRepo.save(record);
+      this.logger.log(`[linkReservation] 关联成功 visitorUserId=${visitorUserId} reservationId=${reservationId} recordId=${record.id} promoterId=${record.promoterId}`);
+    } else {
+      this.logger.warn(`[linkReservation] 未找到推广记录 visitorUserId=${visitorUserId} reservationId=${reservationId} — 该用户没有推广点击记录`);
     }
   }
 
@@ -92,6 +95,9 @@ export class PromotionService {
     if (record) {
       record.verified = true;
       await this.recordRepo.save(record);
+      this.logger.log(`[markVerifiedByReservation] 核销标记成功 reservationId=${reservationId} recordId=${record.id} promoterId=${record.promoterId}`);
+    } else {
+      this.logger.warn(`[markVerifiedByReservation] 未找到推广记录 reservationId=${reservationId} — 该预约可能不是通过推广产生的`);
     }
   }
 
@@ -110,14 +116,16 @@ export class PromotionService {
 
     // 收集有预约关联的记录，查询预约类型（个人/团队）
     const reservationIds = records.filter(r => r.reservationId).map(r => r.reservationId);
-    const reservationMap = new Map<number, string>();
+    const reservationMap = new Map<string, string>();
     if (reservationIds.length > 0) {
       const reservations = await this.dataSource.getRepository(Reservation).find({
         where: { id: In(reservationIds) },
         select: ['id', 'type'],
       });
-      reservations.forEach(r => reservationMap.set(Number(r.id), r.type));
+      reservations.forEach(r => reservationMap.set(String(r.id), r.type));
     }
+
+    this.logger.log(`[getStats] promoterId=${promoterId} 总记录=${records.length} 有关联预约=${reservationIds.length} 已核销=${records.filter(r => r.verified).length} reservationMap大小=${reservationMap.size}`);
 
     // 按预约类型拆分统计
     let personalReservations = 0;
@@ -127,15 +135,19 @@ export class PromotionService {
 
     for (const r of records) {
       if (!r.reservationId) continue;
-      const type = reservationMap.get(r.reservationId);
+      const type = reservationMap.get(String(r.reservationId));
       if (type === 'PERSONAL') {
         personalReservations++;
         if (r.verified) personalVerified++;
       } else if (type === 'TEAM') {
         teamReservations++;
         if (r.verified) teamVerified++;
+      } else {
+        this.logger.warn(`[getStats] reservationId=${r.reservationId} 未在reservationMap中找到类型 type=${type} verified=${r.verified}`);
       }
     }
+
+    this.logger.log(`[getStats] 统计结果: 个人预约=${personalReservations} 团队预约=${teamReservations} 个人核销=${personalVerified} 团队核销=${teamVerified}`);
 
     return {
       totalClicks: records.length,
@@ -209,8 +221,13 @@ export class PromotionService {
     app.status = 'APPROVED';
     app.approvedBy = adminId;
     await this.applicationRepo.save(app);
-    // 更新 user.isPromoter
-    await this.dataSource.getRepository(User).update(app.userId, { isPromoter: true });
+    // 更新 user.isPromoter, 并生成唯一短码
+    const userRepo = this.dataSource.getRepository(User);
+    let shortCode: string;
+    do {
+      shortCode = crypto.randomBytes(4).toString('hex');
+    } while (await userRepo.findOne({ where: { shortCode } }));
+    await userRepo.update(app.userId, { isPromoter: true, shortCode });
     return app;
   }
 
@@ -245,7 +262,7 @@ export class PromotionService {
 
   /** 取消推广员资格 */
   async removePromoter(userId: number) {
-    await this.dataSource.getRepository(User).update(userId, { isPromoter: false });
+    await this.dataSource.getRepository(User).update(userId, { isPromoter: false, shortCode: null as any });
     await this.applicationRepo.update({ userId, status: 'APPROVED' }, { status: 'REJECTED', remark: '管理员取消推广资格' });
   }
 
