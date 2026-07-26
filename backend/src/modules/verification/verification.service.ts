@@ -108,9 +108,17 @@ export class VerificationService {
   }
 
   /** 获取核销人员的核销记录（含预约详情） */
-  async findByVerifier(verifierId: number, page = 1, pageSize = 10) {
+  async findByVerifier(verifierId: number, page = 1, pageSize = 10, date?: string) {
+    const where: any = { verifierId };
+    if (date) {
+      const dayStart = new Date(date);
+      const dayEnd = new Date(date);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      where.verifiedAt = Between(dayStart, dayEnd);
+    }
+
     const [records, total] = await this.recordRepo.findAndCount({
-      where: { verifierId },
+      where,
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: { verifiedAt: 'DESC' },
@@ -127,6 +135,9 @@ export class VerificationService {
       type: r.reservation?.type || '',
       visitorCount: r.reservation?.visitorCount || 0,
       actualCount: r.actualCount || 0,
+      district: r.reservation?.district || '',
+      visitorType: r.reservation?.visitorType || '',
+      childrenCount: r.reservation?.childrenCount || 0,
     }));
 
     return { records: list, total, page, pageSize };

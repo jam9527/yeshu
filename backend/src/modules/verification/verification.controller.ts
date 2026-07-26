@@ -33,8 +33,9 @@ export class VerificationController {
     @CurrentUser('id') verifierId: number,
     @Query('page') page = 1,
     @Query('pageSize') pageSize = 10,
+    @Query('date') date?: string,
   ) {
-    return this.verificationService.findByVerifier(verifierId, page, pageSize);
+    return this.verificationService.findByVerifier(verifierId, page, pageSize, date);
   }
 
   /** GET /api/verification/stats - 核销统计 */
