@@ -582,7 +582,9 @@
 .notice-popup-body {
   padding: 16px 20px;
   flex: 1;
-  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden auto;
   font-size: 14px;
   color: #333;
   line-height: 1.7;

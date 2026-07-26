@@ -5,13 +5,19 @@ import request from '../../api/request'
 
 const personalNotice = ref('')
 const teamNotice = ref('')
+const ticketingNotice = ref('')
 const saving = ref(false)
 
 async function fetchData() {
   try {
-    const [pRes, tRes] = await Promise.all([request.get('/notices/PERSONAL'), request.get('/notices/TEAM')])
+    const [pRes, tRes, tkRes] = await Promise.all([
+      request.get('/notices/PERSONAL'),
+      request.get('/notices/TEAM'),
+      request.get('/notices/TICKETING'),
+    ])
     if ((pRes as any).data) personalNotice.value = (pRes as any).data.content || ''
     if ((tRes as any).data) teamNotice.value = (tRes as any).data.content || ''
+    if ((tkRes as any).data) ticketingNotice.value = (tkRes as any).data.content || ''
   } catch { /* ignore */ }
 }
 
@@ -44,6 +50,15 @@ onMounted(fetchData)
           <template #header>团队预约须知</template>
           <el-input v-model="teamNotice" type="textarea" :rows="12" />
           <el-button type="primary" style="margin-top:12px" :loading="saving" @click="save('TEAM', teamNotice)">保存</el-button>
+        </el-card>
+      </el-col>
+    </el-row>
+    <el-row :gutter="20" style="margin-top:20px">
+      <el-col :span="24">
+        <el-card>
+          <template #header>购票须知（显示在个人预约日历下方）</template>
+          <el-input v-model="ticketingNotice" type="textarea" :rows="12" />
+          <el-button type="primary" style="margin-top:12px" :loading="saving" @click="save('TICKETING', ticketingNotice)">保存</el-button>
         </el-card>
       </el-col>
     </el-row>

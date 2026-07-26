@@ -38,6 +38,7 @@ export class ReservationController {
       district?: string;
       visitorType?: string;
       childrenCount?: number;
+      promoterCode?: string;
     },
   ) {
     return this.reservationService.createPersonal(userId, dto);

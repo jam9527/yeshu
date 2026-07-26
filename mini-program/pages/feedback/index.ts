@@ -58,6 +58,12 @@ Page({
 
   /** 提交反馈 */
   async submit() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/feedback/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     const { content, images } = this.data
 
     if (!content.trim()) {

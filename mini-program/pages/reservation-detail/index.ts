@@ -1,17 +1,8 @@
 /**
  * 预约详情 - 展示预约详细信息
- * 包含参观人列表、团队信息、QR码核销
+ * 包含团队信息、QR码核销
  */
 import api from '../../utils/api'
-
-interface Visitor {
-  id?: string
-  name: string
-  idCard: string
-  province: string
-  city: string
-  visitorType?: string
-}
 
 interface TeamInfo {
   contactName: string
@@ -35,7 +26,6 @@ interface ReservationData {
   visitorCount: number
   qrCode?: string
   qrCodeUrl?: string
-  visitors: Visitor[]
   teamInfo?: TeamInfo
   createTime: string
   rejectReason?: string
@@ -89,13 +79,6 @@ Page({
         visitorCount: raw.visitorCount,
         qrCode: raw.qrCode,
         qrCodeUrl: (getApp() as any).globalData.baseUrl + '/reservations/' + raw.id + '/qrcode',
-        visitors: (raw.visitors || raw.visitorList || []).map((v: any) => ({
-          id: v.id,
-          name: v.name,
-          idCard: v.idCard,
-          province: v.province,
-          city: v.city,
-        })),
         createTime: raw.createTime || raw.createdAt,
         rejectReason: raw.rejectReason,
       }

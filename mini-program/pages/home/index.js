@@ -44,6 +44,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const api_1 = __importStar(require("../../utils/api"));
 const formatDate_1 = require("../../utils/formatDate");
+/** 百度 BD-09 坐标 → 火星 GCJ-02（微信地图使用） */
+function bd09ToGcj02(lng, lat) {
+    const x = lng - 0.0065;
+    const y = lat - 0.006;
+    const z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin((y * Math.PI * 3000) / 180);
+    const theta = Math.atan2(y, x) - 0.000003 * Math.cos((x * Math.PI * 3000) / 180);
+    return { lng: z * Math.cos(theta), lat: z * Math.sin(theta) };
+}
 function normalizeSwiperImages(components) {
     return components.map((comp) => {
         var _a;
@@ -64,9 +72,10 @@ Page({
         loading: true,
     },
     onLoad(options) {
-        // 已登录用户直接打开分享链接时记录推广点击
-        if (options.promoterId) {
-            api_1.default.post('/promotion/click', { promoterId: Number(options.promoterId) }).catch(() => { });
+        // 推广追踪：分享卡片用 promoterId，小程序码扫码用 scene（getUnlimited）
+        const pid = options.promoterId || options.scene;
+        if (pid) {
+            api_1.default.post('/promotion/click', { promoterId: Number(pid) }).catch(() => { });
         }
         this.fetchData();
     },
@@ -125,77 +134,62 @@ Page({
             }
         });
     },
+    // === 通用链接处理 ===
+    // 支持格式:
+    //   - 小程序内部路径 /pages/xxx/index  → wx.navigateTo
+    //   - 其他（http链接等） → 复制到剪贴板
+    handleLink(link) {
+        if (!link)
+            return;
+        if (link.startsWith('/')) {
+            wx.navigateTo({ url: link });
+        }
+        else {
+            wx.setClipboardData({ data: link });
+        }
+    },
     // === DIY 组件交互事件 ===
     onDiySwiperTap(e) {
-        const { link } = e.currentTarget.dataset;
-        if (link)
-            wx.navigateTo({ url: link });
+        this.handleLink(e.currentTarget.dataset.link);
     },
     onFuncGridTap(e) {
-        const { url } = e.currentTarget.dataset;
-        if (!url)
-            return;
-        if (url.startsWith('/')) {
-            wx.navigateTo({ url });
-        }
-        else if (url.startsWith('http')) {
-            wx.setClipboardData({ data: url });
-        }
+        this.handleLink(e.currentTarget.dataset.url);
     },
     onDiyImageTap(e) {
-        const { link } = e.currentTarget.dataset;
-        if (link) {
-            if (link.startsWith('/'))
-                wx.navigateTo({ url: link });
-            else
-                wx.setClipboardData({ data: link });
-        }
+        this.handleLink(e.currentTarget.dataset.link);
     },
     onMediaGridTap(e) {
-        const { link } = e.currentTarget.dataset;
-        if (link) {
-            if (link.startsWith('/'))
-                wx.navigateTo({ url: link });
-            else
-                wx.setClipboardData({ data: link });
-        }
+        this.handleLink(e.currentTarget.dataset.link);
     },
     onColumnsTap(e) {
-        const { link } = e.currentTarget.dataset;
-        if (link) {
-            if (link.startsWith('/'))
-                wx.navigateTo({ url: link });
-            else
-                wx.setClipboardData({ data: link });
-        }
+        this.handleLink(e.currentTarget.dataset.link);
     },
     onDiyButtonTap(e) {
-        const { link } = e.currentTarget.dataset;
-        if (link) {
-            if (link.startsWith('/'))
-                wx.navigateTo({ url: link });
-            else
-                wx.setClipboardData({ data: link });
-        }
+        this.handleLink(e.currentTarget.dataset.link);
     },
     onDiyNavigationTap(e) {
         const { latitude, longitude, name, address } = e.currentTarget.dataset;
-        const lat = parseFloat(latitude);
-        const lng = parseFloat(longitude);
+        console.log('[导航] dataset:', { latitude, longitude, name, address });
+        let lat = parseFloat(latitude);
+        let lng = parseFloat(longitude);
         if (isNaN(lat) || isNaN(lng)) {
             wx.showModal({
                 title: '导航调试',
-                content: `坐标无效\nlat=${latitude}\nlng=${longitude}\nname=${name}\naddr=${address}`,
+                content: `坐标无效\nlat=${latitude} (${typeof latitude})\nlng=${longitude} (${typeof longitude})\nname=${name}\naddr=${address}`,
             });
             return;
         }
+        // 百度地图 BD-09 → 微信 GCJ-02 坐标转换
+        const gcj = bd09ToGcj02(lng, lat);
+        wx.showToast({ title: '正在打开地图...', icon: 'loading', duration: 1000 });
         wx.openLocation({
-            latitude: lat,
-            longitude: lng,
+            latitude: gcj.lat,
+            longitude: gcj.lng,
             name: name || '',
             address: address || '',
             scale: 16,
-            fail: function (err) {
+            fail: (err) => {
+                console.error('[导航] openLocation 失败:', err);
                 wx.showModal({ title: '打开地图失败', content: JSON.stringify(err) });
             },
         });

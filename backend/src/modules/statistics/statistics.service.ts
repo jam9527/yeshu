@@ -2,38 +2,48 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Reservation } from '../reservation/entities/reservation.entity';
-import { ReservationVisitor } from '../reservation/entities/reservation-visitor.entity';
 import { ReservationQuota } from '../reservation/entities/reservation-quota.entity';
 import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
+import { RealNameInfo } from '../real-name/entities/real-name.entity';
 
 @Injectable()
 export class StatisticsService {
   constructor(
     @InjectRepository(Reservation)
     private readonly reservationRepo: Repository<Reservation>,
-    @InjectRepository(ReservationVisitor)
-    private readonly visitorRepo: Repository<ReservationVisitor>,
     @InjectRepository(ReservationQuota)
     private readonly quotaRepo: Repository<ReservationQuota>,
     @InjectRepository(ReservationDateConfig)
     private readonly dateConfigRepo: Repository<ReservationDateConfig>,
+    @InjectRepository(RealNameInfo)
+    private readonly realNameRepo: Repository<RealNameInfo>,
   ) {}
 
   /** 概览数据 */
   async overview() {
-    const totalReservations = await this.reservationRepo.count();
     const today = new Date().toISOString().split('T')[0];
-    const todayReservations = await this.reservationRepo.count({
-      where: { reservationDate: today },
-    });
-    const pendingReview = await this.reservationRepo.count({
-      where: { type: 'TEAM', status: 'APPROVING' },
-    });
+
+    const [totalReservations, todayReservations, pendingReview, totalVerified, todayVerified] =
+      await Promise.all([
+        this.reservationRepo.count(),
+        this.reservationRepo.count({ where: { reservationDate: today } }),
+        this.reservationRepo.count({ where: { type: 'TEAM', status: 'APPROVING' } }),
+        this.reservationRepo.count({ where: { status: 'VERIFIED' } }),
+        this.reservationRepo.count({ where: { reservationDate: today, status: 'VERIFIED' } }),
+      ]);
 
     return {
       totalReservations,
       todayReservations,
       pendingReview,
+      totalVerified,
+      todayVerified,
+      todayVerificationRate: todayReservations > 0
+        ? Math.round((todayVerified / todayReservations) * 100)
+        : 0,
+      totalVerificationRate: totalReservations > 0
+        ? Math.round((totalVerified / totalReservations) * 100)
+        : 0,
     };
   }
 
@@ -72,12 +82,29 @@ export class StatisticsService {
 
   /**
    * 年龄段分布统计
-   * 从身份证号提取出生日期计算年龄
+   * 从预约用户的实名身份证号提取出生日期计算年龄
    */
   async ageDistribution() {
-    const visitors = await this.visitorRepo
-      .createQueryBuilder('v')
-      .select('v.idCard')
+    // 获取有过预约记录的用户ID
+    const userIds = (await this.reservationRepo
+      .createQueryBuilder('r')
+      .select('DISTINCT r.userId')
+      .getRawMany())
+      .map((r: any) => r.userId);
+
+    if (userIds.length === 0) {
+      return Object.entries({
+        '0-17': 0, '18-25': 0, '26-35': 0, '36-45': 0, '46-55': 0, '56+': 0,
+      }).map(([group, count]) => ({ group, count, percentage: 0 }));
+    }
+
+    // 获取这些用户的实名身份证号
+    const realNames = await this.realNameRepo
+      .createQueryBuilder('rn')
+      .select('rn.idCard')
+      .where('rn.userId IN (:...userIds)', { userIds })
+      .andWhere('rn.idVerified = 1')
+      .andWhere('rn.isDeleted = 0')
       .getMany();
 
     const ageGroups: Record<string, number> = {
@@ -91,9 +118,9 @@ export class StatisticsService {
 
     const currentYear = new Date().getFullYear();
 
-    for (const v of visitors) {
+    for (const rn of realNames) {
       // 身份证号 7-14 位为出生日期 YYYYMMDD
-      const birthStr = v.idCard?.substring(6, 14);
+      const birthStr = rn.idCard?.substring(6, 14);
       if (!birthStr || birthStr.length !== 8) continue;
 
       const birthYear = parseInt(birthStr.substring(0, 4), 10);
@@ -109,10 +136,11 @@ export class StatisticsService {
       else ageGroups['56+']++;
     }
 
+    const total = realNames.length;
     return Object.entries(ageGroups).map(([group, count]) => ({
       group,
       count,
-      percentage: visitors.length > 0 ? +((count / visitors.length) * 100).toFixed(1) : 0,
+      percentage: total > 0 ? +((count / total) * 100).toFixed(1) : 0,
     }));
   }
 
@@ -188,6 +216,65 @@ export class StatisticsService {
         teamTotal: config.pmTeamQuota,
       },
     };
+  }
+
+  /** 流量来源统计：自然流量 vs 推广流量，支持日/周/月粒度 */
+  async trafficSource(
+    startDate?: string,
+    endDate?: string,
+    granularity: 'day' | 'week' | 'month' = 'day',
+  ) {
+    // 日期分组表达式
+    const dateExpr = granularity === 'month'
+      ? "DATE_FORMAT(r.reservationDate, '%Y-%m')"
+      : granularity === 'week'
+        ? "CONCAT(YEAR(r.reservationDate), '-W', LPAD(WEEK(r.reservationDate, 1), 2, '0'))"
+        : 'DATE(r.reservationDate)';
+
+    // 所有预约（含状态=VERIFIED的核销数）
+    const allQb = this.reservationRepo
+      .createQueryBuilder('r')
+      .select(`${dateExpr} as period`)
+      .addSelect('COUNT(*) as total')
+      .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
+      .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
+      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team");
+
+    if (startDate) allQb.andWhere('r.reservationDate >= :start', { start: startDate });
+    if (endDate) allQb.andWhere('r.reservationDate <= :end', { end: endDate });
+
+    const allRaw = await allQb.groupBy('period').orderBy('period', 'ASC').getRawMany();
+
+    // 推广预约（在 promotion_records 中有关联的）
+    const promoQb = this.reservationRepo
+      .createQueryBuilder('r')
+      .innerJoin('promotion_records', 'pr', 'pr.reservationId = r.id')
+      .select(`${dateExpr} as period`)
+      .addSelect('COUNT(*) as total')
+      .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
+      .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
+      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team");
+
+    if (startDate) promoQb.andWhere('r.reservationDate >= :start', { start: startDate });
+    if (endDate) promoQb.andWhere('r.reservationDate <= :end', { end: endDate });
+
+    const promoRaw = await promoQb.groupBy('period').orderBy('period', 'ASC').getRawMany();
+
+    // 构建时间序列
+    return allRaw.map((a: any) => {
+      const period = String(a.period);
+      const p = promoRaw.find((pr: any) => String(pr.period) === period);
+      const promoT = Number(p?.total) || 0;
+      const promoV = Number(p?.verified) || 0;
+      const allT = Number(a.total) || 0;
+      const allV = Number(a.verified) || 0;
+      return {
+        period,
+        total: { reservations: allT, verified: allV, personal: Number(a.personal), team: Number(a.team) },
+        organic: { reservations: allT - promoT, verified: allV - promoV, personal: Number(a.personal) - (Number(p?.personal) || 0), team: Number(a.team) - (Number(p?.team) || 0) },
+        promoter: { reservations: promoT, verified: promoV, personal: Number(p?.personal) || 0, team: Number(p?.team) || 0 },
+      };
+    });
   }
 
   /** 按日期范围统计预约数量 */

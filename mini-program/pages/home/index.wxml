@@ -148,7 +148,7 @@
               <rich-text nodes="{{row.props.content}}" />
             </view>
             <view wx:elif="{{row.type === 'button'}}" class="diy-button-wrap">
-              <button class="diy-button" type="{{row.props.type || 'primary'}}" style="border-radius:{{row.props.borderRadius || 8}}px;padding:{{row.props.padding || '10px'}}">{{row.props.text || '按钮'}}</button>
+              <button class="diy-button" type="{{row.props.type || 'primary'}}" data-link="{{row.props.link}}" bindtap="onDiyButtonTap" style="border-radius:{{row.props.borderRadius || 8}}px;padding:{{row.props.padding || '10px'}}">{{row.props.text || '按钮'}}</button>
             </view>
             <view wx:elif="{{row.type === 'spacer'}}" style="height:{{row.props.height || 12}}px;overflow:hidden">{{''}}</view>
           </view>
@@ -181,7 +181,7 @@
         </view>
         <!-- 按钮 -->
         <view wx:elif="{{child.type === 'button'}}" class="diy-button-wrap">
-          <button class="diy-button" type="{{child.props.type || 'primary'}}" style="border-radius:{{child.props.borderRadius || 8}}px;padding:{{child.props.padding || '10px'}}">{{child.props.text || '按钮'}}</button>
+          <button class="diy-button" type="{{child.props.type || 'primary'}}" data-link="{{child.props.link}}" bindtap="onDiyButtonTap" style="border-radius:{{child.props.borderRadius || 8}}px;padding:{{child.props.padding || '10px'}}">{{child.props.text || '按钮'}}</button>
         </view>
         <!-- 空白间距 -->
         <view wx:elif="{{child.type === 'spacer'}}" style="height:{{child.props.height || 16}}px;overflow:hidden">{{''}}</view>
@@ -218,6 +218,11 @@
         <text class="diy-navigation-addr">{{item.props.address || ''}}</text>
       </view>
       <view class="diy-navigation-arrow" style="color:{{item.props.textColor || '#ffd700'}}">›</view>
+    </view>
+
+    <!-- 微信小店 -->
+    <view wx:elif="{{item.type === 'wechat_store'}}" class="diy-wechat-store" style="padding:{{item.props.padding || '0'}}">
+      <store-home appid="{{item.props.appid}}" />
     </view>
 
     <!-- 空白间距 -->

@@ -5,6 +5,17 @@
 import api, { resolveImageUrls } from '../../utils/api'
 import { formatDate } from '../../utils/formatDate'
 
+/** 将富文本 HTML 中的 img 标签转为移动端自适应 */
+function responsiveImages(html: string): string {
+  if (!html) return html
+  return html.replace(/<img\b[^>]*>/gi, (tag) => {
+    let t = tag.replace(/\s*width\s*=\s*["'][^"']*["']/gi, '')
+    t = t.replace(/\s*height\s*=\s*["'][^"']*["']/gi, '')
+    t = t.replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
+    return t.replace(/\/?\s*>$/, ' style="max-width:100%;height:auto;display:block" />')
+  })
+}
+
 /** 根据开始/结束时间实时计算活动状态（与后台 ActivityList 逻辑一致） */
 function computeStatus(activity: any): { label: string; cssClass: string } {
   const now = Date.now()
@@ -42,6 +53,7 @@ Page({
       try {
         const res: any = await api.get('/activities/' + id)
         const act = resolveImageUrls(res)
+        act.richContent = responsiveImages(act.richContent)
         act._startTime = formatDate(act.startTime)
         act._endTime = formatDate(act.endTime)
         applyStatus(act)
@@ -53,6 +65,7 @@ Page({
         const list = resolveImageUrls(res || [])
         const found = list.find((item: any) => String(item.id) === String(id))
         if (found) {
+          found.richContent = responsiveImages(found.richContent)
           found._startTime = formatDate(found.startTime)
           found._endTime = formatDate(found.endTime)
           applyStatus(found)

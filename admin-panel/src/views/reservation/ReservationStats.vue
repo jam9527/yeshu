@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import * as echarts from 'echarts'
 import request from '../../api/request'
 
 const loading = ref(false)
-const overview = ref({ totalReservations: 0, todayReservations: 0, pendingReview: 0 })
+const overview = ref({
+  totalReservations: 0, todayReservations: 0, pendingReview: 0,
+  totalVerified: 0, todayVerified: 0,
+  todayVerificationRate: 0, totalVerificationRate: 0,
+})
 
 // 年龄段分布
 const ageDistribution = ref<any[]>([])
@@ -18,6 +23,14 @@ const popularLoading = ref(false)
 const quotaDate = ref(new Date().toISOString().split('T')[0])
 const quota = ref<any>(null)
 const quotaLoading = ref(false)
+
+// 流量来源趋势
+const trafficStartDate = ref('')
+const trafficEndDate = ref('')
+const trafficGranularity = ref<'day' | 'week' | 'month'>('day')
+const trafficData = ref<any[]>([])
+const trafficChart = ref<echarts.ECharts | null>(null)
+const trafficChartRef = ref<HTMLDivElement | null>(null)
 
 async function fetchOverview() {
   try {
@@ -48,8 +61,6 @@ function buildAgeChart() {
     accumulated += pct
     return { name: d.group, value: d.count, pct: d.percentage, color: colors[i % colors.length], start, end: accumulated }
   })
-
-  // Build conic gradient pie
   const gradientParts = sectors.map((s: any) =>
     `${s.color} ${s.start}% ${s.end}%`
   ).join(', ')
@@ -78,6 +89,69 @@ async function fetchQuota() {
   } finally { quotaLoading.value = false }
 }
 
+// ===== 流量来源 =====
+async function fetchTrafficSource() {
+  loading.value = true
+  try {
+    const params: any = { granularity: trafficGranularity.value }
+    if (trafficStartDate.value) params.startDate = trafficStartDate.value
+    if (trafficEndDate.value) params.endDate = trafficEndDate.value
+    const res: any = await request.get('/admin/statistics/traffic-source', { params })
+    if (res.data) {
+      trafficData.value = res.data
+      renderTrafficChart()
+    }
+  } finally { loading.value = false }
+}
+
+function renderTrafficChart() {
+  if (!trafficChartRef.value || !trafficData.value.length) return
+
+  if (!trafficChart.value) {
+    trafficChart.value = echarts.init(trafficChartRef.value)
+  }
+
+  const data = trafficData.value
+  const periods = data.map((d: any) => d.period)
+  const organicRes = data.map((d: any) => d.organic.reservations)
+  const promoterRes = data.map((d: any) => d.promoter.reservations)
+  const organicVer = data.map((d: any) => d.organic.verified)
+  const promoterVer = data.map((d: any) => d.promoter.verified)
+
+  trafficChart.value.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['自然预约', '推广预约', '自然核销', '推广核销'], bottom: 0 },
+    grid: { left: 40, right: 20, top: 20, bottom: 40 },
+    xAxis: { type: 'category', data: periods, axisLabel: { rotate: 30, fontSize: 11 } },
+    yAxis: { type: 'value', minInterval: 1 },
+    series: [
+      { name: '自然预约', type: 'line', data: organicRes, smooth: true,
+        lineStyle: { color: '#5470c6', width: 2 }, itemStyle: { color: '#5470c6' } },
+      { name: '推广预约', type: 'line', data: promoterRes, smooth: true,
+        lineStyle: { color: '#91cc75', width: 2 }, itemStyle: { color: '#91cc75' } },
+      { name: '自然核销', type: 'line', data: organicVer,
+        lineStyle: { color: '#5470c6', type: 'dashed', width: 1.5 }, itemStyle: { color: '#5470c6' } },
+      { name: '推广核销', type: 'line', data: promoterVer,
+        lineStyle: { color: '#91cc75', type: 'dashed', width: 1.5 }, itemStyle: { color: '#91cc75' } },
+    ],
+  })
+}
+
+// 流量来源汇总
+const trafficSummary = ref({ organicReservations: 0, organicVerified: 0, promoterReservations: 0, promoterVerified: 0 })
+
+watch(trafficData, (data) => {
+  if (!data.length) return
+  trafficSummary.value = {
+    organicReservations: data.reduce((s: number, d: any) => s + d.organic.reservations, 0),
+    organicVerified: data.reduce((s: number, d: any) => s + d.organic.verified, 0),
+    promoterReservations: data.reduce((s: number, d: any) => s + d.promoter.reservations, 0),
+    promoterVerified: data.reduce((s: number, d: any) => s + d.promoter.verified, 0),
+  }
+})
+
+watch(trafficGranularity, () => { fetchTrafficSource() })
+watch([trafficStartDate, trafficEndDate], () => { fetchTrafficSource() })
 watch(quotaDate, fetchQuota)
 
 onMounted(() => {
@@ -85,6 +159,7 @@ onMounted(() => {
   fetchAgeDistribution()
   fetchPopularDates()
   fetchQuota()
+  fetchTrafficSource()
 })
 </script>
 
@@ -113,20 +188,98 @@ onMounted(() => {
       <el-col :span="6">
         <el-card shadow="hover">
           <div class="stat-card">
-            <div class="stat-label">待审核团队</div>
-            <div class="stat-value" style="color: #e6a23c;">{{ overview.pendingReview }}</div>
+            <div class="stat-label">累计核销率</div>
+            <div class="stat-value" style="color: #67c23a;">{{ overview.totalVerificationRate }}%</div>
+            <div class="stat-sub">{{ overview.totalVerified }} 已核销</div>
           </div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover">
           <div class="stat-card">
-            <div class="stat-label">今日核销率</div>
-            <div class="stat-value" style="color: #67c23a;">--</div>
+            <div class="stat-label">待审核团队</div>
+            <div class="stat-value" style="color: #e6a23c;">{{ overview.pendingReview }}</div>
           </div>
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 流量来源对比 -->
+    <el-row :gutter="16" style="margin-bottom: 20px;">
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card">
+            <div class="stat-label">自然流量预约</div>
+            <div class="stat-value" style="color: #5470c6;">{{ trafficSummary.organicReservations }}</div>
+            <div class="stat-sub">核销 {{ trafficSummary.organicVerified }} 次</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card">
+            <div class="stat-label">自然流量核销率</div>
+            <div class="stat-value" style="color: #5470c6;">
+              {{ trafficSummary.organicReservations > 0 ? Math.round(trafficSummary.organicVerified / trafficSummary.organicReservations * 100) : 0 }}%
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card">
+            <div class="stat-label">推广流量预约</div>
+            <div class="stat-value" style="color: #91cc75;">{{ trafficSummary.promoterReservations }}</div>
+            <div class="stat-sub">核销 {{ trafficSummary.promoterVerified }} 次</div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :span="6">
+        <el-card shadow="hover">
+          <div class="stat-card">
+            <div class="stat-label">推广流量核销率</div>
+            <div class="stat-value" style="color: #91cc75;">
+              {{ trafficSummary.promoterReservations > 0 ? Math.round(trafficSummary.promoterVerified / trafficSummary.promoterReservations * 100) : 0 }}%
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <!-- 流量来源趋势图 -->
+    <el-card shadow="hover" style="margin-bottom: 16px;" v-loading="loading">
+      <template #header>
+        <div class="chart-header">
+          <span>流量来源趋势</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <el-radio-group v-model="trafficGranularity" size="small">
+              <el-radio-button value="day">按日</el-radio-button>
+              <el-radio-button value="week">按周</el-radio-button>
+              <el-radio-button value="month">按月</el-radio-button>
+            </el-radio-group>
+            <el-date-picker
+              v-model="trafficStartDate"
+              type="date"
+              placeholder="开始日期"
+              value-format="YYYY-MM-DD"
+              size="small"
+              style="width:140px"
+            />
+            <span style="color:#999;">-</span>
+            <el-date-picker
+              v-model="trafficEndDate"
+              type="date"
+              placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              size="small"
+              style="width:140px"
+            />
+          </div>
+        </div>
+      </template>
+      <div ref="trafficChartRef" style="height:360px;" v-show="trafficData.length"></div>
+      <el-empty v-if="!trafficData.length && !loading" description="暂无数据" />
+    </el-card>
 
     <el-row :gutter="16">
       <!-- 年龄段分布 -->
@@ -234,6 +387,9 @@ onMounted(() => {
 .stat-card { text-align: center; padding: 10px; }
 .stat-label { font-size: 14px; color: #666; margin-bottom: 8px; }
 .stat-value { font-size: 32px; font-weight: bold; }
+.stat-sub { font-size: 12px; color: #999; margin-top: 4px; }
+
+.chart-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
 .chart-container { display: flex; gap: 24px; align-items: center; }
 .pie-chart-wrapper { flex-shrink: 0; }

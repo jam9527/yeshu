@@ -9,17 +9,32 @@
 
     <!-- 步骤1：手机号登录 -->
     <block wx:if="{{!phoneLoggedIn && !codeLoggedIn}}">
+      <!-- 未勾选协议：显示灰色禁用按钮 -->
+      <view wx:if="{{!agreedToPrivacy}}" class="login-btn login-btn-disabled">
+        手机号授权登录
+      </view>
+      <!-- 已勾选协议：显示真实登录按钮 -->
       <button
+        wx:else
         class="login-btn"
         style="background: {{pageConfig.buttonColor}}; color: {{pageConfig.buttonTextColor}}"
         open-type="getPhoneNumber|agreePrivacyAuthorization"
         bindgetphonenumber="handlePhoneLogin"
         bindagreeprivacyauthorization="handleAgreePrivacy"
       >
-        微信一键登录
+        手机号授权登录
       </button>
 
-      <text class="tip">登录即表示同意《用户协议及隐私政策》</text>
+      <!-- 隐私协议勾选区域 -->
+      <view class="agreement" bindtap="handleAgreementTap">
+        <view class="agreement-checkbox {{agreedToPrivacy ? 'checked' : ''}}">
+          <text wx:if="{{agreedToPrivacy}}">✓</text>
+        </view>
+        <text class="agreement-text">我已阅读并同意</text>
+        <text data-action="openTerms" class="agreement-link">《用户协议》</text>
+        <text class="agreement-text">及</text>
+        <text data-action="openPrivacyPolicy" class="agreement-link">《隐私政策》</text>
+      </view>
     </block>
 
     <!-- 步骤1完成 → 静默获取昵称中 -->

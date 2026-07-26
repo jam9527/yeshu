@@ -72,6 +72,7 @@ export class WechatService {
         id: user.id, nickname: user.nickname, avatarUrl: user.avatarUrl,
         phone: user.phone || phone || null,
         isVerifier: user.isVerifier, isPromoter: user.isPromoter,
+        shortCode: user.shortCode || null,
       },
     };
   }
@@ -150,7 +151,7 @@ export class WechatService {
   /** 生成小程序码（wxacode.getUnlimited，后备方案） */
   async generateWxCode(scene: string, page: string): Promise<Buffer> {
     const accessToken = await this.getAccessToken();
-    const url = `https://api.weixin.qq.com/wxa/getwxacodeunlimited?access_token=${accessToken}`;
+    const url = `https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=${accessToken}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -159,7 +160,6 @@ export class WechatService {
         scene,
         page,
         check_path: false,
-        env_version: this.getEnvVersion(),
         width: 280,
       }),
     });

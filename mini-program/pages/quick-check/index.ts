@@ -29,6 +29,12 @@ Page({
   },
 
   onShow() {
+    const app = getApp()
+    if (!app.globalData.token) {
+      app.globalData.pendingRedirect = '/' + (this.route || 'pages/quick-check/index')
+      wx.redirectTo({ url: '/pages/login/index' })
+      return
+    }
     this.fetchActiveReservation()
   },
 

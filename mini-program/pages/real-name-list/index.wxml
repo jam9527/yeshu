@@ -26,7 +26,7 @@
       </view>
       <view class="record-idcard">
         <text class="label">证件号码</text>
-        <text class="value">{{formatIdCard(item.idCard, item.idCardType)}}</text>
+        <text class="value">{{item.maskedIdCard || item.idCard}}</text>
       </view>
 
       <!-- 删除按钮 -->

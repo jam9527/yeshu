@@ -4,6 +4,19 @@
  */
 import api, { resolveImageUrls } from '../../utils/api'
 
+/** 将富文本 HTML 中的 img 标签转为移动端自适应 */
+function responsiveImages(html: string): string {
+  if (!html) return html
+  return html.replace(/<img\b[^>]*>/gi, (tag) => {
+    // 去掉已有的 width/height 属性
+    let t = tag.replace(/\s*width\s*=\s*["'][^"']*["']/gi, '')
+    t = t.replace(/\s*height\s*=\s*["'][^"']*["']/gi, '')
+    t = t.replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
+    // 插入自适应样式
+    return t.replace(/\/?\s*>$/, ' style="max-width:100%;height:auto;display:block" />')
+  })
+}
+
 Page({
   data: {
     /** 展厅详情 */
@@ -23,6 +36,7 @@ Page({
       // 优先尝试直接获取单个展厅
       try {
         const res: any = await api.get('/exhibitions/' + id)
+        if (res) res.richContent = responsiveImages(res.richContent)
         this.setData({ exhibition: resolveImageUrls(res) })
         return
       } catch {
@@ -31,6 +45,7 @@ Page({
         const list = resolveImageUrls(res || [])
         const found = list.find((item: any) => String(item.id) === String(id))
         if (found) {
+          found.richContent = responsiveImages(found.richContent)
           this.setData({ exhibition: found })
         } else {
           wx.showToast({ title: '展厅未找到', icon: 'none' })

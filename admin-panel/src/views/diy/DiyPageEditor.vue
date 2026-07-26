@@ -74,6 +74,7 @@ const componentTypes = [
   { type: 'footer', label: '底部信息', icon: '📄', defaultProps: { brand: '椰树集团', copyright: '© 椰树集团 参观预约系统', backgroundColor: '#000000' } },
   { type: 'spacer', label: '空白间距', icon: '⬜', defaultProps: { height: 16 } },
   { type: 'navigation', label: '导航', icon: '📍', defaultProps: { label: '导航到椰树集团', latitude: 20.017, longitude: 110.358, name: '椰树集团', address: '海南省海口市龙华路41号', backgroundColor: '#1a3a2a', textColor: '#ffd700' } },
+  { type: 'wechat_store', label: '微信小店', icon: '🛒', defaultProps: { appid: '', padding: '0' } },
 ]
 
 // 默认首页模板（模拟当前硬编码布局）
@@ -1045,6 +1046,11 @@ onMounted(fetchList)
                   <div v-if="!comp.props.items?.length" class="mini-empty">暂无内容</div>
                 </div>
 
+                <!-- 微信小店预览 -->
+                <div v-else-if="comp.type === 'wechat_store'" class="mini-store-preview" :style="{ background: '#07c160', color: '#fff', padding: '6px 8px', borderRadius: '6px', fontSize: '11px', textAlign: 'center' }">
+                  🛒 {{ comp.props.appid ? '小店: ' + comp.props.appid : '微信小店（未配置AppID）' }}
+                </div>
+
                 <!-- 空白间距预览 -->
                 <div v-else-if="comp.type === 'spacer'" class="mini-spacer" :style="{ height: Math.min(comp.props.height || 16, 60) + 'px' }"></div>
               </div>
@@ -1296,7 +1302,7 @@ onMounted(fetchList)
               <div v-if="editingComp.props.images?.length" class="swiper-image-list">
                 <div v-for="(img, imgIdx) in editingComp.props.images" :key="imgIdx" class="swiper-image-item">
                   <img :src="typeof img === 'string' ? img : img.src" class="swiper-image-preview" />
-                  <el-input v-model="img.link" placeholder="跳转链接（可选，如 /pages/activities/index）" size="small" style="width:220px" />
+                  <el-input v-model="img.link" placeholder="跳转链接（可选，如 /pages/activities/index ）" size="small" style="width:220px" />
                   <el-button size="small" type="danger" circle class="swiper-image-del" @click="removeSwiperImage(imgIdx)">×</el-button>
                 </div>
               </div>
@@ -1612,7 +1618,7 @@ onMounted(fetchList)
             </div>
           </el-form-item>
           <el-form-item label="跳转链接">
-            <el-input v-model="editingComp.props.link" placeholder="/pages/xxx/index" />
+            <el-input v-model="editingComp.props.link" placeholder="/pages/xxx/index " />
           </el-form-item>
           <el-form-item label="宽度">
             <el-input v-model="editingComp.props.width" placeholder="100%" />
@@ -1674,7 +1680,7 @@ onMounted(fetchList)
             </el-select>
           </el-form-item>
           <el-form-item label="跳转链接">
-            <el-input v-model="editingComp.props.link" placeholder="/pages/xxx/index" />
+            <el-input v-model="editingComp.props.link" placeholder="/pages/xxx/index " />
           </el-form-item>
         </template>
 
@@ -1714,7 +1720,18 @@ onMounted(fetchList)
           </el-form-item>
         </template>
 
-        <!-- 导航 -->
+        <!-- 微信小店 -->
+        <template v-if="editingComp.type === 'wechat_store'">
+          <el-form-item label="小店AppID">
+            <el-input v-model="editingComp.props.appid" placeholder="微信小店ID（从小店后台获取）" />
+            <div style="color:#999;font-size:12px;margin-top:4px">
+              获取方式：小店后台 → 店铺管理 → 基础信息 → 账号信息 → 微信小店ID
+            </div>
+          </el-form-item>
+          <el-form-item label="内边距">
+            <el-input v-model="editingComp.props.padding" placeholder="0" style="width:150px" />
+          </el-form-item>
+        </template>
         <template v-if="editingComp.type === 'navigation'">
           <el-form-item label="按钮文字">
             <el-input v-model="editingComp.props.label" placeholder="导航到椰树集团" />
@@ -1771,7 +1788,7 @@ onMounted(fetchList)
           <el-input v-model="editingMenuItem.text" placeholder="菜单文字" />
         </el-form-item>
         <el-form-item label="跳转链接">
-          <el-input v-model="editingMenuItem.url" placeholder="/pages/xxx/index" />
+          <el-input v-model="editingMenuItem.url" placeholder="/pages/xxx/index " />
         </el-form-item>
         <el-form-item label="背景色">
           <div style="display:flex;gap:8px;align-items:center">
@@ -1802,7 +1819,7 @@ onMounted(fetchList)
           <el-input v-model="editingMediaItem.title" placeholder="标题文字" />
         </el-form-item>
         <el-form-item label="跳转链接">
-          <el-input v-model="editingMediaItem.link" placeholder="/pages/xxx/index 或 https://..." />
+          <el-input v-model="editingMediaItem.link" placeholder="/pages/xxx/index  或 https://..." />
         </el-form-item>
         <el-form-item label="圆角(px)">
           <el-slider v-model="editingMediaItem.borderRadius" :min="0" :max="24" :step="2" style="width:200px" />
@@ -1857,7 +1874,7 @@ onMounted(fetchList)
           </el-select>
         </el-form-item>
         <el-form-item label="跳转链接">
-          <el-input v-model="editingColumnItem.link" placeholder="/pages/xxx/index" />
+          <el-input v-model="editingColumnItem.link" placeholder="/pages/xxx/index " />
         </el-form-item>
         <el-form-item label="行内容">
           <div style="width:100%">

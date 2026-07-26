@@ -56,6 +56,8 @@ Page({
     visitorType: '' as string,
     /** 12岁以下儿童人数 */
     childrenCount: 0,
+    /** 推广人邀请码 */
+    promoterCode: '',
   },
 
   onLoad() {
@@ -241,6 +243,7 @@ Page({
       district: [],
       visitorType: '',
       childrenCount: 0,
+      promoterCode: '',
     })
   },
 
@@ -325,6 +328,10 @@ Page({
     this.setData({ childrenCount: count })
   },
 
+  onPromoterCodeInput(e: any) {
+    this.setData({ promoterCode: e.detail.value })
+  },
+
   goToRealName() {
     wx.navigateTo({ url: '/pages/real-name-list/index' })
   },
@@ -361,6 +368,12 @@ Page({
 
     this.setData({ submitting: true })
     try {
+      if (!this.data.promoterCode.trim()) {
+        wx.showToast({ title: '请输入推广邀请码', icon: 'none' })
+        this.setData({ submitting: false })
+        return
+      }
+
       const res: any = await api.post('/reservations/personal', {
         dateConfigId: selectedDate.id,
         sessionType: selectedSession.type,
@@ -368,6 +381,7 @@ Page({
         district: this.data.district.length > 0 ? this.data.district.join('-') : undefined,
         visitorType: this.data.visitorType || undefined,
         childrenCount: this.data.childrenCount,
+        promoterCode: this.data.promoterCode.trim(),
       })
 
       const reservationId = res?.id || res?.reservationId

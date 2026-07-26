@@ -17,6 +17,7 @@ import { Reservation } from './entities/reservation.entity';
 import { ReservationQuota } from './entities/reservation-quota.entity';
 import { ReservationDateConfig } from './entities/reservation-date-config.entity';
 import { TeamReservationInfo } from './entities/team-reservation-info.entity';
+import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { PromotionService } from '../promotion/promotion.service';
 import { FrequencyLimit } from '../reservation-config/entities/frequency-limit.entity';
@@ -163,9 +164,10 @@ export class ReservationService implements OnModuleInit {
       district?: string;
       visitorType?: string;
       childrenCount?: number;
+      promoterCode?: string;
     },
   ) {
-    const { dateConfigId, sessionType, visitorCount, district, visitorType, childrenCount } = dto;
+    const { dateConfigId, sessionType, visitorCount, district, visitorType, childrenCount, promoterCode } = dto;
 
     // 校验人数（1-5人，含本人）
     if (visitorCount < 1 || visitorCount > 5) {
@@ -181,6 +183,17 @@ export class ReservationService implements OnModuleInit {
     // 校验岛内外类型
     if (visitorType && !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
       throw new BadRequestException('无效的游客类型');
+    }
+
+    // 校验推广邀请码（必填）
+    if (!promoterCode || !promoterCode.trim()) {
+      throw new BadRequestException('请输入推广邀请码');
+    }
+    const promoter = await this.dataSource.getRepository(User).findOne({
+      where: { shortCode: promoterCode.trim(), isPromoter: true },
+    });
+    if (!promoter) {
+      throw new BadRequestException('邀请码无效，请检查后重试');
     }
 
     // 获取日期配置
@@ -264,14 +277,18 @@ export class ReservationService implements OnModuleInit {
       status: 'PENDING',
       qrCode,
       qrCodeExpireAt: new Date(`${dateConfig.date}T23:59:59`),
+      promoterId: promoter.id,
     };
     const reservation = this.reservationRepo.create(reservationData);
     const saved: any = await this.reservationRepo.save(reservation);
 
     // 关联推广记录
-    if (user.promotedBy) {
-      this.promotionService.linkReservation(userId, saved.id).catch(err => {
-        this.logger.warn(`关联推广预约失败: ${err.message}`);
+    this.promotionService.linkReservation(userId, saved.id).catch(err => {
+      this.logger.warn(`关联推广预约失败: ${err.message}`);
+    });
+    if (!user.promotedBy) {
+      this.promotionService.associatePromoter(userId, promoter.id).catch(err => {
+        this.logger.warn(`关联推广人失败: ${err.message}`);
       });
     }
 

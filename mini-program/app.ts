@@ -48,14 +48,6 @@ import { API_BASE_URL } from './config'
         app.globalData.promoterId = Number(options.promoterId)
       }
 
-      if (!app.globalData.token) {
-        if (route !== 'pages/login/index') {
-          app.globalData.pendingRedirect = '/' + route
-          app.globalData.pendingRedirectOptions = options ? { ...options } : null
-          wx.redirectTo({ url: '/pages/login/index' })
-          return
-        }
-      }
       if (originalOnLoad) return originalOnLoad.call(this, options)
     }
     return _Page(config)

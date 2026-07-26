@@ -203,6 +203,13 @@
         </view>
         <text class="count-hint">至少保留1名成人陪同</text>
       </view>
+
+      <!-- 推广邀请码 -->
+      <view class="form-card">
+        <text class="form-card-title">邀请码 <text style="color:#e60012">*</text></text>
+        <input class="promoter-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
+        <text class="input-hint">如果没有邀请码请联系您的推荐人</text>
+      </view>
     </block>
 
     <view class="step-back" bindtap="prevStep">

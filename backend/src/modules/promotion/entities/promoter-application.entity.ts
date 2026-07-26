@@ -14,7 +14,7 @@ export class PromoterApplication {
   token: string;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column({ length: 20, default: 'PENDING', comment: 'PENDING | APPROVED | REJECTED' })
