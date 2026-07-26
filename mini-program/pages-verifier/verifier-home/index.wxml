@@ -51,6 +51,7 @@
       >
         <view class="record-info">
           <text class="record-no">{{item.reservationNo || '—'}}</text>
+          <text class="record-detail">{{item.visitDate || '—'}} · {{item.type === 'TEAM' ? '团队' : '个人'}} · {{item.visitorCount || 1}}人<text wx:if="{{item.type === 'PERSONAL' && item.actualCount > 0}}"> · 实到{{item.actualCount}}人</text></text>
           <text class="record-time">{{formatTime(item.verifiedAt || item.createdAt)}}</text>
         </view>
         <view class="record-badge verified">
