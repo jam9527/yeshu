@@ -72,6 +72,7 @@ export class WechatService {
         id: user.id, nickname: user.nickname, avatarUrl: user.avatarUrl,
         phone: user.phone || phone || null,
         isVerifier: user.isVerifier, isPromoter: user.isPromoter,
+        shortCode: user.shortCode || null,
       },
     };
   }
