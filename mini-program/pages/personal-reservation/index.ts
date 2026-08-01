@@ -58,6 +58,10 @@ Page({
     childrenCount: 0,
     /** 推广人邀请码 */
     promoterCode: '',
+    /** 邀请码联系弹窗 */
+    showInvitePopup: false,
+    invitePopupTitle: '',
+    invitePopupContent: '',
   },
 
   onLoad() {
@@ -75,6 +79,7 @@ Page({
     this.fetchNotice()
     this.fetchDates()
     this.checkRealNameStatus()
+    this.fetchInviteContact()
   },
 
   onShow() {
@@ -127,6 +132,30 @@ Page({
       clearInterval(this.data.countdownTimer)
     }
     this.setData({ showNotice: false, agreed: true, countdownTimer: null })
+  },
+
+  /** 加载邀请码联系弹窗内容 */
+  async fetchInviteContact() {
+    try {
+      const res: any = await api.get('/notices/INVITE_CODE_CONTACT')
+      if (res?.content) {
+        const data = JSON.parse(res.content)
+        this.setData({
+          invitePopupTitle: data.title || '联系我们',
+          invitePopupContent: (data.content || '').replace(/\n/g, '<br/>'),
+        })
+      }
+    } catch { /* 静默处理 */ }
+  },
+
+  /** 显示邀请码联系弹窗 */
+  showInviteContact() {
+    this.setData({ showInvitePopup: true })
+  },
+
+  /** 关闭邀请码联系弹窗 */
+  closeInvitePopup() {
+    this.setData({ showInvitePopup: false })
   },
 
   /** 仅检查本人是否已有核验通过的实名记录 */

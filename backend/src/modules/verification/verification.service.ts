@@ -107,14 +107,22 @@ export class VerificationService {
     return { success: true, verifiedAt: record.verifiedAt };
   }
 
-  /** 获取核销人员的核销记录（含预约详情） */
-  async findByVerifier(verifierId: number, page = 1, pageSize = 10) {
+  /** 获取核销人员的核销记录（含预约详情 + 预约人信息） */
+  async findByVerifier(verifierId: number, page = 1, pageSize = 10, date?: string) {
+    const where: any = { verifierId };
+    if (date) {
+      const dayStart = new Date(date);
+      const dayEnd = new Date(date);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      where.verifiedAt = Between(dayStart, dayEnd);
+    }
+
     const [records, total] = await this.recordRepo.findAndCount({
-      where: { verifierId },
+      where,
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: { verifiedAt: 'DESC' },
-      relations: ['reservation'],
+      relations: ['reservation', 'reservation.user'],
     });
 
     const list = records.map((r) => ({
@@ -127,6 +135,11 @@ export class VerificationService {
       type: r.reservation?.type || '',
       visitorCount: r.reservation?.visitorCount || 0,
       actualCount: r.actualCount || 0,
+      district: r.reservation?.district || '',
+      visitorType: r.reservation?.visitorType || '',
+      childrenCount: r.reservation?.childrenCount || 0,
+      userNickname: r.reservation?.user?.nickname || '',
+      userPhone: r.reservation?.user?.phone || '',
     }));
 
     return { records: list, total, page, pageSize };

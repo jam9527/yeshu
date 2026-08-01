@@ -138,6 +138,15 @@
       </view>
     </view>
 
+    <!-- 推广邀请码 -->
+    <view class="form-section">
+      <view class="form-group">
+        <text class="form-label">邀请码 <text class="required">*</text></text>
+        <input class="form-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
+        <text class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请</text><text class="link-btn" bindtap="showInviteContact">点击这里</text><text class="input-hint">联系</text>
+      </view>
+    </view>
+
     <!-- 联系人信息 -->
     <view class="form-section">
       <view class="section-title">联系人信息</view>
@@ -281,5 +290,19 @@
     >提交预约</button>
   </view>
 
+  </view>
+
+  <!-- 邀请码联系弹窗 -->
+  <view class="notice-mask" wx:if="{{showInvitePopup}}" bindtap="closeInvitePopup"></view>
+  <view class="notice-popup" wx:if="{{showInvitePopup}}">
+    <view class="notice-popup-header">
+      <text class="notice-popup-title">{{invitePopupTitle}}</text>
+    </view>
+    <scroll-view class="notice-popup-body" scroll-y>
+      <rich-text nodes="{{invitePopupContent}}"></rich-text>
+    </scroll-view>
+    <view class="notice-popup-footer">
+      <button class="btn-primary notice-btn" bindtap="closeInvitePopup">关闭</button>
+    </view>
   </view>
 </view>

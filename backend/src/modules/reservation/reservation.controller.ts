@@ -62,6 +62,7 @@ export class ReservationController {
       orgCode?: string;
       applicationFile?: string;
       attachmentFiles?: string;
+      promoterCode?: string;
     },
   ) {
     return this.reservationService.createTeam(userId, dto);

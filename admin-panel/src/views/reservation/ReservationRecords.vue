@@ -95,6 +95,7 @@ onMounted(fetchData)
             <span v-else style="color:#ccc">—</span>
           </template>
         </el-table-column>
+        <el-table-column prop="promoterShortCode" label="推广码" width="100" />
         <el-table-column prop="verifierName" label="核销员" width="100" />
         <el-table-column prop="verifyTime" label="核销时间" width="170">
           <template #default="{ row }">{{ formatTime(row.verifyTime) }}</template>

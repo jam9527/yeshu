@@ -225,6 +225,16 @@ Page({
     }
   },
 
+  /** 复制推广码 */
+  copyShortCode() {
+    const code = this.data.userInfo?.shortCode
+    if (!code) return
+    wx.setClipboardData({
+      data: code,
+      success: () => wx.showToast({ title: '推广码已复制', icon: 'success' }),
+    })
+  },
+
   /** 分享小程序（优先使用海报图） */
   onShareAppMessage(): any {
     const app = getApp()

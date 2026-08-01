@@ -319,9 +319,21 @@ export class ReservationService implements OnModuleInit {
       orgCode?: string;
       applicationFile?: string;
       attachmentFiles?: string;
+      promoterCode?: string;
     },
   ) {
-    const { dateConfigId, sessionType, visitorCount, ...teamInfo } = dto;
+    const { dateConfigId, sessionType, visitorCount, promoterCode, ...teamInfo } = dto;
+
+    // 校验推广邀请码（必填）
+    if (!promoterCode || !promoterCode.trim()) {
+      throw new BadRequestException('请输入推广邀请码');
+    }
+    const promoter = await this.dataSource.getRepository(User).findOne({
+      where: { shortCode: promoterCode.trim(), isPromoter: true },
+    });
+    if (!promoter) {
+      throw new BadRequestException('邀请码无效，请检查后重试');
+    }
 
     // 检查频率限制
     await this.checkFrequencyLimit(userId, 'TEAM');
@@ -370,6 +382,7 @@ export class ReservationService implements OnModuleInit {
       status: 'APPROVING',
       qrCode,
       qrCodeExpireAt: new Date(`${dateConfig.date}T23:59:59`),
+      promoterId: promoter.id,
     };
     const reservation = this.reservationRepo.create(reservationData);
     const saved: any = await this.reservationRepo.save(reservation);
@@ -383,9 +396,12 @@ export class ReservationService implements OnModuleInit {
 
     // 关联推广记录
     const user = await this.userService.findById(userId);
-    if (user?.promotedBy) {
-      this.promotionService.linkReservation(userId, saved.id).catch(err => {
-        this.logger.warn(`关联推广预约失败: ${err.message}`);
+    this.promotionService.linkReservation(userId, saved.id).catch(err => {
+      this.logger.warn(`关联推广预约失败: ${err.message}`);
+    });
+    if (!user?.promotedBy) {
+      this.promotionService.associatePromoter(userId, promoter.id).catch(err => {
+        this.logger.warn(`关联推广人失败: ${err.message}`);
       });
     }
 

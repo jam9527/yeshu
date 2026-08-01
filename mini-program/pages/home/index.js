@@ -41,7 +41,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+
 const api_1 = __importStar(require("../../utils/api"));
 const formatDate_1 = require("../../utils/formatDate");
 /** 百度 BD-09 坐标 → 火星 GCJ-02（微信地图使用） */

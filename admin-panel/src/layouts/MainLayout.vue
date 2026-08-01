@@ -22,8 +22,11 @@ const menuItems = [
   { path: '/user/list', label: '用户管理', icon: User, children: [
     { path: '/user/list', label: '用户列表' },
     { path: '/user/blacklist', label: '黑名单管理' },
+  ]},
+  { path: '/promotion/promoters', label: '推广管理', icon: DataAnalysis, children: [
     { path: '/promotion/promoters', label: '推广员管理' },
     { path: '/promotion/poster', label: '推广海报管理' },
+    { path: '/promotion/stats', label: '推广业绩统计' },
   ]},
   { path: '/reservation/review', label: '预约管理', icon: Tickets, children: [
     { path: '/reservation/review', label: '预约审核' },

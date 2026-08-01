@@ -1,4 +1,8 @@
 <view class="login-container" style="background-image: url({{pageConfig.background}})">
+  <!-- 返回/关闭按钮 -->
+  <view class="back-btn" bindtap="handleBack">
+    <text class="back-icon">✕</text>
+  </view>
   <view class="login-box">
     <!-- Logo：优先使用后台配置，否则使用默认 -->
     <image wx:if="{{pageConfig.logo}}" class="logo" src="{{pageConfig.logo}}" mode="widthFix" />
@@ -24,6 +28,11 @@
       >
         手机号授权登录
       </button>
+
+      <!-- 拒绝/取消登录 -->
+      <view class="deny-btn" bindtap="handleBack">
+        <text>拒绝</text>
+      </view>
 
       <!-- 隐私协议勾选区域 -->
       <view class="agreement" bindtap="handleAgreementTap">

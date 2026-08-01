@@ -41,6 +41,7 @@ const router = createRouter({
         // 推广管理
         { path: 'promotion/promoters', name: 'PromoterManagement', component: () => import('../views/promotion/PromoterManagement.vue') },
         { path: 'promotion/poster', name: 'PromotionPoster', component: () => import('../views/promotion/PromotionPoster.vue') },
+        { path: 'promotion/stats', name: 'PromoterStats', component: () => import('../views/promotion/PromoterStats.vue') },
         // 系统管理
         { path: 'system/admin-user', name: 'AdminUserList', component: () => import('../views/system/AdminUserList.vue') },
         { path: 'system/role', name: 'RoleList', component: () => import('../views/system/RoleList.vue') },

@@ -73,6 +73,8 @@ Page({
     orgName: '',
     /** 统一社会信用代码 */
     orgCode: '',
+    /** 推广人邀请码 */
+    promoterCode: '',
     /** 附件文件列表 */
     files: [] as { name: string; url: string }[],
     /** 当前有效的申请表模板 */
@@ -100,6 +102,10 @@ Page({
     showNotice: false,
     noticeContent: '',
     agreed: false,
+    /** 邀请码联系弹窗 */
+    showInvitePopup: false,
+    invitePopupTitle: '',
+    invitePopupContent: '',
   },
 
   onLoad() {
@@ -118,6 +124,7 @@ Page({
     this.fetchDates()
     this.fetchTemplate()
     this.updateTeamTypeDisplay()
+    this.fetchInviteContact()
   },
 
   async fetchNotice() {
@@ -135,6 +142,30 @@ Page({
 
   agreeNotice() {
     this.setData({ showNotice: false, agreed: true })
+  },
+
+  /** 加载邀请码联系弹窗内容 */
+  async fetchInviteContact() {
+    try {
+      const res: any = await api.get('/notices/INVITE_CODE_CONTACT')
+      if (res?.content) {
+        const data = JSON.parse(res.content)
+        this.setData({
+          invitePopupTitle: data.title || '联系我们',
+          invitePopupContent: (data.content || '').replace(/\n/g, '<br/>'),
+        })
+      }
+    } catch { /* 静默处理 */ }
+  },
+
+  /** 显示邀请码联系弹窗 */
+  showInviteContact() {
+    this.setData({ showInvitePopup: true })
+  },
+
+  /** 关闭邀请码联系弹窗 */
+  closeInvitePopup() {
+    this.setData({ showInvitePopup: false })
   },
 
   /** 获取有效的申请表模板 */
@@ -315,6 +346,7 @@ Page({
       selectedSession: null,
       sessions: this.buildSessions(day.data),
       currentStep: 2,
+      promoterCode: '',
     })
   },
 
@@ -358,6 +390,10 @@ Page({
   onVisitorCountInput(e: any) {
     const val = parseInt(e.detail.value, 10)
     this.setData({ visitorCount: isNaN(val) ? 0 : val })
+  },
+
+  onPromoterCodeInput(e: any) {
+    this.setData({ promoterCode: e.detail.value })
   },
 
   /** 返回上一步 */
@@ -456,6 +492,7 @@ Page({
     if (!contactPhone.trim()) return '请输入联系电话'
     if (!/^1\d{10}$/.test(contactPhone.trim())) return '联系电话格式不正确'
     if (!contactIdCard.trim()) return '请输入联系人证件号'
+    if (!this.data.promoterCode.trim()) return '请输入推广邀请码'
     if (!visitorCount || visitorCount < 10) return '团队预约人数不能少于10人'
     if (visitorCount > this.data.maxVisitorCount) return `当前场次最多可预约${this.data.maxVisitorCount}人`
     if (!orgName.trim()) return '请输入单位名称'
@@ -494,6 +531,7 @@ Page({
         orgName: orgName.trim(),
         orgCode: orgCode.trim(),
         attachmentFiles: files.length > 0 ? JSON.stringify(files.map(f => f.url)) : undefined,
+        promoterCode: this.data.promoterCode.trim(),
       })
 
       const reservationId = res?.id || res?.reservationId

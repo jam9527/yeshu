@@ -184,6 +184,16 @@ Page({
     if (url) wx.navigateTo({ url })
   },
 
+  /** 复制推广码到剪贴板 */
+  copyShortCode() {
+    const code = this.data.userInfo?.shortCode
+    if (!code) return
+    wx.setClipboardData({
+      data: code,
+      success: () => wx.showToast({ title: '推广码已复制', icon: 'success' }),
+    })
+  },
+
   handleLogout() {
     wx.showModal({
       title: '提示',

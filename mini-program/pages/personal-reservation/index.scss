@@ -813,4 +813,14 @@ $ys-blue: #005bac;
   color: #999;
   margin-top: 6px;
   display: block;
+  line-height: 1.5;
+}
+
+.link-btn {
+  color: #005bac;
+  border: 1px solid #005bac;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  display: inline;
 }

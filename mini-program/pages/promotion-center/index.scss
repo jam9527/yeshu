@@ -98,6 +98,14 @@
   font-family: monospace;
 }
 
+.short-code-copy {
+  font-size: 11px;
+  color: rgba(255, 215, 0, 0.5);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
 /* 申请推广员卡片 */
 .apply-card {
   display: flex;

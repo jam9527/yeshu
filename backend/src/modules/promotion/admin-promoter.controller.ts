@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Put, Param, Query, Body, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, Body, ParseIntPipe, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { PromotionService } from './promotion.service';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -38,6 +39,34 @@ export class AdminPromoterController {
   @Post('generate-qr')
   async generateQr() {
     return this.promotionService.generatePromoterQrCode();
+  }
+
+  /** GET /api/admin/promoters/stats - 推广员详细业绩统计 */
+  @Get('stats')
+  async getStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('promoterId') promoterId?: string,
+  ) {
+    const data = await this.promotionService.getDetailedStats(
+      startDate, endDate,
+      promoterId ? parseInt(promoterId, 10) : undefined,
+    );
+    return { data };
+  }
+
+  /** GET /api/admin/promoters/stats/export - 导出推广员业绩 CSV */
+  @Get('stats/export')
+  async exportStats(
+    @Res() res: Response,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const csv = await this.promotionService.exportStatsCsv(startDate, endDate);
+    const filename = `推广员业绩_${startDate || '全部'}_${endDate || '全部'}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.send(Buffer.from(csv, 'utf-8'));
   }
 
   /** POST /api/admin/promoters/applications - 后台直接添加推广员 */

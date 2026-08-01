@@ -5,6 +5,7 @@ import { Reservation } from '../reservation/entities/reservation.entity';
 import { ReservationQuota } from '../reservation/entities/reservation-quota.entity';
 import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
 import { RealNameInfo } from '../real-name/entities/real-name.entity';
+import { VerificationRecord } from '../verification/entities/verification-record.entity';
 
 @Injectable()
 export class StatisticsService {
@@ -17,20 +18,36 @@ export class StatisticsService {
     private readonly dateConfigRepo: Repository<ReservationDateConfig>,
     @InjectRepository(RealNameInfo)
     private readonly realNameRepo: Repository<RealNameInfo>,
+    @InjectRepository(VerificationRecord)
+    private readonly verificationRepo: Repository<VerificationRecord>,
   ) {}
 
   /** 概览数据 */
   async overview() {
     const today = new Date().toISOString().split('T')[0];
 
-    const [totalReservations, todayReservations, pendingReview, totalVerified, todayVerified] =
+    const [totalReservations, todayReservations, pendingReview, totalVerified, todayVerified,
+           totalActualCountResult, todayActualCountResult] =
       await Promise.all([
         this.reservationRepo.count(),
         this.reservationRepo.count({ where: { reservationDate: today } }),
         this.reservationRepo.count({ where: { type: 'TEAM', status: 'APPROVING' } }),
         this.reservationRepo.count({ where: { status: 'VERIFIED' } }),
         this.reservationRepo.count({ where: { reservationDate: today, status: 'VERIFIED' } }),
+        this.verificationRepo
+          .createQueryBuilder('vr')
+          .select('COALESCE(SUM(vr.actualCount), 0)', 'total')
+          .getRawOne(),
+        this.verificationRepo
+          .createQueryBuilder('vr')
+          .innerJoin('vr.reservation', 'r')
+          .select('COALESCE(SUM(vr.actualCount), 0)', 'total')
+          .where('r.reservationDate = :today', { today })
+          .getRawOne(),
       ]);
+
+    const totalActualCount = Number(totalActualCountResult?.total) || 0;
+    const todayActualCount = Number(todayActualCountResult?.total) || 0;
 
     return {
       totalReservations,
@@ -38,6 +55,8 @@ export class StatisticsService {
       pendingReview,
       totalVerified,
       todayVerified,
+      totalActualCount,
+      todayActualCount,
       todayVerificationRate: todayReservations > 0
         ? Math.round((todayVerified / todayReservations) * 100)
         : 0,

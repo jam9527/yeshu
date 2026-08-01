@@ -31,9 +31,10 @@
     </view>
 
     <!-- 推广短码 -->
-    <view class="short-code-bar" wx:if="{{userInfo.shortCode}}">
+    <view class="short-code-bar" wx:if="{{userInfo.shortCode}}" bindtap="copyShortCode">
       <text class="short-code-label">我的推广码</text>
       <text class="short-code-value">{{userInfo.shortCode}}</text>
+      <text class="short-code-copy">点击复制</text>
     </view>
 
     <!-- 统计卡片 -->

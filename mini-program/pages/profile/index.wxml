@@ -27,7 +27,10 @@
       <view class="info-field" bindtap="handleEditPhone">
         <text class="phone-text">{{userInfo.phone || '点击设置手机号'}}</text>
       </view>
-      <text class="short-code" wx:if="{{userInfo.shortCode}}">推广码：{{userInfo.shortCode}}</text>
+      <view class="short-code" wx:if="{{userInfo.shortCode}}" bindtap="copyShortCode">
+        <text>推广码：{{userInfo.shortCode}}</text>
+        <text class="copy-hint">点击复制</text>
+      </view>
     </view>
     <text class="user-arrow">›</text>
   </view>

@@ -1,5 +1,9 @@
 import { Controller, Get, Put, Param, Query, ParseBoolPipe, Body } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { UserService } from './user.service';
+import { User } from './entities/user.entity';
 import { AdminPermissions } from '../../common/decorators/admin-permissions.decorator';
 
 /**
@@ -8,7 +12,11 @@ import { AdminPermissions } from '../../common/decorators/admin-permissions.deco
 @AdminPermissions('user:manage')
 @Controller('admin')
 export class AdminUserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
 
   /** GET /api/admin/users - 用户列表 */
   @Get('users')
@@ -55,7 +63,16 @@ export class AdminUserController {
     @Param('id') id: number,
     @Query('isPromoter', ParseBoolPipe) isPromoter: boolean,
   ) {
-    await this.userService.update(id, { isPromoter } as any);
+    if (isPromoter) {
+      // 生成唯一邀请短码（8位 hex），与 approveApplication 逻辑一致
+      let shortCode: string;
+      do {
+        shortCode = crypto.randomBytes(4).toString('hex');
+      } while (await this.userRepo.findOne({ where: { shortCode } }));
+      await this.userService.update(id, { isPromoter: true, shortCode } as any);
+    } else {
+      await this.userService.update(id, { isPromoter: false, shortCode: null } as any);
+    }
     return { success: true };
   }
 

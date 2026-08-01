@@ -161,6 +161,174 @@ export class PromotionService {
     };
   }
 
+  /** 获取推广员详细业绩统计（按日期范围） */
+  async getDetailedStats(startDate?: string, endDate?: string, promoterId?: number) {
+    const userRepo = this.dataSource.getRepository(User);
+    const reservationRepo = this.dataSource.getRepository(Reservation);
+
+    // 查询推广员列表
+    const wherePromoter: any = { isPromoter: true };
+    if (promoterId) wherePromoter.id = promoterId;
+    const promoters = await userRepo.find({ where: wherePromoter, order: { id: 'ASC' } });
+
+    const results: any[] = [];
+
+    for (const promoter of promoters) {
+      // 个人预约统计（直接从 reservations 表查 promoterId）
+      const personalQb = reservationRepo.createQueryBuilder('r')
+        .select([
+          'COUNT(r.id) AS count',
+          'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
+          'COALESCE(SUM(r.childrenCount), 0) AS totalChildren',
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN 1 ELSE 0 END), 0) AS islandCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN 1 ELSE 0 END), 0) AS offIslandCount`,
+          `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
+          `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
+        ])
+        .where('r.promoterId = :promoterId', { promoterId: promoter.id })
+        .andWhere('r.type = :type', { type: 'PERSONAL' });
+
+      if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
+      if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
+
+      const personalRaw: any = await personalQb.getRawOne();
+
+      // 个人实到人数（从 verification_records 关联）
+      const actualQb = reservationRepo.createQueryBuilder('r')
+        .select('COALESCE(SUM(vr.actualCount), 0)', 'actualTotal')
+        .innerJoin('verification_records', 'vr', 'vr.reservationId = r.id')
+        .where('r.promoterId = :promoterId', { promoterId: promoter.id })
+        .andWhere('r.type = :type', { type: 'PERSONAL' });
+
+      if (startDate) actualQb.andWhere('r.reservationDate >= :startDate', { startDate });
+      if (endDate) actualQb.andWhere('r.reservationDate <= :endDate', { endDate });
+
+      const actualRaw: any = await actualQb.getRawOne();
+
+      // 团队预约统计（通过 promotion_records 关联）
+      const teamQb = this.recordRepo.createQueryBuilder('pr')
+        .select([
+          'COUNT(DISTINCT r.id) AS count',
+          'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
+          `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
+          `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
+        ])
+        .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
+        .where('pr.promoterId = :promoterId', { promoterId: promoter.id })
+        .andWhere('r.type = :type', { type: 'TEAM' });
+
+      if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
+      if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });
+
+      const teamRaw: any = await teamQb.getRawOne();
+
+      const personalReservations = Number(personalRaw?.count) || 0;
+      const personalVisitors = Number(personalRaw?.totalVisitors) || 0;
+      const personalVerified = Number(personalRaw?.verifiedCount) || 0;
+      const personalVerifiedVisitors = Number(personalRaw?.verifiedVisitors) || 0;
+      const actualTotal = Number(actualRaw?.actualTotal) || 0;
+      const totalChildren = Number(personalRaw?.totalChildren) || 0;
+      const islandCount = Number(personalRaw?.islandCount) || 0;
+      const offIslandCount = Number(personalRaw?.offIslandCount) || 0;
+
+      const teamReservations = Number(teamRaw?.count) || 0;
+      const teamVisitors = Number(teamRaw?.totalVisitors) || 0;
+      const teamVerified = Number(teamRaw?.verifiedCount) || 0;
+      const teamVerifiedVisitors = Number(teamRaw?.verifiedVisitors) || 0;
+
+      const totalReservations = personalReservations + teamReservations;
+      const totalVerified = personalVerified + teamVerified;
+
+      results.push({
+        promoterId: promoter.id,
+        promoterName: promoter.nickname || '',
+        promoterPhone: promoter.phone || '',
+        shortCode: promoter.shortCode || '',
+        // 预约人数
+        personalReservations,
+        teamReservations,
+        totalReservations,
+        // 预约人次
+        personalVisitors,
+        teamVisitors,
+        totalVisitors: personalVisitors + teamVisitors,
+        // 实到人数
+        personalActualVisitors: actualTotal,
+        teamActualVisitors: teamVerifiedVisitors,
+        totalActualVisitors: actualTotal + teamVerifiedVisitors,
+        // 核销单数
+        personalVerified,
+        teamVerified,
+        totalVerified,
+        // 核销率
+        verificationRate: totalReservations > 0
+          ? Math.round(totalVerified / totalReservations * 10000) / 100
+          : 0,
+        // 大人/小孩（仅个人预约有明细）
+        adultVisitors: personalVisitors - totalChildren,
+        childrenVisitors: totalChildren,
+        // 岛内/岛外（仅个人预约有明细）
+        islandCount,
+        offIslandCount,
+      });
+    }
+
+    return results;
+  }
+
+  /** 导出推广员业绩 CSV */
+  async exportStatsCsv(startDate?: string, endDate?: string): Promise<string> {
+    const stats = await this.getDetailedStats(startDate, endDate);
+
+    // BOM for Excel UTF-8 compatibility
+    const BOM = '﻿';
+    const headers = [
+      '推广员姓名', '短码', '手机号',
+      '个人预约数', '团队预约数', '预约总数',
+      '个人预约人次', '团队预约人次', '预约总人次',
+      '个人实到人数', '团队实到人数', '实到总人数',
+      '个人核销单数', '团队核销单数', '核销总单数',
+      '核销率(%)',
+      '成人数', '儿童数',
+      '岛内人数', '岛外人数',
+    ];
+
+    const escapeField = (v: any) => {
+      const s = String(v ?? '');
+      // 包含逗号、引号或换行时需要用引号包裹
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+
+    const rows = stats.map((s: any) => [
+      s.promoterName, s.shortCode, s.promoterPhone,
+      s.personalReservations, s.teamReservations, s.totalReservations,
+      s.personalVisitors, s.teamVisitors, s.totalVisitors,
+      s.personalActualVisitors, s.teamActualVisitors, s.totalActualVisitors,
+      s.personalVerified, s.teamVerified, s.totalVerified,
+      s.verificationRate,
+      s.adultVisitors, s.childrenVisitors,
+      s.islandCount, s.offIslandCount,
+    ].map(escapeField).join(','));
+
+    // 合计行
+    const sum = (field: string) => stats.reduce((acc: number, s: any) => acc + (Number(s[field]) || 0), 0);
+    const totalRow = [
+      '合计', '', '',
+      sum('personalReservations'), sum('teamReservations'), sum('totalReservations'),
+      sum('personalVisitors'), sum('teamVisitors'), sum('totalVisitors'),
+      sum('personalActualVisitors'), sum('teamActualVisitors'), sum('totalActualVisitors'),
+      sum('personalVerified'), sum('teamVerified'), sum('totalVerified'),
+      '',
+      sum('adultVisitors'), sum('childrenVisitors'),
+      sum('islandCount'), sum('offIslandCount'),
+    ].map(escapeField).join(',');
+
+    return BOM + [headers.join(','), ...rows, totalRow].join('\n');
+  }
+
   /** 获取推广记录明细（按时间筛选） */
   async getRecords(promoterId: number, page = 1, pageSize = 20, startDate?: string, endDate?: string) {
     const qb = this.recordRepo.createQueryBuilder('r')

@@ -85,11 +85,24 @@
   font-weight: bold;
   color: #333;
 }
+.record-user {
+  font-size: 12px;
+  color: #666;
+}
 .record-date,
 .record-session,
 .record-type {
   font-size: 12px;
   color: #999;
+}
+.highlight-num {
+  color: #e60012;
+  font-weight: bold;
+  font-size: 14px;
+}
+.record-booked {
+  font-size: 11px;
+  color: #ccc;
 }
 .record-right {
   display: flex;

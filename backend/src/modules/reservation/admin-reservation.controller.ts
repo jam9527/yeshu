@@ -53,6 +53,13 @@ export class AdminReservationController {
       : [];
     const verifierMap = new Map(verifiers.map(v => [Number(v.id), v.nickname || v.phone || '核销员']));
 
+    // 获取推广人短码
+    const promoterIds = records.filter(r => r.promoterId).map(r => Number(r.promoterId));
+    const promoters = promoterIds.length > 0
+      ? await this.userRepo.find({ where: { id: In(promoterIds) } })
+      : [];
+    const promoterCodeMap = new Map(promoters.map(p => [Number(p.id), p.shortCode || '—']));
+
     // 个人预约不再逐条存储参观人明细，仅返回预约人数
     const list = records.map(r => ({
       id: r.id,
@@ -73,6 +80,7 @@ export class AdminReservationController {
       createdAt: r.createdAt,
       updatedAt: r.updatedAt,
       verifierName: verifierMap.get(Number(r.verifierId)) || null,
+      promoterShortCode: promoterCodeMap.get(Number(r.promoterId)) || null,
       user: r.user ? {
         id: r.user.id,
         nickname: r.user.nickname,

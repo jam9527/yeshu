@@ -46,11 +46,25 @@
       >
         <view class="record-left">
           <text class="record-no">{{item.reservationNo || '—'}}</text>
-          <text class="record-date">{{item.visitDate || '—'}} · {{item.session === 'AM' ? '上午场' : item.session === 'PM' ? '下午场' : item.session || '—'}}</text>
-          <text class="record-type">{{item.type === 'TEAM' ? '团队' : '个人'}}预约 · 预约{{item.visitorCount || 1}}人<text wx:if="{{item.type === 'PERSONAL' && item.actualCount > 0}}"> · 实到{{item.actualCount}}人</text></text>
+          <text class="record-user" wx:if="{{item.userNickname}}">预约人：{{item.userNickname}}{{item.userPhone ? ' ' + item.userPhone : ''}}</text>
+          <text class="record-date">{{item.visitDate || '—'}} · {{item.session === 'AM' ? '上午' : item.session === 'PM' ? '下午' : '—'}}</text>
+          <text class="record-type">
+            {{item.type === 'TEAM' ? '团队' : '个人'}}预约
+            <block wx:if="{{item.type === 'PERSONAL'}}">
+              · 实到<text class="highlight-num">{{item.actualCount || 0}}</text>人
+              <text wx:if="{{item.childrenCount > 0}}">（含儿童{{item.childrenCount}}）</text>
+              <text class="record-booked"> / 预约{{item.visitorCount || 1}}人</text>
+            </block>
+            <block wx:if="{{item.type === 'TEAM'}}">
+              · {{item.visitorCount || 1}}人
+            </block>
+          </text>
+          <text class="record-detail" wx:if="{{item.district || item.visitorType}}">
+            {{item.district || '—'}} · {{item.visitorType === 'ON_ISLAND' ? '岛内' : item.visitorType === 'OFF_ISLAND' ? '岛外' : '—'}}
+          </text>
         </view>
         <view class="record-right">
-          <text class="record-time">{{formatTime(item.verifiedAt)}}</text>
+          <text class="record-time">{{item.verifiedAt ? formatTime(item.verifiedAt) : '—'}}</text>
           <text class="record-badge verified">已核销</text>
         </view>
       </view>
