@@ -43,6 +43,7 @@ backend/uploads/*
 # Project docs (original source files)
 *.docx
 *.xlsx
+*.rar
 项目需求.docx
 椰树集团参观预约小程序.xlsx
 
