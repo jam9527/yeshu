@@ -47,12 +47,14 @@ export class AdminPromoterController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('promoterId') promoterId?: string,
+    @Query('searchType') searchType?: string,
+    @Query('keyword') keyword?: string,
   ) {
-    const data = await this.promotionService.getDetailedStats(
+    return this.promotionService.getDetailedStats(
       startDate, endDate,
       promoterId ? parseInt(promoterId, 10) : undefined,
+      searchType, keyword,
     );
-    return { data };
   }
 
   /** GET /api/admin/promoters/stats/export - 导出推广员业绩 CSV */

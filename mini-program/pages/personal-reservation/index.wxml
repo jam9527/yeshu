@@ -208,7 +208,7 @@
       <view class="form-card">
         <text class="form-card-title">邀请码 <text style="color:#e60012">*</text></text>
         <input class="promoter-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
-        <text class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请</text><text class="link-btn" bindtap="showInviteContact">点击这里</text><text class="input-hint">联系</text>
+        <view class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>联系</view>
       </view>
     </block>
 
@@ -233,7 +233,10 @@
       <text class="notice-popup-title">{{invitePopupTitle}}</text>
     </view>
     <scroll-view class="notice-popup-body" scroll-y>
-      <rich-text nodes="{{invitePopupContent}}"></rich-text>
+      <block wx:for="{{invitePopupSegments}}" wx:key="key">
+        <text wx:if="{{item.type === 'phone'}}" class="phone-link" data-phone="{{item.value}}" bindtap="callInvitePhone">{{item.value}}</text>
+        <text wx:else>{{item.value}}</text>
+      </block>
     </scroll-view>
     <view class="notice-popup-footer">
       <button class="btn-primary notice-btn" bindtap="closeInvitePopup">关闭</button>

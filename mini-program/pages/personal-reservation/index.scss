@@ -684,6 +684,12 @@ $ys-blue: #005bac;
   overflow-wrap: break-word;
 }
 
+.phone-link {
+  color: $ys-blue;
+  text-decoration: underline;
+  margin: 0 2px;
+}
+
 .notice-popup-footer {
   padding: 12px 20px 20px;
   border-top: 1px solid #f0f0f0;

@@ -61,7 +61,7 @@ Page({
     /** 邀请码联系弹窗 */
     showInvitePopup: false,
     invitePopupTitle: '',
-    invitePopupContent: '',
+    invitePopupSegments: [] as Array<{ key: string; type: 'text' | 'phone'; value: string }>,
   },
 
   onLoad() {
@@ -142,10 +142,44 @@ Page({
         const data = JSON.parse(res.content)
         this.setData({
           invitePopupTitle: data.title || '联系我们',
-          invitePopupContent: (data.content || '').replace(/\n/g, '<br/>'),
+          invitePopupSegments: this.parseInviteContact(data.content || ''),
         })
       }
     } catch { /* 静默处理 */ }
+  },
+
+  /** 解析联系内容，将手机号/座机号拆分为可拨号片段 */
+  parseInviteContact(content: string) {
+    const segments: Array<{ key: string; type: 'text' | 'phone'; value: string }> = []
+    const phoneRe = /(1[3-9]\d{9}|0\d{2,3}-?\d{7,8})/g
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = phoneRe.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ key: `seg-${segments.length}`, type: 'text', value: content.slice(lastIndex, match.index) })
+      }
+      segments.push({ key: `seg-${segments.length}`, type: 'phone', value: match[0] })
+      lastIndex = match.index + match[0].length
+    }
+    if (lastIndex < content.length) {
+      segments.push({ key: `seg-${segments.length}`, type: 'text', value: content.slice(lastIndex) })
+    }
+    if (segments.length === 0) {
+      segments.push({ key: 'seg-0', type: 'text', value: content })
+    }
+    return segments
+  },
+
+  /** 拨打邀请码联系弹窗中的电话号码 */
+  callInvitePhone(e: any) {
+    const phone = e.currentTarget.dataset.phone
+    if (!phone) return
+    wx.makePhoneCall({
+      phoneNumber: String(phone).replace(/\D/g, ''),
+      fail: () => {
+        wx.showToast({ title: '拨号失败', icon: 'none' })
+      },
+    })
   },
 
   /** 显示邀请码联系弹窗 */

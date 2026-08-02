@@ -161,15 +161,30 @@ export class PromotionService {
     };
   }
 
-  /** 获取推广员详细业绩统计（按日期范围） */
-  async getDetailedStats(startDate?: string, endDate?: string, promoterId?: number) {
+  /** 获取推广员详细业绩统计（按日期范围，支持搜索） */
+  async getDetailedStats(
+    startDate?: string,
+    endDate?: string,
+    promoterId?: number,
+    searchType?: string,
+    keyword?: string,
+  ) {
     const userRepo = this.dataSource.getRepository(User);
     const reservationRepo = this.dataSource.getRepository(Reservation);
 
     // 查询推广员列表
-    const wherePromoter: any = { isPromoter: true };
-    if (promoterId) wherePromoter.id = promoterId;
-    const promoters = await userRepo.find({ where: wherePromoter, order: { id: 'ASC' } });
+    const qb = userRepo.createQueryBuilder('u').where('u.isPromoter = :isPromoter', { isPromoter: true });
+    if (promoterId) {
+      qb.andWhere('u.id = :promoterId', { promoterId });
+    }
+    if (keyword && keyword.trim()) {
+      if (searchType === 'phone') {
+        qb.andWhere('u.phone LIKE :kw', { kw: `%${keyword.trim()}%` });
+      } else {
+        qb.andWhere('u.nickname LIKE :kw', { kw: `%${keyword.trim()}%` });
+      }
+    }
+    const promoters = await qb.orderBy('u.id', 'ASC').getMany();
 
     const results: any[] = [];
 
@@ -180,8 +195,8 @@ export class PromotionService {
           'COUNT(r.id) AS count',
           'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
           'COALESCE(SUM(r.childrenCount), 0) AS totalChildren',
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN 1 ELSE 0 END), 0) AS islandCount`,
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN 1 ELSE 0 END), 0) AS offIslandCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS islandCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS offIslandCount`,
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
         ])
@@ -212,6 +227,8 @@ export class PromotionService {
           'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS teamIslandCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS teamOffIslandCount`,
         ])
         .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
         .where('pr.promoterId = :promoterId', { promoterId: promoter.id })
@@ -235,6 +252,8 @@ export class PromotionService {
       const teamVisitors = Number(teamRaw?.totalVisitors) || 0;
       const teamVerified = Number(teamRaw?.verifiedCount) || 0;
       const teamVerifiedVisitors = Number(teamRaw?.verifiedVisitors) || 0;
+      const teamIslandCount = Number(teamRaw?.teamIslandCount) || 0;
+      const teamOffIslandCount = Number(teamRaw?.teamOffIslandCount) || 0;
 
       const totalReservations = personalReservations + teamReservations;
       const totalVerified = personalVerified + teamVerified;
@@ -267,9 +286,9 @@ export class PromotionService {
         // 大人/小孩（仅个人预约有明细）
         adultVisitors: personalVisitors - totalChildren,
         childrenVisitors: totalChildren,
-        // 岛内/岛外（仅个人预约有明细）
-        islandCount,
-        offIslandCount,
+        // 岛内/岛外（个人+团队，按人数统计）
+        islandCount: islandCount + teamIslandCount,
+        offIslandCount: offIslandCount + teamOffIslandCount,
       });
     }
 

@@ -138,12 +138,29 @@
       </view>
     </view>
 
+    <!-- 游客类型（岛内/岛外） -->
+    <view class="form-section">
+      <view class="form-group">
+        <text class="form-label">游客类型 <text class="required">*</text></text>
+        <view class="radio-group">
+          <view class="radio-item {{visitorType === 'ON_ISLAND' ? 'active' : ''}}" data-value="ON_ISLAND" bindtap="onVisitorTypeChange">
+            <view class="radio-circle {{visitorType === 'ON_ISLAND' ? 'checked' : ''}}"></view>
+            <text>岛内</text>
+          </view>
+          <view class="radio-item {{visitorType === 'OFF_ISLAND' ? 'active' : ''}}" data-value="OFF_ISLAND" bindtap="onVisitorTypeChange">
+            <view class="radio-circle {{visitorType === 'OFF_ISLAND' ? 'checked' : ''}}"></view>
+            <text>岛外</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 推广邀请码 -->
     <view class="form-section">
       <view class="form-group">
         <text class="form-label">邀请码 <text class="required">*</text></text>
         <input class="form-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
-        <text class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请</text><text class="link-btn" bindtap="showInviteContact">点击这里</text><text class="input-hint">联系</text>
+        <view class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>联系</view>
       </view>
     </view>
 
@@ -299,7 +316,10 @@
       <text class="notice-popup-title">{{invitePopupTitle}}</text>
     </view>
     <scroll-view class="notice-popup-body" scroll-y>
-      <rich-text nodes="{{invitePopupContent}}"></rich-text>
+      <block wx:for="{{invitePopupSegments}}" wx:key="key">
+        <text wx:if="{{item.type === 'phone'}}" class="phone-link" data-phone="{{item.value}}" bindtap="callInvitePhone">{{item.value}}</text>
+        <text wx:else>{{item.value}}</text>
+      </block>
     </scroll-view>
     <view class="notice-popup-footer">
       <button class="btn-primary notice-btn" bindtap="closeInvitePopup">关闭</button>

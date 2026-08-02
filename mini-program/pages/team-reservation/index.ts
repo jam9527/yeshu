@@ -75,6 +75,8 @@ Page({
     orgCode: '',
     /** 推广人邀请码 */
     promoterCode: '',
+    /** 岛内/岛外 */
+    visitorType: '' as string,
     /** 附件文件列表 */
     files: [] as { name: string; url: string }[],
     /** 当前有效的申请表模板 */
@@ -105,7 +107,7 @@ Page({
     /** 邀请码联系弹窗 */
     showInvitePopup: false,
     invitePopupTitle: '',
-    invitePopupContent: '',
+    invitePopupSegments: [] as Array<{ key: string; type: 'text' | 'phone'; value: string }>,
   },
 
   onLoad() {
@@ -152,10 +154,44 @@ Page({
         const data = JSON.parse(res.content)
         this.setData({
           invitePopupTitle: data.title || '联系我们',
-          invitePopupContent: (data.content || '').replace(/\n/g, '<br/>'),
+          invitePopupSegments: this.parseInviteContact(data.content || ''),
         })
       }
     } catch { /* 静默处理 */ }
+  },
+
+  /** 解析联系内容，将手机号/座机号拆分为可拨号片段 */
+  parseInviteContact(content: string) {
+    const segments: Array<{ key: string; type: 'text' | 'phone'; value: string }> = []
+    const phoneRe = /(1[3-9]\d{9}|0\d{2,3}-?\d{7,8})/g
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = phoneRe.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ key: `seg-${segments.length}`, type: 'text', value: content.slice(lastIndex, match.index) })
+      }
+      segments.push({ key: `seg-${segments.length}`, type: 'phone', value: match[0] })
+      lastIndex = match.index + match[0].length
+    }
+    if (lastIndex < content.length) {
+      segments.push({ key: `seg-${segments.length}`, type: 'text', value: content.slice(lastIndex) })
+    }
+    if (segments.length === 0) {
+      segments.push({ key: 'seg-0', type: 'text', value: content })
+    }
+    return segments
+  },
+
+  /** 拨打邀请码联系弹窗中的电话号码 */
+  callInvitePhone(e: any) {
+    const phone = e.currentTarget.dataset.phone
+    if (!phone) return
+    wx.makePhoneCall({
+      phoneNumber: String(phone).replace(/\D/g, ''),
+      fail: () => {
+        wx.showToast({ title: '拨号失败', icon: 'none' })
+      },
+    })
   },
 
   /** 显示邀请码联系弹窗 */
@@ -347,6 +383,7 @@ Page({
       sessions: this.buildSessions(day.data),
       currentStep: 2,
       promoterCode: '',
+      visitorType: '',
     })
   },
 
@@ -394,6 +431,12 @@ Page({
 
   onPromoterCodeInput(e: any) {
     this.setData({ promoterCode: e.detail.value })
+  },
+
+  /** 选择岛内/岛外 */
+  onVisitorTypeChange(e: any) {
+    const value = e.currentTarget.dataset.value
+    this.setData({ visitorType: this.data.visitorType === value ? '' : value })
   },
 
   /** 返回上一步 */
@@ -493,6 +536,7 @@ Page({
     if (!/^1\d{10}$/.test(contactPhone.trim())) return '联系电话格式不正确'
     if (!contactIdCard.trim()) return '请输入联系人证件号'
     if (!this.data.promoterCode.trim()) return '请输入推广邀请码'
+    if (!this.data.visitorType) return '请选择游客类型（岛内/岛外）'
     if (!visitorCount || visitorCount < 10) return '团队预约人数不能少于10人'
     if (visitorCount > this.data.maxVisitorCount) return `当前场次最多可预约${this.data.maxVisitorCount}人`
     if (!orgName.trim()) return '请输入单位名称'
@@ -532,6 +576,7 @@ Page({
         orgCode: orgCode.trim(),
         attachmentFiles: files.length > 0 ? JSON.stringify(files.map(f => f.url)) : undefined,
         promoterCode: this.data.promoterCode.trim(),
+        visitorType: this.data.visitorType,
       })
 
       const reservationId = res?.id || res?.reservationId

@@ -320,9 +320,10 @@ export class ReservationService implements OnModuleInit {
       applicationFile?: string;
       attachmentFiles?: string;
       promoterCode?: string;
+      visitorType?: string;
     },
   ) {
-    const { dateConfigId, sessionType, visitorCount, promoterCode, ...teamInfo } = dto;
+    const { dateConfigId, sessionType, visitorCount, promoterCode, visitorType, ...teamInfo } = dto;
 
     // 校验推广邀请码（必填）
     if (!promoterCode || !promoterCode.trim()) {
@@ -333,6 +334,11 @@ export class ReservationService implements OnModuleInit {
     });
     if (!promoter) {
       throw new BadRequestException('邀请码无效，请检查后重试');
+    }
+
+    // 校验岛内外类型（团队预约必填，用于推广业绩统计）
+    if (!visitorType || !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
+      throw new BadRequestException('请选择游客类型（岛内/岛外）');
     }
 
     // 检查频率限制
@@ -379,6 +385,7 @@ export class ReservationService implements OnModuleInit {
       reservationDate: dateConfig.date,
       dateConfigId,
       visitorCount,
+      visitorType,
       status: 'APPROVING',
       qrCode,
       qrCodeExpireAt: new Date(`${dateConfig.date}T23:59:59`),

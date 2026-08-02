@@ -8,6 +8,8 @@ const exporting = ref(false)
 const stats = ref<any[]>([])
 const startDate = ref('')
 const endDate = ref('')
+const searchType = ref('nickname')
+const keyword = ref('')
 
 // 默认本月
 function setDefaultDates() {
@@ -49,6 +51,10 @@ async function fetchStats() {
     const params: any = {}
     if (startDate.value) params.startDate = startDate.value
     if (endDate.value) params.endDate = endDate.value
+    if (keyword.value.trim()) {
+      params.searchType = searchType.value
+      params.keyword = keyword.value.trim()
+    }
     const res: any = await request.get('/admin/promoters/stats', { params })
     if (res.data) {
       stats.value = res.data || []
@@ -145,6 +151,18 @@ onMounted(() => {
           value-format="YYYY-MM-DD"
           size="small"
           style="width:140px"
+        />
+        <el-select v-model="searchType" size="small" style="width:90px">
+          <el-option label="昵称" value="nickname" />
+          <el-option label="手机号" value="phone" />
+        </el-select>
+        <el-input
+          v-model="keyword"
+          placeholder="输入搜索关键词"
+          size="small"
+          clearable
+          style="width:170px"
+          @keyup.enter="fetchStats"
         />
         <el-button type="primary" size="small" @click="fetchStats">查询</el-button>
         <el-button type="success" size="small" :loading="exporting" @click="exportCsv">导出 CSV</el-button>
