@@ -36,6 +36,21 @@ const selectedDate = ref<string | null>(null)
 const showDialog = ref(false)
 const batchMode = ref(false)
 const batchDates = ref<string[]>([])
+const showBatchDialog = ref(false)
+const batchForm = ref({
+  morningStart: '09:00',
+  morningEnd: '12:00',
+  amPersonalQuota: 500,
+  amTeamQuota: 200,
+  afternoonStart: '14:00',
+  afternoonEnd: '17:00',
+  pmPersonalQuota: 500,
+  pmTeamQuota: 200,
+  eveningStart: '19:00',
+  eveningEnd: '21:00',
+  evPersonalQuota: 500,
+  evTeamQuota: 200,
+})
 const editingConfig = ref<Partial<DateConfigItem>>({})
 
 const weekDays = ['日', '一', '二', '三', '四', '五', '六']
@@ -145,66 +160,64 @@ function toggleBatchMode() {
   batchDates.value = []
 }
 
-/** 批量设置: 将选中的日期全部设为指定配额 */
-async function batchSet() {
+/** 打开批量设置对话框 */
+function openBatchDialog() {
   if (batchDates.value.length === 0) {
     ElMessage.warning('请先选择日期')
     return
   }
-  ElMessageBox.prompt('请输入个人上午名额', '批量设置', {
-    inputValue: '500',
-    inputPlaceholder: '个人上午名额',
-  }).then(async ({ value: amPersonal }) => {
-    const pmPersonal = await ElMessageBox.prompt('请输入个人下午名额', '批量设置', {
-      inputValue: '500',
-      inputPlaceholder: '个人下午名额',
-    }).then(r => r.value)
-    const amTeam = await ElMessageBox.prompt('请输入团队上午名额', '批量设置', {
-      inputValue: '200',
-      inputPlaceholder: '团队上午名额',
-    }).then(r => r.value)
-    const pmTeam = await ElMessageBox.prompt('请输入团队下午名额', '批量设置', {
-      inputValue: '200',
-      inputPlaceholder: '团队下午名额',
-    }).then(r => r.value)
-    const evPersonal = await ElMessageBox.prompt('请输入个人夜场名额', '批量设置', {
-      inputValue: '500',
-      inputPlaceholder: '个人夜场名额',
-    }).then(r => r.value)
-    const evTeam = await ElMessageBox.prompt('请输入团队夜场名额', '批量设置', {
-      inputValue: '200',
-      inputPlaceholder: '团队夜场名额',
-    }).then(r => r.value)
-
-    for (const dateStr of batchDates.value) {
-      const existing = configs.value.find(c => c.date === dateStr)
-      if (existing) {
-        await request.put(`/admin/config/dates/${existing.id}`, {
-          amPersonalQuota: Number(amPersonal),
-          pmPersonalQuota: Number(pmPersonal),
-          evPersonalQuota: Number(evPersonal),
-          amTeamQuota: Number(amTeam),
-          pmTeamQuota: Number(pmTeam),
-          evTeamQuota: Number(evTeam),
-          isAvailable: true,
-        })
-      } else {
-        await request.post('/admin/config/dates', {
-          date: dateStr,
-          amPersonalQuota: Number(amPersonal),
-          pmPersonalQuota: Number(pmPersonal),
-          evPersonalQuota: Number(evPersonal),
-          amTeamQuota: Number(amTeam),
-          pmTeamQuota: Number(pmTeam),
-          evTeamQuota: Number(evTeam),
-        })
-      }
+  // 从已选中的第一个已有配置预填默认值
+  const firstExisting = configs.value.find(c => batchDates.value.includes(c.date))
+  if (firstExisting) {
+    batchForm.value = {
+      morningStart: firstExisting.morningStart || '09:00',
+      morningEnd: firstExisting.morningEnd || '12:00',
+      amPersonalQuota: firstExisting.amPersonalQuota ?? 500,
+      amTeamQuota: firstExisting.amTeamQuota ?? 200,
+      afternoonStart: firstExisting.afternoonStart || '14:00',
+      afternoonEnd: firstExisting.afternoonEnd || '17:00',
+      pmPersonalQuota: firstExisting.pmPersonalQuota ?? 500,
+      pmTeamQuota: firstExisting.pmTeamQuota ?? 200,
+      eveningStart: firstExisting.eveningStart || '19:00',
+      eveningEnd: firstExisting.eveningEnd || '21:00',
+      evPersonalQuota: firstExisting.evPersonalQuota ?? 500,
+      evTeamQuota: firstExisting.evTeamQuota ?? 200,
     }
-    ElMessage.success(`已设置 ${batchDates.value.length} 个日期`)
-    batchMode.value = false
-    batchDates.value = []
-    fetchData()
-  }).catch(() => {})
+  }
+  showBatchDialog.value = true
+}
+
+/** 确认批量设置 */
+async function confirmBatch() {
+  const f = batchForm.value
+  for (const dateStr of batchDates.value) {
+    const existing = configs.value.find(c => c.date === dateStr)
+    const payload = {
+      morningStart: f.morningStart,
+      morningEnd: f.morningEnd,
+      amPersonalQuota: f.amPersonalQuota,
+      amTeamQuota: f.amTeamQuota,
+      afternoonStart: f.afternoonStart,
+      afternoonEnd: f.afternoonEnd,
+      pmPersonalQuota: f.pmPersonalQuota,
+      pmTeamQuota: f.pmTeamQuota,
+      eveningStart: f.eveningStart,
+      eveningEnd: f.eveningEnd,
+      evPersonalQuota: f.evPersonalQuota,
+      evTeamQuota: f.evTeamQuota,
+      isAvailable: true,
+    }
+    if (existing) {
+      await request.put(`/admin/config/dates/${existing.id}`, payload)
+    } else {
+      await request.post('/admin/config/dates', { date: dateStr, ...payload })
+    }
+  }
+  ElMessage.success(`已设置 ${batchDates.value.length} 个日期`)
+  showBatchDialog.value = false
+  batchMode.value = false
+  batchDates.value = []
+  fetchData()
 }
 
 /** 一键生成本月所有日期（已有配置自动跳过） */
@@ -274,7 +287,7 @@ onMounted(fetchData)
       <!-- 批量操作栏 -->
       <div class="batch-bar" v-if="batchMode">
         <span>已选 {{ batchDates.length }} 天</span>
-        <el-button size="small" type="primary" :disabled="batchDates.length === 0" @click="batchSet">
+        <el-button size="small" type="primary" :disabled="batchDates.length === 0" @click="openBatchDialog">
           应用批量设置
         </el-button>
       </div>
@@ -307,6 +320,55 @@ onMounted(fetchData)
         </div>
       </div>
     </el-card>
+
+    <!-- 批量设置弹窗 -->
+    <el-dialog v-model="showBatchDialog" title="批量设置 — 已选 {{ batchDates.length }} 天" width="480px">
+      <el-form label-width="100px">
+        <el-divider>上午场</el-divider>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="batchForm.morningStart" format="HH:mm" value-format="HH:mm" placeholder="09:00" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="batchForm.morningEnd" format="HH:mm" value-format="HH:mm" placeholder="12:00" />
+        </el-form-item>
+        <el-form-item label="个人名额">
+          <el-input-number v-model="batchForm.amPersonalQuota" :min="0" />
+        </el-form-item>
+        <el-form-item label="团队名额">
+          <el-input-number v-model="batchForm.amTeamQuota" :min="0" />
+        </el-form-item>
+        <el-divider>下午场</el-divider>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="batchForm.afternoonStart" format="HH:mm" value-format="HH:mm" placeholder="14:00" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="batchForm.afternoonEnd" format="HH:mm" value-format="HH:mm" placeholder="17:00" />
+        </el-form-item>
+        <el-form-item label="个人名额">
+          <el-input-number v-model="batchForm.pmPersonalQuota" :min="0" />
+        </el-form-item>
+        <el-form-item label="团队名额">
+          <el-input-number v-model="batchForm.pmTeamQuota" :min="0" />
+        </el-form-item>
+        <el-divider>夜场</el-divider>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="batchForm.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="batchForm.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" />
+        </el-form-item>
+        <el-form-item label="个人名额">
+          <el-input-number v-model="batchForm.evPersonalQuota" :min="0" />
+        </el-form-item>
+        <el-form-item label="团队名额">
+          <el-input-number v-model="batchForm.evTeamQuota" :min="0" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showBatchDialog = false">取消</el-button>
+        <el-button type="primary" @click="confirmBatch">应用到 {{ batchDates.length }} 天</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 编辑弹窗 -->
     <el-dialog v-model="showDialog" title="编辑日期配置" width="420px">
