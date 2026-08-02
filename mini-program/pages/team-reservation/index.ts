@@ -11,6 +11,7 @@ interface DateItem {
   remainingQuota: number
   amRemaining: number
   pmRemaining: number
+  evRemaining: number
 }
 
 interface SessionItem {
@@ -275,9 +276,10 @@ Page({
         id: d.id,
         date: d.date,
         isAvailable: d.isAvailable,
-        remainingQuota: (d.morning?.remainingTeam || 0) + (d.afternoon?.remainingTeam || 0),
+        remainingQuota: (d.morning?.remainingTeam || 0) + (d.afternoon?.remainingTeam || 0) + (d.evening?.remainingTeam || 0),
         amRemaining: d.morning?.remainingTeam || 0,
         pmRemaining: d.afternoon?.remainingTeam || 0,
+        evRemaining: d.evening?.remainingTeam || 0,
       }))
       this.setData({ dates })
 
@@ -406,6 +408,15 @@ Page({
         remaining: date.pmRemaining,
         startTime: '14:00',
         endTime: '17:00',
+      })
+    }
+    if (date.evRemaining > 0) {
+      sessions.push({
+        type: 'EV',
+        label: '夜场',
+        remaining: date.evRemaining,
+        startTime: '19:00',
+        endTime: '21:00',
       })
     }
     return sessions

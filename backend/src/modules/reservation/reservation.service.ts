@@ -76,6 +76,7 @@ export class ReservationService implements OnModuleInit {
 
       const amQuota = quotas.find((q) => q.sessionType === 'AM');
       const pmQuota = quotas.find((q) => q.sessionType === 'PM');
+      const evQuota = quotas.find((q) => q.sessionType === 'EV');
 
       result.push({
         id: config.id,
@@ -92,6 +93,12 @@ export class ReservationService implements OnModuleInit {
           endTime: config.afternoonEnd,
           remainingPersonal: pmQuota ? pmQuota.totalPersonal - pmQuota.usedPersonal : 0,
           remainingTeam: pmQuota ? pmQuota.totalTeam - pmQuota.usedTeam : 0,
+        },
+        evening: {
+          startTime: config.eveningStart,
+          endTime: config.eveningEnd,
+          remainingPersonal: evQuota ? evQuota.totalPersonal - evQuota.usedPersonal : 0,
+          remainingTeam: evQuota ? evQuota.totalTeam - evQuota.usedTeam : 0,
         },
       });
     }
@@ -229,7 +236,9 @@ export class ReservationService implements OnModuleInit {
 
     const remaining = sessionType === 'AM'
       ? dateConfig.amPersonalQuota - quota.usedPersonal
-      : dateConfig.pmPersonalQuota - quota.usedPersonal;
+      : sessionType === 'PM'
+        ? dateConfig.pmPersonalQuota - quota.usedPersonal
+        : dateConfig.evPersonalQuota - quota.usedPersonal;
 
     if (remaining < visitorCount) {
       throw new ConflictException('预约名额不足');
@@ -361,7 +370,7 @@ export class ReservationService implements OnModuleInit {
     });
     if (!quota) throw new BadRequestException('配额配置不存在');
 
-    const teamQuota = sessionType === 'AM' ? dateConfig.amTeamQuota : dateConfig.pmTeamQuota;
+    const teamQuota = sessionType === 'AM' ? dateConfig.amTeamQuota : sessionType === 'PM' ? dateConfig.pmTeamQuota : dateConfig.evTeamQuota;
     if (teamQuota - quota.usedTeam < visitorCount) {
       throw new ConflictException('团队预约名额不足');
     }
@@ -542,12 +551,15 @@ export class ReservationService implements OnModuleInit {
           amTeamQuota: 200,
           pmPersonalQuota: 500,
           pmTeamQuota: 200,
+          evPersonalQuota: 500,
+          evTeamQuota: 200,
         }),
       );
 
       await this.quotaRepo.save([
         this.quotaRepo.create({ dateConfigId: config.id, sessionType: 'AM', totalPersonal: 500, totalTeam: 200 }),
         this.quotaRepo.create({ dateConfigId: config.id, sessionType: 'PM', totalPersonal: 500, totalTeam: 200 }),
+        this.quotaRepo.create({ dateConfigId: config.id, sessionType: 'EV', totalPersonal: 500, totalTeam: 200 }),
       ]);
 
       created.push(dateStr);

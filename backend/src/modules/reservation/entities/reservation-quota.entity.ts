@@ -20,7 +20,7 @@ export class ReservationQuota {
   @JoinColumn({ name: 'date_config_id' })
   dateConfig: ReservationDateConfig;
 
-  @Column({ length: 10, comment: '场次: AM=上午 PM=下午' })
+  @Column({ length: 10, comment: '场次: AM=上午 PM=下午 EV=夜场' })
   sessionType: string;
 
   @Column({ default: 0, comment: '个人总名额' })

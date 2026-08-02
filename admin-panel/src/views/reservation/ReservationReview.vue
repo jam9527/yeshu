@@ -73,8 +73,8 @@ onMounted(fetchData)
         <el-table-column prop="reservationDate" label="预约日期" width="120" />
         <el-table-column prop="sessionType" label="场次" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.sessionType === 'AM' ? 'warning' : 'primary'" size="small">
-              {{ row.sessionType === 'AM' ? '上午' : '下午' }}
+            <el-tag :type="row.sessionType === 'AM' ? 'warning' : row.sessionType === 'PM' ? 'primary' : 'danger'" size="small">
+              {{ row.sessionType === 'AM' ? '上午' : row.sessionType === 'PM' ? '下午' : '夜场' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -106,7 +106,7 @@ onMounted(fetchData)
           <el-descriptions-item label="编号">{{ currentDetail.reservationNo }}</el-descriptions-item>
           <el-descriptions-item label="类型">{{ currentDetail.type === 'PERSONAL' ? '个人' : '团队' }}</el-descriptions-item>
           <el-descriptions-item label="日期">{{ currentDetail.reservationDate }}</el-descriptions-item>
-          <el-descriptions-item label="场次">{{ currentDetail.sessionType === 'AM' ? '上午' : '下午' }}</el-descriptions-item>
+          <el-descriptions-item label="场次">{{ currentDetail.sessionType === 'AM' ? '上午' : currentDetail.sessionType === 'PM' ? '下午' : '夜场' }}</el-descriptions-item>
           <el-descriptions-item label="人数">{{ currentDetail.visitorCount }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusLabel(currentDetail.status) }}</el-descriptions-item>
           <el-descriptions-item v-if="currentDetail.rejectReason" label="驳回原因" :span="2">

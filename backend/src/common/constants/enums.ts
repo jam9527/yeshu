@@ -14,6 +14,7 @@ export type ReservationType = (typeof RESERVATION_TYPE)[keyof typeof RESERVATION
 export const SESSION_TYPE = {
   AM: 'AM',   // 上午场
   PM: 'PM',   // 下午场
+  EV: 'EV',   // 夜场
 } as const;
 export type SessionType = (typeof SESSION_TYPE)[keyof typeof SESSION_TYPE];
 

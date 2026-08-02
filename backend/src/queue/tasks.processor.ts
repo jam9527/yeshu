@@ -149,12 +149,15 @@ export class TasksProcessor {
         amTeamQuota: 200,
         pmPersonalQuota: 500,
         pmTeamQuota: 200,
+        evPersonalQuota: 500,
+        evTeamQuota: 200,
       });
       const saved = await this.dateConfigRepo.save(config);
 
       await this.quotaRepo.save([
         this.quotaRepo.create({ dateConfigId: saved.id, sessionType: 'AM', totalPersonal: 500, totalTeam: 200 }),
         this.quotaRepo.create({ dateConfigId: saved.id, sessionType: 'PM', totalPersonal: 500, totalTeam: 200 }),
+        this.quotaRepo.create({ dateConfigId: saved.id, sessionType: 'EV', totalPersonal: 500, totalTeam: 200 }),
       ]);
 
       created++;

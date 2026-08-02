@@ -71,7 +71,7 @@ Page({
         reservationNo: raw.reservationNo,
         date: raw.reservationDate || raw.date || raw.visitDate,
         sessionType: raw.sessionType,
-        sessionLabel: raw.sessionType === 'AM' ? '上午场' : '下午场',
+        sessionLabel: raw.sessionType === 'AM' ? '上午场' : raw.sessionType === 'PM' ? '下午场' : '夜场',
         type: raw.type || raw.reservationType,
         typeLabel: this.getTypeLabel(raw.type || raw.reservationType),
         status: raw.status,

@@ -98,8 +98,8 @@
       bindtap="selectSession"
     >
       <view class="session-left">
-        <view class="session-icon {{item.type === 'AM' ? 'am' : 'pm'}}">
-          {{item.type === 'AM' ? '上午' : '下午'}}
+        <view class="session-icon {{item.type === 'AM' ? 'am' : item.type === 'PM' ? 'pm' : 'ev'}}">
+          {{item.type === 'AM' ? '上午' : item.type === 'PM' ? '下午' : '夜场'}}
         </view>
       </view>
       <view class="session-info">

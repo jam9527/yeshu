@@ -66,7 +66,7 @@ onMounted(fetchData)
         </el-table-column>
         <el-table-column prop="reservationDate" label="日期" width="110" />
         <el-table-column prop="sessionType" label="场次" width="80">
-          <template #default="{ row }">{{ row.sessionType === 'AM' ? '上午' : '下午' }}</template>
+          <template #default="{ row }">{{ row.sessionType === 'AM' ? '上午' : row.sessionType === 'PM' ? '下午' : '夜场' }}</template>
         </el-table-column>
         <el-table-column prop="visitorCount" label="人数" width="60" />
         <el-table-column label="区域/类型" width="140">

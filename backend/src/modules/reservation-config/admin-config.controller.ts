@@ -31,13 +31,15 @@ export class AdminConfigController {
 
   /** POST /api/admin/config/dates - 新增日期配置 */
   @Post('dates')
-  async createDate(@Body() dto: { date: string; amPersonalQuota?: number; amTeamQuota?: number; pmPersonalQuota?: number; pmTeamQuota?: number }) {
+  async createDate(@Body() dto: { date: string; amPersonalQuota?: number; amTeamQuota?: number; pmPersonalQuota?: number; pmTeamQuota?: number; evPersonalQuota?: number; evTeamQuota?: number }) {
     const config = this.dateConfigRepo.create({
       date: dto.date,
       amPersonalQuota: dto.amPersonalQuota ?? 500,
       amTeamQuota: dto.amTeamQuota ?? 200,
       pmPersonalQuota: dto.pmPersonalQuota ?? 500,
       pmTeamQuota: dto.pmTeamQuota ?? 200,
+      evPersonalQuota: dto.evPersonalQuota ?? 500,
+      evTeamQuota: dto.evTeamQuota ?? 200,
     });
     const saved = await this.dateConfigRepo.save(config);
 
@@ -54,7 +56,13 @@ export class AdminConfigController {
       totalPersonal: saved.pmPersonalQuota,
       totalTeam: saved.pmTeamQuota,
     });
-    await this.quotaRepo.save([amQuota, pmQuota]);
+    const evQuota = this.quotaRepo.create({
+      dateConfigId: saved.id,
+      sessionType: 'EV',
+      totalPersonal: saved.evPersonalQuota,
+      totalTeam: saved.evTeamQuota,
+    });
+    await this.quotaRepo.save([amQuota, pmQuota, evQuota]);
 
     return saved;
   }
@@ -79,6 +87,14 @@ export class AdminConfigController {
         if (dto.pmPersonalQuota !== undefined) pmQuota.totalPersonal = dto.pmPersonalQuota;
         if (dto.pmTeamQuota !== undefined) pmQuota.totalTeam = dto.pmTeamQuota;
         await this.quotaRepo.save(pmQuota);
+      }
+    }
+    if (dto.evPersonalQuota !== undefined || dto.evTeamQuota !== undefined) {
+      const evQuota = await this.quotaRepo.findOne({ where: { dateConfigId: id, sessionType: 'EV' } });
+      if (evQuota) {
+        if (dto.evPersonalQuota !== undefined) evQuota.totalPersonal = dto.evPersonalQuota;
+        if (dto.evTeamQuota !== undefined) evQuota.totalTeam = dto.evTeamQuota;
+        await this.quotaRepo.save(evQuota);
       }
     }
 
@@ -113,11 +129,13 @@ export class AdminConfigController {
     const dateDto: any = {};
     if (dto.totalPersonal !== undefined) {
       if (quota.sessionType === 'AM') dateDto.amPersonalQuota = dto.totalPersonal;
-      else dateDto.pmPersonalQuota = dto.totalPersonal;
+      else if (quota.sessionType === 'PM') dateDto.pmPersonalQuota = dto.totalPersonal;
+      else if (quota.sessionType === 'EV') dateDto.evPersonalQuota = dto.totalPersonal;
     }
     if (dto.totalTeam !== undefined) {
       if (quota.sessionType === 'AM') dateDto.amTeamQuota = dto.totalTeam;
-      else dateDto.pmTeamQuota = dto.totalTeam;
+      else if (quota.sessionType === 'PM') dateDto.pmTeamQuota = dto.totalTeam;
+      else if (quota.sessionType === 'EV') dateDto.evTeamQuota = dto.totalTeam;
     }
     if (Object.keys(dateDto).length > 0) {
       await this.dateConfigRepo.update(quota.dateConfigId, dateDto);

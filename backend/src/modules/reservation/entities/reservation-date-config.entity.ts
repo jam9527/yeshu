@@ -41,6 +41,18 @@ export class ReservationDateConfig {
   @Column({ default: 200, comment: '下午场团队名额' })
   pmTeamQuota: number;
 
+  @Column({ type: 'time', default: '19:00:00', comment: '夜场开始时间' })
+  eveningStart: string;
+
+  @Column({ type: 'time', default: '21:00:00', comment: '夜场结束时间' })
+  eveningEnd: string;
+
+  @Column({ default: 500, comment: '夜场个人名额' })
+  evPersonalQuota: number;
+
+  @Column({ default: 200, comment: '夜场团队名额' })
+  evTeamQuota: number;
+
   @Column({ length: 255, nullable: true, comment: '备注' })
   remark: string;
 

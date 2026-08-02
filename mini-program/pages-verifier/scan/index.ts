@@ -64,7 +64,7 @@ Page({
       const display = {
         ...res,
         visitors,
-        sessionLabel: res.sessionType === 'AM' ? '上午场' : res.sessionType === 'PM' ? '下午场' : res.sessionType,
+        sessionLabel: res.sessionType === 'AM' ? '上午场' : res.sessionType === 'PM' ? '下午场' : res.sessionType === 'EV' ? '夜场' : res.sessionType,
         isVerified: res.status === 'VERIFIED',
       }
       this.setData({

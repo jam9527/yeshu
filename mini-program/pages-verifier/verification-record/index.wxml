@@ -47,7 +47,7 @@
         <view class="record-left">
           <text class="record-no">{{item.reservationNo || '—'}}</text>
           <text class="record-user" wx:if="{{item.userNickname}}">预约人：{{item.userNickname}}{{item.userPhone ? ' ' + item.userPhone : ''}}</text>
-          <text class="record-date">{{item.visitDate || '—'}} · {{item.session === 'AM' ? '上午' : item.session === 'PM' ? '下午' : '—'}}</text>
+          <text class="record-date">{{item.visitDate || '—'}} · {{item.session === 'AM' ? '上午' : item.session === 'PM' ? '下午' : item.session === 'EV' ? '夜场' : '—'}}</text>
           <text class="record-type">
             {{item.type === 'TEAM' ? '团队' : '个人'}}预约
             <block wx:if="{{item.type === 'PERSONAL'}}">

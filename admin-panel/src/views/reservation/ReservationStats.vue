@@ -376,6 +376,25 @@ onMounted(() => {
               </div>
             </div>
           </div>
+          <div class="quota-session">
+            <h4>夜场 <small>{{ quota.evening?.startTime }} - {{ quota.evening?.endTime }}</small></h4>
+            <div class="quota-bars">
+              <div class="quota-bar-item">
+                <span class="bar-label">个人名额</span>
+                <div class="bar-track">
+                  <div class="bar-fill" :style="{ width: quota.evening ? ((quota.evening.personalTotal - quota.evening.personalRemaining) / quota.evening.personalTotal * 100) + '%' : '0%', background: '#e60012' }"></div>
+                </div>
+                <span class="bar-text">{{ quota.evening?.personalRemaining }}/{{ quota.evening?.personalTotal }}</span>
+              </div>
+              <div class="quota-bar-item">
+                <span class="bar-label">团队名额</span>
+                <div class="bar-track">
+                  <div class="bar-fill" :style="{ width: quota.evening ? ((quota.evening.teamTotal - quota.evening.teamRemaining) / quota.evening.teamTotal * 100) + '%' : '0%', background: '#005bac' }"></div>
+                </div>
+                <span class="bar-text">{{ quota.evening?.teamRemaining }}/{{ quota.evening?.teamTotal }}</span>
+              </div>
+            </div>
+          </div>
         </template>
       </div>
       <el-skeleton v-else :rows="4" animated />

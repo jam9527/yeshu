@@ -30,7 +30,7 @@ export class Reservation {
   @Column({ length: 10, comment: '预约类型: PERSONAL=个人 TEAM=团队' })
   type: string;
 
-  @Column({ length: 10, comment: '场次: AM=上午 PM=下午' })
+  @Column({ length: 10, comment: '场次: AM=上午 PM=下午 EV=夜场' })
   sessionType: string;
 
   @Column({ type: 'date', comment: '预约日期' })

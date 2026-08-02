@@ -11,10 +11,14 @@ interface DateConfigItem {
   morningEnd: string
   afternoonStart: string
   afternoonEnd: string
+  eveningStart: string
+  eveningEnd: string
   amPersonalQuota: number
   amTeamQuota: number
   pmPersonalQuota: number
   pmTeamQuota: number
+  evPersonalQuota: number
+  evTeamQuota: number
 }
 
 interface CalendarDay {
@@ -121,10 +125,14 @@ async function saveConfig() {
       morningEnd: editingConfig.value.morningEnd,
       afternoonStart: editingConfig.value.afternoonStart,
       afternoonEnd: editingConfig.value.afternoonEnd,
+      eveningStart: editingConfig.value.eveningStart,
+      eveningEnd: editingConfig.value.eveningEnd,
       amPersonalQuota: editingConfig.value.amPersonalQuota,
       amTeamQuota: editingConfig.value.amTeamQuota,
       pmPersonalQuota: editingConfig.value.pmPersonalQuota,
       pmTeamQuota: editingConfig.value.pmTeamQuota,
+      evPersonalQuota: editingConfig.value.evPersonalQuota,
+      evTeamQuota: editingConfig.value.evTeamQuota,
     })
     ElMessage.success('保存成功')
     showDialog.value = false
@@ -159,6 +167,14 @@ async function batchSet() {
       inputValue: '200',
       inputPlaceholder: '团队下午名额',
     }).then(r => r.value)
+    const evPersonal = await ElMessageBox.prompt('请输入个人夜场名额', '批量设置', {
+      inputValue: '500',
+      inputPlaceholder: '个人夜场名额',
+    }).then(r => r.value)
+    const evTeam = await ElMessageBox.prompt('请输入团队夜场名额', '批量设置', {
+      inputValue: '200',
+      inputPlaceholder: '团队夜场名额',
+    }).then(r => r.value)
 
     for (const dateStr of batchDates.value) {
       const existing = configs.value.find(c => c.date === dateStr)
@@ -166,8 +182,10 @@ async function batchSet() {
         await request.put(`/admin/config/dates/${existing.id}`, {
           amPersonalQuota: Number(amPersonal),
           pmPersonalQuota: Number(pmPersonal),
+          evPersonalQuota: Number(evPersonal),
           amTeamQuota: Number(amTeam),
           pmTeamQuota: Number(pmTeam),
+          evTeamQuota: Number(evTeam),
           isAvailable: true,
         })
       } else {
@@ -175,8 +193,10 @@ async function batchSet() {
           date: dateStr,
           amPersonalQuota: Number(amPersonal),
           pmPersonalQuota: Number(pmPersonal),
+          evPersonalQuota: Number(evPersonal),
           amTeamQuota: Number(amTeam),
           pmTeamQuota: Number(pmTeam),
+          evTeamQuota: Number(evTeam),
         })
       }
     }
@@ -278,8 +298,8 @@ onMounted(fetchData)
         >
           <div class="day-number">{{ day.day }}</div>
           <div class="day-info" v-if="day.isCurrentMonth && day.config && day.config.isAvailable">
-            <span class="info-line">个:{{ day.config.amPersonalQuota }}/{{ day.config.pmPersonalQuota }}</span>
-            <span class="info-line">团:{{ day.config.amTeamQuota }}/{{ day.config.pmTeamQuota }}</span>
+            <span class="info-line">个:{{ day.config.amPersonalQuota }}/{{ day.config.pmPersonalQuota }}/{{ day.config.evPersonalQuota }}</span>
+            <span class="info-line">团:{{ day.config.amTeamQuota }}/{{ day.config.pmTeamQuota }}/{{ day.config.evTeamQuota }}</span>
           </div>
           <div class="day-info unavailable" v-else-if="day.isCurrentMonth && day.config && !day.config.isAvailable">
             <span class="info-line">已关闭</span>
@@ -322,6 +342,19 @@ onMounted(fetchData)
         </el-form-item>
         <el-form-item label="团队名额">
           <el-input-number v-model="editingConfig.pmTeamQuota" :min="0" />
+        </el-form-item>
+        <el-divider>夜场</el-divider>
+        <el-form-item label="开始时间">
+          <el-time-picker v-model="editingConfig.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" />
+        </el-form-item>
+        <el-form-item label="结束时间">
+          <el-time-picker v-model="editingConfig.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" />
+        </el-form-item>
+        <el-form-item label="个人名额">
+          <el-input-number v-model="editingConfig.evPersonalQuota" :min="0" />
+        </el-form-item>
+        <el-form-item label="团队名额">
+          <el-input-number v-model="editingConfig.evTeamQuota" :min="0" />
         </el-form-item>
       </el-form>
       <template #footer>

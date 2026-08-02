@@ -272,6 +272,9 @@
 .session-icon.pm {
   background: #005bac;
 }
+.session-icon.ev {
+  background: #7b1fa2;
+}
 
 .session-info {
   flex: 1;

@@ -214,6 +214,7 @@ export class StatisticsService {
 
     const amQuota = quotas.find((q) => q.sessionType === 'AM');
     const pmQuota = quotas.find((q) => q.sessionType === 'PM');
+    const evQuota = quotas.find((q) => q.sessionType === 'EV');
 
     return {
       date: targetDate,
@@ -233,6 +234,14 @@ export class StatisticsService {
         teamRemaining: config.pmTeamQuota - (pmQuota?.usedTeam || 0),
         personalTotal: config.pmPersonalQuota,
         teamTotal: config.pmTeamQuota,
+      },
+      evening: {
+        startTime: config.eveningStart.slice(0, 5),
+        endTime: config.eveningEnd.slice(0, 5),
+        personalRemaining: config.evPersonalQuota - (evQuota?.usedPersonal || 0),
+        teamRemaining: config.evTeamQuota - (evQuota?.usedTeam || 0),
+        personalTotal: config.evPersonalQuota,
+        teamTotal: config.evTeamQuota,
       },
     };
   }
