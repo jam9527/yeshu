@@ -64,6 +64,7 @@ export class ReservationService implements OnModuleInit {
 
   /** 获取可预约日期列表（含剩余名额） */
   async getAvailableDates() {
+    const fmt = (t: string) => (t && t.length >= 5) ? t.slice(0, 5) : t;
     const configs = await this.dateConfigRepo.find({
       order: { date: 'ASC' },
     });
@@ -83,20 +84,20 @@ export class ReservationService implements OnModuleInit {
         date: config.date,
         isAvailable: config.isAvailable,
         morning: {
-          startTime: config.morningStart,
-          endTime: config.morningEnd,
+          startTime: fmt(config.morningStart),
+          endTime: fmt(config.morningEnd),
           remainingPersonal: amQuota ? amQuota.totalPersonal - amQuota.usedPersonal : 0,
           remainingTeam: amQuota ? amQuota.totalTeam - amQuota.usedTeam : 0,
         },
         afternoon: {
-          startTime: config.afternoonStart,
-          endTime: config.afternoonEnd,
+          startTime: fmt(config.afternoonStart),
+          endTime: fmt(config.afternoonEnd),
           remainingPersonal: pmQuota ? pmQuota.totalPersonal - pmQuota.usedPersonal : 0,
           remainingTeam: pmQuota ? pmQuota.totalTeam - pmQuota.usedTeam : 0,
         },
         evening: {
-          startTime: config.eveningStart,
-          endTime: config.eveningEnd,
+          startTime: fmt(config.eveningStart),
+          endTime: fmt(config.eveningEnd),
           remainingPersonal: evQuota ? evQuota.totalPersonal - evQuota.usedPersonal : 0,
           remainingTeam: evQuota ? evQuota.totalTeam - evQuota.usedTeam : 0,
         },

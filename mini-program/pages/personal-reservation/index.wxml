@@ -208,7 +208,7 @@
       <view class="form-card">
         <text class="form-card-title">邀请码 <text style="color:#e60012">*</text></text>
         <input class="promoter-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
-        <view class="input-hint">如果没有邀请码请联系您的推荐人，如果没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>联系</view>
+        <view class="input-hint">请联系您的推荐人获取邀请码，如没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>。</view>
       </view>
     </block>
 

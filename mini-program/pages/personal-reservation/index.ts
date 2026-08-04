@@ -8,6 +8,12 @@ interface DateItem {
   amRemaining: number
   pmRemaining: number
   evRemaining: number
+  amStartTime: string
+  amEndTime: string
+  pmStartTime: string
+  pmEndTime: string
+  evStartTime: string
+  evEndTime: string
 }
 
 interface SessionItem {
@@ -218,6 +224,12 @@ Page({
         amRemaining: d.morning?.remainingPersonal || 0,
         pmRemaining: d.afternoon?.remainingPersonal || 0,
         evRemaining: d.evening?.remainingPersonal || 0,
+        amStartTime: d.morning?.startTime || '09:00',
+        amEndTime: d.morning?.endTime || '12:00',
+        pmStartTime: d.afternoon?.startTime || '14:00',
+        pmEndTime: d.afternoon?.endTime || '17:00',
+        evStartTime: d.evening?.startTime || '19:00',
+        evEndTime: d.evening?.endTime || '21:00',
       }))
       this.setData({ dates })
 
@@ -336,22 +348,22 @@ Page({
       type: 'AM',
       label: '上午场',
       remaining: date.amRemaining,
-      startTime: '09:00',
-      endTime: '12:00',
+      startTime: date.amStartTime,
+      endTime: date.amEndTime,
     })
     sessions.push({
       type: 'PM',
       label: '下午场',
       remaining: date.pmRemaining,
-      startTime: '14:00',
-      endTime: '17:00',
+      startTime: date.pmStartTime,
+      endTime: date.pmEndTime,
     })
     sessions.push({
       type: 'EV',
       label: '夜场',
       remaining: date.evRemaining,
-      startTime: '19:00',
-      endTime: '21:00',
+      startTime: date.evStartTime,
+      endTime: date.evEndTime,
     })
     return sessions
   },

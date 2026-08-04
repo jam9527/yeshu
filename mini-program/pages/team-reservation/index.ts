@@ -12,6 +12,12 @@ interface DateItem {
   amRemaining: number
   pmRemaining: number
   evRemaining: number
+  amStartTime: string
+  amEndTime: string
+  pmStartTime: string
+  pmEndTime: string
+  evStartTime: string
+  evEndTime: string
 }
 
 interface SessionItem {
@@ -105,6 +111,8 @@ Page({
     showNotice: false,
     noticeContent: '',
     agreed: false,
+    countdown: 5,
+    countdownTimer: null as any,
     /** 邀请码联系弹窗 */
     showInvitePopup: false,
     invitePopupTitle: '',
@@ -134,7 +142,8 @@ Page({
     try {
       const res: any = await api.get('/notices/team')
       if (res?.content) {
-        this.setData({ noticeContent: res.content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false })
+        this.setData({ noticeContent: res.content.replace(/\n/g, '<br/>'), showNotice: true, agreed: false, countdown: 5 })
+        this.startCountdown()
       } else {
         this.setData({ agreed: true })
       }
@@ -143,8 +152,31 @@ Page({
     }
   },
 
+  startCountdown() {
+    const timer = setInterval(() => {
+      const { countdown } = this.data
+      if (countdown <= 1) {
+        clearInterval(timer)
+        this.setData({ countdown: 0, countdownTimer: null })
+      } else {
+        this.setData({ countdown: countdown - 1 })
+      }
+    }, 1000)
+    this.setData({ countdownTimer: timer })
+  },
+
   agreeNotice() {
-    this.setData({ showNotice: false, agreed: true })
+    if (this.data.countdown > 0) return
+    if (this.data.countdownTimer) {
+      clearInterval(this.data.countdownTimer)
+    }
+    this.setData({ showNotice: false, agreed: true, countdownTimer: null })
+  },
+
+  onUnload() {
+    if (this.data.countdownTimer) {
+      clearInterval(this.data.countdownTimer)
+    }
   },
 
   /** 加载邀请码联系弹窗内容 */
@@ -280,6 +312,12 @@ Page({
         amRemaining: d.morning?.remainingTeam || 0,
         pmRemaining: d.afternoon?.remainingTeam || 0,
         evRemaining: d.evening?.remainingTeam || 0,
+        amStartTime: d.morning?.startTime || '09:00',
+        amEndTime: d.morning?.endTime || '12:00',
+        pmStartTime: d.afternoon?.startTime || '14:00',
+        pmEndTime: d.afternoon?.endTime || '17:00',
+        evStartTime: d.evening?.startTime || '19:00',
+        evEndTime: d.evening?.endTime || '21:00',
       }))
       this.setData({ dates })
 
@@ -397,8 +435,8 @@ Page({
         type: 'AM',
         label: '上午场',
         remaining: date.amRemaining,
-        startTime: '09:00',
-        endTime: '12:00',
+        startTime: date.amStartTime,
+        endTime: date.amEndTime,
       })
     }
     if (date.pmRemaining > 0) {
@@ -406,8 +444,8 @@ Page({
         type: 'PM',
         label: '下午场',
         remaining: date.pmRemaining,
-        startTime: '14:00',
-        endTime: '17:00',
+        startTime: date.pmStartTime,
+        endTime: date.pmEndTime,
       })
     }
     if (date.evRemaining > 0) {
@@ -415,8 +453,8 @@ Page({
         type: 'EV',
         label: '夜场',
         remaining: date.evRemaining,
-        startTime: '19:00',
-        endTime: '21:00',
+        startTime: date.evStartTime,
+        endTime: date.evEndTime,
       })
     }
     return sessions
