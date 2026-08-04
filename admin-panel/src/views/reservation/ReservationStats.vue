@@ -154,12 +154,50 @@ watch(trafficGranularity, () => { fetchTrafficSource() })
 watch([trafficStartDate, trafficEndDate], () => { fetchTrafficSource() })
 watch(quotaDate, fetchQuota)
 
+// ===== 每日场次明细 =====
+const sessionStats = ref<any[]>([])
+const sessionLoading = ref(false)
+const sessionStartDate = ref('')
+const sessionEndDate = ref('')
+
+function setDefaultSessionDates() {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  sessionStartDate.value = `${y}-${String(m + 1).padStart(2, '0')}-01`
+  sessionEndDate.value = now.toISOString().split('T')[0]
+}
+
+async function fetchSessionStats() {
+  sessionLoading.value = true
+  try {
+    const params: any = {}
+    if (sessionStartDate.value) params.startDate = sessionStartDate.value
+    if (sessionEndDate.value) params.endDate = sessionEndDate.value
+    const res: any = await request.get('/admin/statistics/reservation-stats', { params })
+    if (res.data) sessionStats.value = res.data || []
+  } finally { sessionLoading.value = false }
+}
+
+const sessionSummary = computed(() => {
+  if (!sessionStats.value.length) return null
+  const sum = (field: string) => sessionStats.value.reduce((acc, s) => acc + (Number(s[field]) || 0), 0)
+  return {
+    amReservations: sum('amReservations'), amVisitors: sum('amVisitors'),
+    pmReservations: sum('pmReservations'), pmVisitors: sum('pmVisitors'),
+    evReservations: sum('evReservations'), evVisitors: sum('evVisitors'),
+    totalReservations: sum('totalReservations'), totalVisitors: sum('totalVisitors'),
+  }
+})
+
 onMounted(() => {
   fetchOverview()
   fetchAgeDistribution()
   fetchPopularDates()
   fetchQuota()
   fetchTrafficSource()
+  setDefaultSessionDates()
+  fetchSessionStats()
 })
 </script>
 
@@ -279,6 +317,70 @@ onMounted(() => {
       </template>
       <div ref="trafficChartRef" style="height:360px;" v-show="trafficData.length"></div>
       <el-empty v-if="!trafficData.length && !loading" description="暂无数据" />
+    </el-card>
+
+    <!-- 每日场次预约明细 -->
+    <el-card shadow="hover" style="margin-bottom:16px" v-loading="sessionLoading">
+      <template #header>
+        <div class="chart-header">
+          <span>每日场次预约明细</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <el-date-picker
+              v-model="sessionStartDate"
+              type="date"
+              placeholder="开始日期"
+              value-format="YYYY-MM-DD"
+              size="small"
+              style="width:140px"
+            />
+            <span style="color:#999">-</span>
+            <el-date-picker
+              v-model="sessionEndDate"
+              type="date"
+              placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              size="small"
+              style="width:140px"
+            />
+            <el-button type="primary" size="small" @click="fetchSessionStats">查询</el-button>
+          </div>
+        </div>
+      </template>
+
+      <el-table :data="sessionStats" stripe border size="small" max-height="500" style="width:100%">
+        <el-table-column prop="date" label="日期" width="120" fixed="left" />
+
+        <el-table-column label="上午场" align="center">
+          <el-table-column prop="amReservations" label="预约" width="70" sortable />
+          <el-table-column prop="amVisitors" label="人次" width="70" sortable />
+        </el-table-column>
+
+        <el-table-column label="下午场" align="center">
+          <el-table-column prop="pmReservations" label="预约" width="70" sortable />
+          <el-table-column prop="pmVisitors" label="人次" width="70" sortable />
+        </el-table-column>
+
+        <el-table-column label="夜场" align="center">
+          <el-table-column prop="evReservations" label="预约" width="70" sortable />
+          <el-table-column prop="evVisitors" label="人次" width="70" sortable />
+        </el-table-column>
+
+        <el-table-column label="合计" align="center">
+          <el-table-column prop="totalReservations" label="预约" width="70" sortable />
+          <el-table-column prop="totalVisitors" label="人次" width="70" sortable />
+        </el-table-column>
+      </el-table>
+
+      <!-- 汇总行 -->
+      <div v-if="sessionSummary" style="margin-top:12px;padding:10px 16px;background:#f5f7fa;border-radius:4px;font-size:13px;display:flex;flex-wrap:wrap;gap:4px 20px">
+        <span><b>汇总：</b></span>
+        <span>上午 预约{{ sessionSummary.amReservations }} / 人次{{ sessionSummary.amVisitors }}</span>
+        <span>下午 预约{{ sessionSummary.pmReservations }} / 人次{{ sessionSummary.pmVisitors }}</span>
+        <span>夜场 预约{{ sessionSummary.evReservations }} / 人次{{ sessionSummary.evVisitors }}</span>
+        <span>合计 预约{{ sessionSummary.totalReservations }} / 人次{{ sessionSummary.totalVisitors }}</span>
+      </div>
+
+      <el-empty v-if="!sessionStats.length && !sessionLoading" description="暂无数据" />
     </el-card>
 
     <el-row :gutter="16">

@@ -305,27 +305,45 @@ export class StatisticsService {
     });
   }
 
-  /** 按日期范围统计预约数量 */
+  /**
+   * 按日期范围统计预约 — 每日场次 pivot（上午/下午/夜场 × 预约数/人次）
+   * 复用 trafficSource 的 SUM(CASE WHEN) SQL pivot 模式
+   */
   async reservationStats(startDate?: string, endDate?: string) {
-    let query = this.reservationRepo
+    const qb = this.reservationRepo
       .createQueryBuilder('r')
-      .select("DATE(r.reservationDate) as date, r.sessionType, r.type, COUNT(*) as count");
+      .select('r.reservationDate', 'date')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'AM\' THEN 1 ELSE 0 END), 0)', 'amReservations')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'AM\' THEN r.visitorCount ELSE 0 END), 0)', 'amVisitors')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'PM\' THEN 1 ELSE 0 END), 0)', 'pmReservations')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'PM\' THEN r.visitorCount ELSE 0 END), 0)', 'pmVisitors')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'EV\' THEN 1 ELSE 0 END), 0)', 'evReservations')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'EV\' THEN r.visitorCount ELSE 0 END), 0)', 'evVisitors')
+      .addSelect('COUNT(*)', 'totalReservations')
+      .addSelect('COALESCE(SUM(r.visitorCount), 0)', 'totalVisitors')
+      .groupBy('r.reservationDate')
+      .orderBy('r.reservationDate', 'ASC');
 
-    if (startDate) {
-      query = query.andWhere('r.reservationDate >= :start', { start: startDate });
-    }
-    if (endDate) {
-      query = query.andWhere('r.reservationDate <= :end', { end: endDate });
-    }
+    if (startDate) qb.andWhere('r.reservationDate >= :start', { start: startDate });
+    if (endDate) qb.andWhere('r.reservationDate <= :end', { end: endDate });
 
-    const records = await query
-      .groupBy('DATE(r.reservationDate), r.sessionType, r.type')
-      .orderBy('DATE(r.reservationDate)', 'ASC')
-      .getRawMany();
+    const records = await qb.getRawMany();
 
-    return records.map((r: any) => ({
-      ...r,
-      date: r.date instanceof Date ? r.date.toISOString().split('T')[0] : String(r.date).split('T')[0],
-    }));
+    return records.map((r: any) => {
+      const dateStr = r.date instanceof Date
+        ? r.date.toISOString().split('T')[0]
+        : String(r.date).split('T')[0];
+      return {
+        date: dateStr,
+        amReservations: Number(r.amReservations),
+        amVisitors: Number(r.amVisitors),
+        pmReservations: Number(r.pmReservations),
+        pmVisitors: Number(r.pmVisitors),
+        evReservations: Number(r.evReservations),
+        evVisitors: Number(r.evVisitors),
+        totalReservations: Number(r.totalReservations),
+        totalVisitors: Number(r.totalVisitors),
+      };
+    });
   }
 }
