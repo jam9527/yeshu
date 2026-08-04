@@ -101,59 +101,75 @@ export class PromotionService {
     }
   }
 
-  /** 获取推广统计（按时间筛选，区分个人/团队预约与核销） */
+  /** 获取推广统计（按时间筛选，区分个人/团队预约与核销）
+   *  预约/核销统计与后台 getDetailedStats 口径一致：
+   *  - 个人预约：直接从 reservations 表查 promoterId
+   *  - 团队预约：通过 promotion_records 关联 reservations
+   *  - 日期筛选：点击/注册按 clickedAt，预约/核销按 reservationDate
+   */
   async getStats(promoterId: number, startDate?: string, endDate?: string) {
-    const where: any = { promoterId };
+    const reservationRepo = this.dataSource.getRepository(Reservation);
+
+    // 1. 点击 & 注册统计（仅 promotion_records 有这些数据，按 clickedAt 筛选）
+    const clickWhere: any = { promoterId };
     if (startDate && endDate) {
-      where.clickedAt = Between(new Date(startDate), new Date(endDate + 'T23:59:59'));
+      clickWhere.clickedAt = Between(new Date(startDate), new Date(endDate + 'T23:59:59'));
     } else if (startDate) {
-      where.clickedAt = MoreThanOrEqual(new Date(startDate));
+      clickWhere.clickedAt = MoreThanOrEqual(new Date(startDate));
     } else if (endDate) {
-      where.clickedAt = LessThanOrEqual(new Date(endDate + 'T23:59:59'));
+      clickWhere.clickedAt = LessThanOrEqual(new Date(endDate + 'T23:59:59'));
     }
+    const records = await this.recordRepo.find({ where: clickWhere });
+    const totalClicks = records.length;
+    const totalRegisters = records.filter(r => r.visitorUserId).length;
 
-    const records = await this.recordRepo.find({ where });
+    // 2. 个人预约 & 核销统计（直接从 reservations 查，与后台 getDetailedStats 一致）
+    const personalQb = reservationRepo.createQueryBuilder('r')
+      .select([
+        'COUNT(r.id) AS count',
+        `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
+      ])
+      .where('r.promoterId = :promoterId', { promoterId })
+      .andWhere('r.type = :type', { type: 'PERSONAL' });
 
-    // 收集有预约关联的记录，查询预约类型（个人/团队）
-    const reservationIds = records.filter(r => r.reservationId).map(r => r.reservationId);
-    const reservationMap = new Map<string, string>();
-    if (reservationIds.length > 0) {
-      const reservations = await this.dataSource.getRepository(Reservation).find({
-        where: { id: In(reservationIds) },
-        select: ['id', 'type'],
-      });
-      reservations.forEach(r => reservationMap.set(String(r.id), r.type));
-    }
+    if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
+    if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
 
-    this.logger.log(`[getStats] promoterId=${promoterId} 总记录=${records.length} 有关联预约=${reservationIds.length} 已核销=${records.filter(r => r.verified).length} reservationMap大小=${reservationMap.size}`);
+    const personalRaw: any = await personalQb.getRawOne();
+    const personalReservations = Number(personalRaw?.count) || 0;
+    const personalVerified = Number(personalRaw?.verifiedCount) || 0;
 
-    // 按预约类型拆分统计
-    let personalReservations = 0;
-    let teamReservations = 0;
-    let personalVerified = 0;
-    let teamVerified = 0;
+    // 3. 团队预约 & 核销统计（通过 promotion_records 关联，与后台 getDetailedStats 一致）
+    const teamQb = this.recordRepo.createQueryBuilder('pr')
+      .select([
+        'COUNT(DISTINCT r.id) AS count',
+        `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
+      ])
+      .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
+      .where('pr.promoterId = :promoterId', { promoterId })
+      .andWhere('r.type = :type', { type: 'TEAM' });
 
-    for (const r of records) {
-      if (!r.reservationId) continue;
-      const type = reservationMap.get(String(r.reservationId));
-      if (type === 'PERSONAL') {
-        personalReservations++;
-        if (r.verified) personalVerified++;
-      } else if (type === 'TEAM') {
-        teamReservations++;
-        if (r.verified) teamVerified++;
-      } else {
-        this.logger.warn(`[getStats] reservationId=${r.reservationId} 未在reservationMap中找到类型 type=${type} verified=${r.verified}`);
-      }
-    }
+    if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
+    if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });
 
-    this.logger.log(`[getStats] 统计结果: 个人预约=${personalReservations} 团队预约=${teamReservations} 个人核销=${personalVerified} 团队核销=${teamVerified}`);
+    const teamRaw: any = await teamQb.getRawOne();
+    const teamReservations = Number(teamRaw?.count) || 0;
+    const teamVerified = Number(teamRaw?.verifiedCount) || 0;
+
+    const totalReservations = personalReservations + teamReservations;
+    const totalVerified = personalVerified + teamVerified;
+
+    this.logger.log(
+      `[getStats] promoterId=${promoterId} clicks=${totalClicks} registers=${totalRegisters} ` +
+      `personal=${personalReservations}/${personalVerified} team=${teamReservations}/${teamVerified} ` +
+      `total=${totalReservations}/${totalVerified}`,
+    );
 
     return {
-      totalClicks: records.length,
-      totalRegisters: records.filter(r => r.visitorUserId).length,
-      totalReservations: records.filter(r => r.reservationId).length,
-      totalVerified: records.filter(r => r.verified).length,
+      totalClicks,
+      totalRegisters,
+      totalReservations,
+      totalVerified,
       totalReservationsPersonal: personalReservations,
       totalReservationsTeam: teamReservations,
       totalVerifiedPersonal: personalVerified,
