@@ -12,6 +12,9 @@ interface DateItem {
   amRemaining: number
   pmRemaining: number
   evRemaining: number
+  amEnabled: boolean
+  pmEnabled: boolean
+  evEnabled: boolean
   amStartTime: string
   amEndTime: string
   pmStartTime: string
@@ -312,10 +315,13 @@ Page({
         amRemaining: d.morning?.remainingTeam || 0,
         pmRemaining: d.afternoon?.remainingTeam || 0,
         evRemaining: d.evening?.remainingTeam || 0,
+        amEnabled: d.morning?.enabled !== false,
         amStartTime: d.morning?.startTime || '09:00',
         amEndTime: d.morning?.endTime || '12:00',
+        pmEnabled: d.afternoon?.enabled !== false,
         pmStartTime: d.afternoon?.startTime || '14:00',
         pmEndTime: d.afternoon?.endTime || '17:00',
+        evEnabled: d.evening?.enabled !== false,
         evStartTime: d.evening?.startTime || '19:00',
         evEndTime: d.evening?.endTime || '21:00',
       }))
@@ -430,7 +436,7 @@ Page({
   /** 根据日期构建场次 */
   buildSessions(date: DateItem): SessionItem[] {
     const sessions: SessionItem[] = []
-    if (date.amRemaining > 0) {
+    if (date.amEnabled) {
       sessions.push({
         type: 'AM',
         label: '上午场',
@@ -439,7 +445,7 @@ Page({
         endTime: date.amEndTime,
       })
     }
-    if (date.pmRemaining > 0) {
+    if (date.pmEnabled) {
       sessions.push({
         type: 'PM',
         label: '下午场',
@@ -448,7 +454,7 @@ Page({
         endTime: date.pmEndTime,
       })
     }
-    if (date.evRemaining > 0) {
+    if (date.evEnabled) {
       sessions.push({
         type: 'EV',
         label: '夜场',

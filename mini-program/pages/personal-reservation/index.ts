@@ -8,6 +8,9 @@ interface DateItem {
   amRemaining: number
   pmRemaining: number
   evRemaining: number
+  amEnabled: boolean
+  pmEnabled: boolean
+  evEnabled: boolean
   amStartTime: string
   amEndTime: string
   pmStartTime: string
@@ -224,10 +227,13 @@ Page({
         amRemaining: d.morning?.remainingPersonal || 0,
         pmRemaining: d.afternoon?.remainingPersonal || 0,
         evRemaining: d.evening?.remainingPersonal || 0,
+        amEnabled: d.morning?.enabled !== false,
         amStartTime: d.morning?.startTime || '09:00',
         amEndTime: d.morning?.endTime || '12:00',
+        pmEnabled: d.afternoon?.enabled !== false,
         pmStartTime: d.afternoon?.startTime || '14:00',
         pmEndTime: d.afternoon?.endTime || '17:00',
+        evEnabled: d.evening?.enabled !== false,
         evStartTime: d.evening?.startTime || '19:00',
         evEndTime: d.evening?.endTime || '21:00',
       }))
@@ -344,27 +350,33 @@ Page({
 
   buildSessions(date: DateItem): SessionItem[] {
     const sessions: SessionItem[] = []
-    sessions.push({
-      type: 'AM',
-      label: '上午场',
-      remaining: date.amRemaining,
-      startTime: date.amStartTime,
-      endTime: date.amEndTime,
-    })
-    sessions.push({
-      type: 'PM',
-      label: '下午场',
-      remaining: date.pmRemaining,
-      startTime: date.pmStartTime,
-      endTime: date.pmEndTime,
-    })
-    sessions.push({
-      type: 'EV',
-      label: '夜场',
-      remaining: date.evRemaining,
-      startTime: date.evStartTime,
-      endTime: date.evEndTime,
-    })
+    if (date.amEnabled) {
+      sessions.push({
+        type: 'AM',
+        label: '上午场',
+        remaining: date.amRemaining,
+        startTime: date.amStartTime,
+        endTime: date.amEndTime,
+      })
+    }
+    if (date.pmEnabled) {
+      sessions.push({
+        type: 'PM',
+        label: '下午场',
+        remaining: date.pmRemaining,
+        startTime: date.pmStartTime,
+        endTime: date.pmEndTime,
+      })
+    }
+    if (date.evEnabled) {
+      sessions.push({
+        type: 'EV',
+        label: '夜场',
+        remaining: date.evRemaining,
+        startTime: date.evStartTime,
+        endTime: date.evEndTime,
+      })
+    }
     return sessions
   },
 

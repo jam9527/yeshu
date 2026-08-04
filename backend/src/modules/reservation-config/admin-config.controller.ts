@@ -31,7 +31,7 @@ export class AdminConfigController {
 
   /** POST /api/admin/config/dates - 新增日期配置 */
   @Post('dates')
-  async createDate(@Body() dto: { date: string; morningStart?: string; morningEnd?: string; afternoonStart?: string; afternoonEnd?: string; eveningStart?: string; eveningEnd?: string; amPersonalQuota?: number; amTeamQuota?: number; pmPersonalQuota?: number; pmTeamQuota?: number; evPersonalQuota?: number; evTeamQuota?: number }) {
+  async createDate(@Body() dto: { date: string; morningStart?: string; morningEnd?: string; afternoonStart?: string; afternoonEnd?: string; eveningStart?: string; eveningEnd?: string; morningEnabled?: boolean; afternoonEnabled?: boolean; eveningEnabled?: boolean; amPersonalQuota?: number; amTeamQuota?: number; pmPersonalQuota?: number; pmTeamQuota?: number; evPersonalQuota?: number; evTeamQuota?: number }) {
     const config = this.dateConfigRepo.create({
       date: dto.date,
       morningStart: dto.morningStart ?? '09:00',
@@ -40,6 +40,9 @@ export class AdminConfigController {
       afternoonEnd: dto.afternoonEnd ?? '17:00',
       eveningStart: dto.eveningStart ?? '19:00',
       eveningEnd: dto.eveningEnd ?? '21:00',
+      morningEnabled: dto.morningEnabled ?? true,
+      afternoonEnabled: dto.afternoonEnabled ?? true,
+      eveningEnabled: dto.eveningEnabled ?? true,
       amPersonalQuota: dto.amPersonalQuota ?? 500,
       amTeamQuota: dto.amTeamQuota ?? 200,
       pmPersonalQuota: dto.pmPersonalQuota ?? 500,

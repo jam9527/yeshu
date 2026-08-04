@@ -7,6 +7,9 @@ interface DateConfigItem {
   id: number
   date: string
   isAvailable: boolean
+  morningEnabled: boolean
+  afternoonEnabled: boolean
+  eveningEnabled: boolean
   morningStart: string
   morningEnd: string
   afternoonStart: string
@@ -38,14 +41,17 @@ const batchMode = ref(false)
 const batchDates = ref<string[]>([])
 const showBatchDialog = ref(false)
 const batchForm = ref({
+  morningEnabled: true,
   morningStart: '09:00',
   morningEnd: '12:00',
   amPersonalQuota: 500,
   amTeamQuota: 200,
+  afternoonEnabled: true,
   afternoonStart: '14:00',
   afternoonEnd: '17:00',
   pmPersonalQuota: 500,
   pmTeamQuota: 200,
+  eveningEnabled: true,
   eveningStart: '19:00',
   eveningEnd: '21:00',
   evPersonalQuota: 500,
@@ -136,10 +142,13 @@ async function saveConfig() {
   try {
     await request.put(`/admin/config/dates/${editingConfig.value.id}`, {
       isAvailable: editingConfig.value.isAvailable,
+      morningEnabled: editingConfig.value.morningEnabled,
       morningStart: editingConfig.value.morningStart,
       morningEnd: editingConfig.value.morningEnd,
+      afternoonEnabled: editingConfig.value.afternoonEnabled,
       afternoonStart: editingConfig.value.afternoonStart,
       afternoonEnd: editingConfig.value.afternoonEnd,
+      eveningEnabled: editingConfig.value.eveningEnabled,
       eveningStart: editingConfig.value.eveningStart,
       eveningEnd: editingConfig.value.eveningEnd,
       amPersonalQuota: editingConfig.value.amPersonalQuota,
@@ -170,14 +179,17 @@ function openBatchDialog() {
   const firstExisting = configs.value.find(c => batchDates.value.includes(c.date))
   if (firstExisting) {
     batchForm.value = {
+      morningEnabled: firstExisting.morningEnabled ?? true,
       morningStart: firstExisting.morningStart || '09:00',
       morningEnd: firstExisting.morningEnd || '12:00',
       amPersonalQuota: firstExisting.amPersonalQuota ?? 500,
       amTeamQuota: firstExisting.amTeamQuota ?? 200,
+      afternoonEnabled: firstExisting.afternoonEnabled ?? true,
       afternoonStart: firstExisting.afternoonStart || '14:00',
       afternoonEnd: firstExisting.afternoonEnd || '17:00',
       pmPersonalQuota: firstExisting.pmPersonalQuota ?? 500,
       pmTeamQuota: firstExisting.pmTeamQuota ?? 200,
+      eveningEnabled: firstExisting.eveningEnabled ?? true,
       eveningStart: firstExisting.eveningStart || '19:00',
       eveningEnd: firstExisting.eveningEnd || '21:00',
       evPersonalQuota: firstExisting.evPersonalQuota ?? 500,
@@ -193,14 +205,17 @@ async function confirmBatch() {
   for (const dateStr of batchDates.value) {
     const existing = configs.value.find(c => c.date === dateStr)
     const payload = {
+      morningEnabled: f.morningEnabled,
       morningStart: f.morningStart,
       morningEnd: f.morningEnd,
       amPersonalQuota: f.amPersonalQuota,
       amTeamQuota: f.amTeamQuota,
+      afternoonEnabled: f.afternoonEnabled,
       afternoonStart: f.afternoonStart,
       afternoonEnd: f.afternoonEnd,
       pmPersonalQuota: f.pmPersonalQuota,
       pmTeamQuota: f.pmTeamQuota,
+      eveningEnabled: f.eveningEnabled,
       eveningStart: f.eveningStart,
       eveningEnd: f.eveningEnd,
       evPersonalQuota: f.evPersonalQuota,
@@ -325,43 +340,52 @@ onMounted(fetchData)
     <el-dialog v-model="showBatchDialog" title="批量设置 — 已选 {{ batchDates.length }} 天" width="480px">
       <el-form label-width="100px">
         <el-divider>上午场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="batchForm.morningEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="batchForm.morningStart" format="HH:mm" value-format="HH:mm" placeholder="09:00" />
+          <el-time-picker v-model="batchForm.morningStart" format="HH:mm" value-format="HH:mm" placeholder="09:00" :disabled="!batchForm.morningEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="batchForm.morningEnd" format="HH:mm" value-format="HH:mm" placeholder="12:00" />
+          <el-time-picker v-model="batchForm.morningEnd" format="HH:mm" value-format="HH:mm" placeholder="12:00" :disabled="!batchForm.morningEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="batchForm.amPersonalQuota" :min="0" />
+          <el-input-number v-model="batchForm.amPersonalQuota" :min="0" :disabled="!batchForm.morningEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="batchForm.amTeamQuota" :min="0" />
+          <el-input-number v-model="batchForm.amTeamQuota" :min="0" :disabled="!batchForm.morningEnabled" />
         </el-form-item>
         <el-divider>下午场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="batchForm.afternoonEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="batchForm.afternoonStart" format="HH:mm" value-format="HH:mm" placeholder="14:00" />
+          <el-time-picker v-model="batchForm.afternoonStart" format="HH:mm" value-format="HH:mm" placeholder="14:00" :disabled="!batchForm.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="batchForm.afternoonEnd" format="HH:mm" value-format="HH:mm" placeholder="17:00" />
+          <el-time-picker v-model="batchForm.afternoonEnd" format="HH:mm" value-format="HH:mm" placeholder="17:00" :disabled="!batchForm.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="batchForm.pmPersonalQuota" :min="0" />
+          <el-input-number v-model="batchForm.pmPersonalQuota" :min="0" :disabled="!batchForm.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="batchForm.pmTeamQuota" :min="0" />
+          <el-input-number v-model="batchForm.pmTeamQuota" :min="0" :disabled="!batchForm.afternoonEnabled" />
         </el-form-item>
         <el-divider>夜场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="batchForm.eveningEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="batchForm.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" />
+          <el-time-picker v-model="batchForm.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" :disabled="!batchForm.eveningEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="batchForm.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" />
+          <el-time-picker v-model="batchForm.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" :disabled="!batchForm.eveningEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="batchForm.evPersonalQuota" :min="0" />
+          <el-input-number v-model="batchForm.evPersonalQuota" :min="0" :disabled="!batchForm.eveningEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="batchForm.evTeamQuota" :min="0" />
+          <el-input-number v-model="batchForm.evTeamQuota" :min="0" :disabled="!batchForm.eveningEnabled" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -380,43 +404,52 @@ onMounted(fetchData)
           <el-switch v-model="editingConfig.isAvailable" />
         </el-form-item>
         <el-divider>上午场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="editingConfig.morningEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="editingConfig.morningStart" format="HH:mm" value-format="HH:mm" placeholder="09:00" />
+          <el-time-picker v-model="editingConfig.morningStart" format="HH:mm" value-format="HH:mm" placeholder="09:00" :disabled="!editingConfig.morningEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="editingConfig.morningEnd" format="HH:mm" value-format="HH:mm" placeholder="12:00" />
+          <el-time-picker v-model="editingConfig.morningEnd" format="HH:mm" value-format="HH:mm" placeholder="12:00" :disabled="!editingConfig.morningEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="editingConfig.amPersonalQuota" :min="0" />
+          <el-input-number v-model="editingConfig.amPersonalQuota" :min="0" :disabled="!editingConfig.morningEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="editingConfig.amTeamQuota" :min="0" />
+          <el-input-number v-model="editingConfig.amTeamQuota" :min="0" :disabled="!editingConfig.morningEnabled" />
         </el-form-item>
         <el-divider>下午场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="editingConfig.afternoonEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="editingConfig.afternoonStart" format="HH:mm" value-format="HH:mm" placeholder="14:00" />
+          <el-time-picker v-model="editingConfig.afternoonStart" format="HH:mm" value-format="HH:mm" placeholder="14:00" :disabled="!editingConfig.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="editingConfig.afternoonEnd" format="HH:mm" value-format="HH:mm" placeholder="17:00" />
+          <el-time-picker v-model="editingConfig.afternoonEnd" format="HH:mm" value-format="HH:mm" placeholder="17:00" :disabled="!editingConfig.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="editingConfig.pmPersonalQuota" :min="0" />
+          <el-input-number v-model="editingConfig.pmPersonalQuota" :min="0" :disabled="!editingConfig.afternoonEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="editingConfig.pmTeamQuota" :min="0" />
+          <el-input-number v-model="editingConfig.pmTeamQuota" :min="0" :disabled="!editingConfig.afternoonEnabled" />
         </el-form-item>
         <el-divider>夜场</el-divider>
+        <el-form-item label="是否开放">
+          <el-switch v-model="editingConfig.eveningEnabled" />
+        </el-form-item>
         <el-form-item label="开始时间">
-          <el-time-picker v-model="editingConfig.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" />
+          <el-time-picker v-model="editingConfig.eveningStart" format="HH:mm" value-format="HH:mm" placeholder="19:00" :disabled="!editingConfig.eveningEnabled" />
         </el-form-item>
         <el-form-item label="结束时间">
-          <el-time-picker v-model="editingConfig.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" />
+          <el-time-picker v-model="editingConfig.eveningEnd" format="HH:mm" value-format="HH:mm" placeholder="21:00" :disabled="!editingConfig.eveningEnabled" />
         </el-form-item>
         <el-form-item label="个人名额">
-          <el-input-number v-model="editingConfig.evPersonalQuota" :min="0" />
+          <el-input-number v-model="editingConfig.evPersonalQuota" :min="0" :disabled="!editingConfig.eveningEnabled" />
         </el-form-item>
         <el-form-item label="团队名额">
-          <el-input-number v-model="editingConfig.evTeamQuota" :min="0" />
+          <el-input-number v-model="editingConfig.evTeamQuota" :min="0" :disabled="!editingConfig.eveningEnabled" />
         </el-form-item>
       </el-form>
       <template #footer>

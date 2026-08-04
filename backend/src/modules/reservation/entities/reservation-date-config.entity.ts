@@ -47,6 +47,15 @@ export class ReservationDateConfig {
   @Column({ type: 'time', default: '21:00:00', comment: '夜场结束时间' })
   eveningEnd: string;
 
+  @Column({ default: true, comment: '上午场是否开放' })
+  morningEnabled: boolean;
+
+  @Column({ default: true, comment: '下午场是否开放' })
+  afternoonEnabled: boolean;
+
+  @Column({ default: true, comment: '夜场是否开放' })
+  eveningEnabled: boolean;
+
   @Column({ default: 500, comment: '夜场个人名额' })
   evPersonalQuota: number;
 

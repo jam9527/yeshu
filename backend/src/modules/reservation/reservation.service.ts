@@ -84,18 +84,21 @@ export class ReservationService implements OnModuleInit {
         date: config.date,
         isAvailable: config.isAvailable,
         morning: {
+          enabled: config.morningEnabled,
           startTime: fmt(config.morningStart),
           endTime: fmt(config.morningEnd),
           remainingPersonal: amQuota ? amQuota.totalPersonal - amQuota.usedPersonal : 0,
           remainingTeam: amQuota ? amQuota.totalTeam - amQuota.usedTeam : 0,
         },
         afternoon: {
+          enabled: config.afternoonEnabled,
           startTime: fmt(config.afternoonStart),
           endTime: fmt(config.afternoonEnd),
           remainingPersonal: pmQuota ? pmQuota.totalPersonal - pmQuota.usedPersonal : 0,
           remainingTeam: pmQuota ? pmQuota.totalTeam - pmQuota.usedTeam : 0,
         },
         evening: {
+          enabled: config.eveningEnabled,
           startTime: fmt(config.eveningStart),
           endTime: fmt(config.eveningEnd),
           remainingPersonal: evQuota ? evQuota.totalPersonal - evQuota.usedPersonal : 0,
