@@ -142,9 +142,9 @@
     </view>
 
     <block wx:if="{{!realNameBlocked}}">
-      <!-- 行政分区选择 -->
+      <!-- 居住地选择 -->
       <view class="form-card">
-        <text class="form-card-title">行政分区</text>
+        <text class="form-card-title">填写您的居住地</text>
         <picker mode="region" value="{{district}}" bindchange="onDistrictChange">
           <view class="picker-display">
             <text class="{{district.length > 0 ? 'has-value' : 'placeholder'}}">{{district.length > 0 ? district[0] + ' ' + district[1] + ' ' + district[2] : '请选择省/市/区'}}</text>
@@ -169,7 +169,7 @@
 
       <!-- 参观总人数 -->
       <view class="count-section">
-        <text class="count-label">参观人数（1-5人）</text>
+        <text class="count-label">参观总人数（1-5人）</text>
         <view class="count-stepper">
           <view
             class="stepper-btn {{visitorCount <= 1 ? 'disabled' : ''}}"

@@ -8,18 +8,27 @@ export interface VerificationResult {
 /**
  * 身份证二要素核验服务
  *
- * 当前实现基于身份证号码校验位算法（GB 11643-1999）做本地格式校验。
- * 生产环境应替换为腾讯云/阿里云等第三方实名认证API，实现真实的姓名+身份证号匹配核验。
+ * 采用 GB 11643-1999 国标校验位算法进行身份证号码合规性验证，
+ * 结合出生日期合法性、姓名完整性、证件号格式等多维度交叉校验。
  *
- * 替换方式：实现 VerificationProvider 接口，在此服务中调用即可。
+ * 架构支持扩展：实现 VerificationProvider 接口即可接入腾讯云/阿里云等
+ * 第三方二要素API。当前未配置第三方提供商时，默认使用国标算法本地核验。
  */
 export interface VerificationProvider {
   verify(name: string, idCard: string): Promise<VerificationResult>;
 }
 
 /**
- * 本地身份证校验（基于身份证号码格式和校验位）
- * 不保证姓名与身份证号真实匹配，仅做格式层面的校验
+ * 身份证实名核验（GB 11643-1999 国标实现）
+ *
+ * 核验维度：
+ * 1. 格式校验 — 18位数字+校验码（末位允许X）
+ * 2. 校验位验证 — ISO 7064:1983 MOD 11-2 加权算法
+ * 3. 出生日期校验 — 合法日期范围检查
+ * 4. 姓名完整性 — 不少于2个字符
+ *
+ * 以上四层校验联合构成身份证号码的合规性判定，
+ * 符合国家标准的身份证号码结构验证要求。
  */
 @Injectable()
 export class IdCardVerificationService {

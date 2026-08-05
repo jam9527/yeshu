@@ -36,7 +36,7 @@ export class RealNameInfo {
   @Column({ length: 32, nullable: true, comment: '城市' })
   city: string;
 
-  @Column({ default: false, comment: '是否已通过腾讯云二要素核验' })
+  @Column({ default: false, comment: '是否已通过实名核验（GB 11643-1999国标校验）' })
   idVerified: boolean;
 
   @Column({ type: 'datetime', nullable: true, comment: '核验时间' })

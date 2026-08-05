@@ -210,9 +210,6 @@ export class PromotionService {
         .select([
           'COUNT(r.id) AS count',
           'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
-          'COALESCE(SUM(r.childrenCount), 0) AS totalChildren',
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS islandCount`,
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS offIslandCount`,
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
         ])
@@ -224,10 +221,16 @@ export class PromotionService {
 
       const personalRaw: any = await personalQb.getRawOne();
 
-      // 个人实到人数（从 verification_records 关联）
+      // 个人实到明细（verification_records 关联，含岛内/岛外/儿童）
       const actualQb = reservationRepo.createQueryBuilder('r')
-        .select('COALESCE(SUM(vr.actualCount), 0)', 'actualTotal')
-        .innerJoin('verification_records', 'vr', 'vr.reservationId = r.id')
+        .select([
+          'COALESCE(SUM(vr.actualCount), 0) AS actualTotal',
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS islandActualCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS offIslandActualCount`,
+          'COALESCE(SUM(r.childrenCount), 0) AS verifiedChildren',
+          'COALESCE(SUM(r.visitorCount), 0) AS verifiedVisitorCount',
+        ])
+        .innerJoin('verification_records', 'vr', "vr.reservationId = r.id AND vr.verifyResult = 'SUCCESS'")
         .where('r.promoterId = :promoterId', { promoterId: promoter.id })
         .andWhere('r.type = :type', { type: 'PERSONAL' });
 
@@ -242,11 +245,12 @@ export class PromotionService {
           'COUNT(DISTINCT r.id) AS count',
           'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
-          `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS teamIslandCount`,
-          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN r.visitorCount ELSE 0 END), 0) AS teamOffIslandCount`,
+          `COALESCE(SUM(vr.actualCount), 0) AS teamActualVisitors`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS teamIslandActualCount`,
+          `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS teamOffIslandActualCount`,
         ])
         .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
+        .leftJoin('verification_records', 'vr', "vr.reservationId = r.id AND vr.verifyResult = 'SUCCESS'")
         .where('pr.promoterId = :promoterId', { promoterId: promoter.id })
         .andWhere('r.type = :type', { type: 'TEAM' });
 
@@ -259,17 +263,20 @@ export class PromotionService {
       const personalVisitors = Number(personalRaw?.totalVisitors) || 0;
       const personalVerified = Number(personalRaw?.verifiedCount) || 0;
       const personalVerifiedVisitors = Number(personalRaw?.verifiedVisitors) || 0;
+
+      // 实到数据（来自 verification_records，仅核销成功的预约）
       const actualTotal = Number(actualRaw?.actualTotal) || 0;
-      const totalChildren = Number(personalRaw?.totalChildren) || 0;
-      const islandCount = Number(personalRaw?.islandCount) || 0;
-      const offIslandCount = Number(personalRaw?.offIslandCount) || 0;
+      const islandActualCount = Number(actualRaw?.islandActualCount) || 0;
+      const offIslandActualCount = Number(actualRaw?.offIslandActualCount) || 0;
+      const verifiedChildren = Number(actualRaw?.verifiedChildren) || 0;
+      const verifiedVisitorCount = Number(actualRaw?.verifiedVisitorCount) || 0;
 
       const teamReservations = Number(teamRaw?.count) || 0;
       const teamVisitors = Number(teamRaw?.totalVisitors) || 0;
       const teamVerified = Number(teamRaw?.verifiedCount) || 0;
-      const teamVerifiedVisitors = Number(teamRaw?.verifiedVisitors) || 0;
-      const teamIslandCount = Number(teamRaw?.teamIslandCount) || 0;
-      const teamOffIslandCount = Number(teamRaw?.teamOffIslandCount) || 0;
+      const teamActualVisitors = Number(teamRaw?.teamActualVisitors) || 0;
+      const teamIslandActualCount = Number(teamRaw?.teamIslandActualCount) || 0;
+      const teamOffIslandActualCount = Number(teamRaw?.teamOffIslandActualCount) || 0;
 
       const totalReservations = personalReservations + teamReservations;
       const totalVerified = personalVerified + teamVerified;
@@ -289,8 +296,8 @@ export class PromotionService {
         totalVisitors: personalVisitors + teamVisitors,
         // 实到人数
         personalActualVisitors: actualTotal,
-        teamActualVisitors: teamVerifiedVisitors,
-        totalActualVisitors: actualTotal + teamVerifiedVisitors,
+        teamActualVisitors,
+        totalActualVisitors: actualTotal + teamActualVisitors,
         // 核销单数
         personalVerified,
         teamVerified,
@@ -299,12 +306,12 @@ export class PromotionService {
         verificationRate: totalReservations > 0
           ? Math.round(totalVerified / totalReservations * 10000) / 100
           : 0,
-        // 大人/小孩（仅个人预约有明细）
-        adultVisitors: personalVisitors - totalChildren,
-        childrenVisitors: totalChildren,
-        // 岛内/岛外（个人+团队，按人数统计）
-        islandCount: islandCount + teamIslandCount,
-        offIslandCount: offIslandCount + teamOffIslandCount,
+        // 大人/小孩（实到数据：核销成功的预约中儿童数，成人=实到总数-儿童）
+        adultVisitors: Math.max(0, actualTotal - verifiedChildren),
+        childrenVisitors: verifiedChildren,
+        // 岛内/岛外（实到数据：个人+团队，来自 verification_records.actualCount）
+        islandCount: islandActualCount + teamIslandActualCount,
+        offIslandCount: offIslandActualCount + teamOffIslandActualCount,
       });
     }
 
