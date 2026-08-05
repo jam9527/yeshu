@@ -94,7 +94,8 @@ onMounted(fetchData)
           </template>
         </el-table-column>
       </el-table>
-      <div style="margin-top: 16px; text-align: right;">
+      <el-empty v-if="!list.length && !loading" description="暂无待审核团队预约" />
+      <div v-if="list.length" style="margin-top: 16px; text-align: right;">
         <el-pagination v-model:current-page="page" :total="total" :page-size="10" layout="prev, pager, next" @current-change="fetchData" />
       </div>
     </el-card>
