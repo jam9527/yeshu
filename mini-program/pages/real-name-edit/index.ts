@@ -62,7 +62,7 @@ Page({
     this.setData({ idCardType: this.data.idCardTypes[index].value, idCardTypeIndex: index })
   },
 
-  /** 姓名+身份证号二要素核验 */
+  /** 姓名+身份证号格式校验（本地校验，不调用付费API，保存时自动核验） */
   async idCardVerify() {
     const { name, idCard } = this.data
     if (!name.trim() || !idCard.trim()) {
@@ -71,21 +71,38 @@ Page({
     }
 
     this.setData({ verifying: true, verifyMsg: '' })
-    try {
-      const res: any = await api.post('/real-names/verify', { name: name.trim(), idCard: idCard.trim() })
-      if (res.verified) {
-        this.setData({ verifyMsg: res.message || '核验通过', verifyPass: true })
-        wx.showToast({ title: '核验通过', icon: 'success' })
-      } else {
-        this.setData({ verifyMsg: res.message || '核验不通过', verifyPass: false })
-        wx.showToast({ title: res.message || '核验不通过', icon: 'none' })
-      }
-    } catch {
-      this.setData({ verifyMsg: '核验服务异常', verifyPass: false })
-      wx.showToast({ title: '核验失败', icon: 'none' })
-    } finally {
+
+    // 本地格式校验（免费）：18位 + 校验位 + 出生日期
+    const cleanId = idCard.trim().toUpperCase()
+    if (cleanId.length !== 18 || !/^\d{17}[\dX]$/.test(cleanId)) {
+      this.setData({ verifyMsg: '身份证号格式不正确（需18位）', verifyPass: false })
+      wx.showToast({ title: '格式不正确', icon: 'none' })
       this.setData({ verifying: false })
+      return
     }
+
+    // GB 11643-1999 校验位
+    const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
+    const checkCodes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
+    let sum = 0
+    for (let i = 0; i < 17; i++) sum += parseInt(cleanId[i]) * weights[i]
+    if (cleanId[17] !== checkCodes[sum % 11]) {
+      this.setData({ verifyMsg: '身份证号校验位不正确，请检查', verifyPass: false })
+      wx.showToast({ title: '校验位不正确', icon: 'none' })
+      this.setData({ verifying: false })
+      return
+    }
+
+    if (name.trim().length < 2) {
+      this.setData({ verifyMsg: '姓名不完整', verifyPass: false })
+      wx.showToast({ title: '姓名不完整', icon: 'none' })
+      this.setData({ verifying: false })
+      return
+    }
+
+    this.setData({ verifyMsg: '格式校验通过（姓名与证件号匹配将在保存时核验）', verifyPass: true })
+    wx.showToast({ title: '格式校验通过', icon: 'success' })
+    this.setData({ verifying: false })
   },
 
   /** 提交实名信息 */
