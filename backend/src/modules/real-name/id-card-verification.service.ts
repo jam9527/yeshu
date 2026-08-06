@@ -6,19 +6,6 @@ export interface VerificationResult {
 }
 
 /**
- * 身份证二要素核验服务
- *
- * 采用 GB 11643-1999 国标校验位算法进行身份证号码合规性验证，
- * 结合出生日期合法性、姓名完整性、证件号格式等多维度交叉校验。
- *
- * 架构支持扩展：实现 VerificationProvider 接口即可接入腾讯云/阿里云等
- * 第三方二要素API。当前未配置第三方提供商时，默认使用国标算法本地核验。
- */
-export interface VerificationProvider {
-  verify(name: string, idCard: string): Promise<VerificationResult>;
-}
-
-/**
  * 身份证实名核验（GB 11643-1999 国标实现）
  *
  * 核验维度：
@@ -32,20 +19,7 @@ export interface VerificationProvider {
  */
 @Injectable()
 export class IdCardVerificationService {
-  private provider: VerificationProvider | null = null;
-
-  /** 设置第三方核验提供商（可选，默认使用本地校验） */
-  setProvider(provider: VerificationProvider) {
-    this.provider = provider;
-  }
-
   async verify(name: string, idCard: string): Promise<VerificationResult> {
-    // 如果有第三方提供商，优先使用
-    if (this.provider) {
-      return this.provider.verify(name, idCard);
-    }
-
-    // 本地校验
     const cleanIdCard = idCard.trim().toUpperCase();
 
     if (cleanIdCard.length !== 18) {
