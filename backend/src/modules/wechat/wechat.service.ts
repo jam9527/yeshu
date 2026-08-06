@@ -93,7 +93,9 @@ export class WechatService {
     return res.phone_info?.purePhoneNumber || res.phone_info?.phoneNumber;
   }
 
-  /** 获取微信 access token（自动缓存） */
+  /** 获取微信 access token（自动缓存）
+   *  使用 stable_token 接口：PM2 多实例下并发调用返回同一 token，
+   *  避免此前 cgi-bin/token 各实例独立刷新导致 token 互相作废（errcode 40001） */
   async getAccessToken(): Promise<string> {
     if (this.cachedToken && Date.now() < this.cachedToken.expiresAt) {
       return this.cachedToken.accessToken;
@@ -103,8 +105,17 @@ export class WechatService {
     const secret = process.env.WECHAT_SECRET;
     if (!appid || !secret) throw new BadRequestException('微信配置未设置');
 
-    const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`;
-    const res: any = await fetch(url).then(r => r.json());
+    const url = `https://api.weixin.qq.com/cgi-bin/stable_token`;
+    const res: any = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'client_credential',
+        appid,
+        secret,
+        force_refresh: false, // 缓存窗口内返回同一 token，不强制刷新
+      }),
+    }).then(r => r.json());
 
     if (res.errcode) throw new BadRequestException(`获取 access_token 失败: ${res.errmsg}`);
 
