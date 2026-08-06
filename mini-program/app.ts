@@ -64,8 +64,6 @@ App({
     baseUrl: API_BASE_URL,
     /** 推广人 ID（从分享链接进入时捕获） */
     promoterId: null as number | null,
-    /** 锁定的推广邀请码（扫描海报后自动填入，不可修改） */
-    lockedPromoterCode: null as string | null,
     /** 登录成功后待跳转页面路径 */
     pendingRedirect: '',
     /** 待跳转页面的参数 */

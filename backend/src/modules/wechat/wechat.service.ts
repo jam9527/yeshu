@@ -66,13 +66,6 @@ export class WechatService {
       isVerifier: user.isVerifier,
     });
 
-    // 如果通过推广海报/链接进入，查推广人的邀请码用于预约时自动填入
-    let promoterCode: string | null = null;
-    if (promoterId) {
-      const promoter = await this.userService.findById(promoterId);
-      promoterCode = promoter?.shortCode || null;
-    }
-
     return {
       token,
       user: {
@@ -81,7 +74,6 @@ export class WechatService {
         isVerifier: user.isVerifier, isPromoter: user.isPromoter,
         shortCode: user.shortCode || null,
       },
-      promoterCode,
     };
   }
 

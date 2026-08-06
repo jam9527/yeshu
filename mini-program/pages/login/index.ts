@@ -137,9 +137,6 @@ Page({
       app.setToken(res.token)
       app.globalData.userInfo = res.user
       app.globalData.promoterId = null // 登录成功后清除
-      if (res.promoterCode) {
-        app.globalData.lockedPromoterCode = res.promoterCode
-      }
 
       wx.hideLoading()
       this.setData({ phoneLoggedIn: true })
@@ -171,9 +168,6 @@ Page({
       app.setToken(res.token)
       app.globalData.userInfo = res.user
       app.globalData.promoterId = null // 登录成功后清除
-      if (res.promoterCode) {
-        app.globalData.lockedPromoterCode = res.promoterCode
-      }
 
       wx.hideLoading()
       this.setData({ codeLoggedIn: true })
