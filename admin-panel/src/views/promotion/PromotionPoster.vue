@@ -262,7 +262,13 @@ function onKeydown(e: KeyboardEvent) {
 
 function handleBgUpload(res: any) {
   const url = res?.data?.url || res?.url || res
+  console.log('[海报] 背景图上传成功:', url)
   form.backgroundUrl = url
+}
+
+function handleBgUploadError(err: any) {
+  console.error('[海报] 背景图上传失败:', err)
+  ElMessage.error('背景图上传失败，请检查网络或联系管理员')
 }
 
 // ==================== Editor Lifecycle ====================
@@ -566,6 +572,7 @@ watch(
                 :headers="uploadHeaders"
                 :show-file-list="false"
                 :on-success="handleBgUpload"
+                :on-error="handleBgUploadError"
                 accept="image/*"
                 drag
                 style="width: 100%"

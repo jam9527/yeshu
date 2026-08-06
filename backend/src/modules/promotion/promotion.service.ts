@@ -596,10 +596,10 @@ export class PromotionService {
       return { url: `${this.cosService.baseUrl}/${cosKey}` };
     }
 
-    // 1. 加载背景图（支持 COS URL / 外部 HTTP URL / 本地路径）
-    const bgBuffer = await this.loadImageBuffer(poster.backgroundUrl);
-
     try {
+      // 1. 加载背景图（支持 COS URL / 外部 HTTP URL / 本地路径）
+      const bgBuffer = await this.loadImageBuffer(poster.backgroundUrl);
+
       // 2. 获取背景图尺寸
       const bgMetadata = await sharp(bgBuffer).metadata();
       const bgWidth = bgMetadata.width || 750;
