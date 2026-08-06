@@ -34,15 +34,15 @@ export class VerificationService {
       throw new BadRequestException('该预约已核销，不可重复使用');
     }
 
-    // NOTE: 临时取消过期限制，方便开发测试
-    // if (reservation.qrCodeExpireAt && new Date() > new Date(reservation.qrCodeExpireAt)) {
-    //   throw new BadRequestException('核销码已过期');
-    // }
-    // const today = new Date();
-    // const resDate = new Date(reservation.reservationDate);
-    // if (resDate.toDateString() !== today.toDateString()) {
-    //   throw new BadRequestException('核销码仅限预约当天使用');
-    // }
+    // 核销码仅限预约当天使用，过期或未到期均不可核销
+    if (reservation.qrCodeExpireAt && new Date() > new Date(reservation.qrCodeExpireAt)) {
+      throw new BadRequestException('核销码已过期');
+    }
+    const today = new Date();
+    const resDate = new Date(reservation.reservationDate);
+    if (resDate.toDateString() !== today.toDateString()) {
+      throw new BadRequestException('核销码仅限预约当天使用');
+    }
 
     // 个人预约不再逐条存储参观人，仅返回人数
     let visitors: any[] = [];

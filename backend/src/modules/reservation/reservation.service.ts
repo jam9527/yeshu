@@ -191,9 +191,9 @@ export class ReservationService implements OnModuleInit {
       throw new BadRequestException('儿童人数不能为负数，且必须小于参观总人数（至少1名成人）');
     }
 
-    // 校验岛内外类型
-    if (visitorType && !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
-      throw new BadRequestException('无效的游客类型');
+    // 校验岛内外类型（个人预约必填，用于推广业绩统计）
+    if (!visitorType || !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
+      throw new BadRequestException('请选择游客类型（岛内/岛外）');
     }
 
     // 校验推广邀请码（必填）

@@ -462,6 +462,11 @@ Page({
       return
     }
 
+    if (!this.data.visitorType) {
+      wx.showToast({ title: '请选择游客类型（岛内/岛外）', icon: 'none' })
+      return
+    }
+
     this.setData({ submitting: true })
     try {
       if (!this.data.promoterCode.trim()) {
