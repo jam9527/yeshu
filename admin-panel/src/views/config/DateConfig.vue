@@ -41,6 +41,7 @@ const batchMode = ref(false)
 const batchDates = ref<string[]>([])
 const showBatchDialog = ref(false)
 const batchForm = ref({
+  isAvailable: true,
   morningEnabled: true,
   morningStart: '09:00',
   morningEnd: '12:00',
@@ -179,6 +180,7 @@ function openBatchDialog() {
   const firstExisting = configs.value.find(c => batchDates.value.includes(c.date))
   if (firstExisting) {
     batchForm.value = {
+      isAvailable: firstExisting.isAvailable ?? true,
       morningEnabled: firstExisting.morningEnabled ?? true,
       morningStart: firstExisting.morningStart || '09:00',
       morningEnd: firstExisting.morningEnd || '12:00',
@@ -220,7 +222,7 @@ async function confirmBatch() {
       eveningEnd: f.eveningEnd,
       evPersonalQuota: f.evPersonalQuota,
       evTeamQuota: f.evTeamQuota,
-      isAvailable: true,
+      isAvailable: f.isAvailable,
     }
     if (existing) {
       await request.put(`/admin/config/dates/${existing.id}`, payload)
@@ -339,6 +341,9 @@ onMounted(fetchData)
     <!-- 批量设置弹窗 -->
     <el-dialog v-model="showBatchDialog" title="批量设置 — 已选 {{ batchDates.length }} 天" width="480px">
       <el-form label-width="100px">
+        <el-form-item label="是否开放">
+          <el-switch v-model="batchForm.isAvailable" />
+        </el-form-item>
         <el-divider>上午场</el-divider>
         <el-form-item label="是否开放">
           <el-switch v-model="batchForm.morningEnabled" />
