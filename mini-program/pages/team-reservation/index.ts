@@ -85,6 +85,8 @@ Page({
     orgCode: '',
     /** 推广人邀请码 */
     promoterCode: '',
+    /** 邀请码是否已锁定（扫描海报后自动填入，不可修改） */
+    promoterCodeLocked: false,
     /** 岛内/岛外 */
     visitorType: '' as string,
     /** 附件文件列表 */
@@ -128,6 +130,10 @@ Page({
       app.globalData.pendingRedirect = '/' + (this.route || 'pages/team-reservation/index')
       wx.redirectTo({ url: '/pages/login/index' })
       return
+    }
+    // 如果通过推广海报进入，自动填入推广人邀请码并锁定
+    if (app.globalData.lockedPromoterCode) {
+      this.setData({ promoterCode: app.globalData.lockedPromoterCode, promoterCodeLocked: true })
     }
     const now = new Date()
     this.setData({
@@ -428,7 +434,7 @@ Page({
       selectedSession: null,
       sessions: this.buildSessions(day.data),
       currentStep: 2,
-      promoterCode: '',
+      promoterCode: this.data.promoterCodeLocked ? this.data.promoterCode : '',
       visitorType: '',
     })
   },

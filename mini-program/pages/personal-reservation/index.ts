@@ -68,6 +68,8 @@ Page({
     childrenCount: 0,
     /** 推广人邀请码 */
     promoterCode: '',
+    /** 邀请码是否已锁定（扫描海报后自动填入，不可修改） */
+    promoterCodeLocked: false,
     /** 邀请码联系弹窗 */
     showInvitePopup: false,
     invitePopupTitle: '',
@@ -80,6 +82,10 @@ Page({
       app.globalData.pendingRedirect = '/' + (this.route || 'pages/personal-reservation/index')
       wx.redirectTo({ url: '/pages/login/index' })
       return
+    }
+    // 如果通过推广海报进入，自动填入推广人邀请码并锁定
+    if (app.globalData.lockedPromoterCode) {
+      this.setData({ promoterCode: app.globalData.lockedPromoterCode, promoterCodeLocked: true })
     }
     const now = new Date()
     this.setData({
@@ -326,7 +332,7 @@ Page({
       district: [],
       visitorType: '',
       childrenCount: 0,
-      promoterCode: '',
+      promoterCode: this.data.promoterCodeLocked ? this.data.promoterCode : '',
     })
   },
 

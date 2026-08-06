@@ -163,8 +163,9 @@
     <view class="form-section">
       <view class="form-group">
         <text class="form-label">邀请码 <text class="required">*</text></text>
-        <input class="form-input" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" />
-        <view class="input-hint">请联系您的推荐人获取邀请码，如没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>。</view>
+        <input class="form-input {{promoterCodeLocked ? 'input-locked' : ''}}" placeholder="请输入推广人邀请码" value="{{promoterCode}}" bindinput="onPromoterCodeInput" maxlength="8" disabled="{{promoterCodeLocked}}" />
+        <view class="input-hint" wx:if="{{promoterCodeLocked}}">已通过推广海报自动绑定，无需手动输入</view>
+        <view class="input-hint" wx:else>请联系您的推荐人获取邀请码，如没有推荐人请<text class="link-btn" bindtap="showInviteContact">点击这里</text>。</view>
       </view>
     </view>
 
