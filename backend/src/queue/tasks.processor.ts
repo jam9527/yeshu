@@ -66,6 +66,23 @@ export class TasksProcessor {
       { status: 'EXPIRED' },
     );
 
+    // 标记过期后再回退配额：避免任务失败重试时对同一批预约重复扣减。
+    // 个人预约在 PENDING 时占用 usedPersonal，团队预约仅在审核通过(APPROVED)后占用 usedTeam
+    for (const r of expired) {
+      const wasApproved = r.status === 'APPROVED';
+      const wasPersonal = r.type === 'PERSONAL';
+      if (wasPersonal || wasApproved) {
+        const field = wasPersonal ? 'usedPersonal' : 'usedTeam';
+        await this.quotaRepo
+          .createQueryBuilder()
+          .update()
+          .set({ [field]: () => `${field} - ${r.visitorCount}` })
+          .where('dateConfigId = :dateConfigId', { dateConfigId: r.dateConfigId })
+          .andWhere('sessionType = :sessionType', { sessionType: r.sessionType })
+          .execute();
+      }
+    }
+
     for (const [userId, count] of userNoShowMap) {
       await this.userRepo.increment({ id: userId }, 'noShowCount', count);
     }

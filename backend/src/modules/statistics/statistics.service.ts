@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { ReservationQuota } from '../reservation/entities/reservation-quota.entity';
 import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
@@ -323,6 +323,12 @@ export class StatisticsService {
       .addSelect('COALESCE(SUM(r.visitorCount), 0)', 'totalVisitors')
       .groupBy('r.reservationDate')
       .orderBy('r.reservationDate', 'ASC');
+
+    // 只统计占用配额的有效预约（待核销/已通过/已核销），
+    // 排除已取消/已过期/已驳回/待审核，与"实时剩余名额"口径保持一致
+    qb.andWhere('r.status IN (:...validStatuses)', {
+      validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'],
+    });
 
     if (startDate) qb.andWhere('r.reservationDate >= :start', { start: startDate });
     if (endDate) qb.andWhere('r.reservationDate <= :end', { end: endDate });
