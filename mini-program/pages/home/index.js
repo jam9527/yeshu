@@ -123,7 +123,7 @@ Page({
                 this.setData({
                     exhibitions: exhList,
                     activities: actList,
-                    _homeExhibitions: exhList.slice(0, 4),
+                    _homeExhibitions: exhList.slice(0, 6),
                     _homeActivities: homeActs,
                     diyComponents: rawComponents,
                     diyBackgroundStyle: bgStyle,

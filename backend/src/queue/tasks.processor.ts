@@ -161,7 +161,8 @@ export class TasksProcessor {
 
       const config = this.dateConfigRepo.create({
         date: dateStr,
-        isAvailable: true,
+        // 默认关闭，避免自动生成的日期直接开放可约；后台按需手动打开
+        isAvailable: false,
         amPersonalQuota: 500,
         amTeamQuota: 200,
         pmPersonalQuota: 500,
@@ -180,6 +181,6 @@ export class TasksProcessor {
       created++;
     }
 
-    this.logger.log(`滚动创建了 ${created} 个可预约日期`);
+    this.logger.log(`滚动创建了 ${created} 个日期配置`);
   }
 }
