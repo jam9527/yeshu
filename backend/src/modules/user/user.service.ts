@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 
 /**
@@ -41,9 +41,21 @@ export class UserService {
     await this.userRepo.update(id, data);
   }
 
-  /** 获取用户列表（管理后台） */
-  async findAll(page = 1, pageSize = 10): Promise<[User[], number]> {
+  /** 获取用户列表（管理后台），支持按昵称/手机号模糊搜索 */
+  async findAll(
+    page = 1,
+    pageSize = 10,
+    filters?: { nickname?: string; phone?: string },
+  ): Promise<[User[], number]> {
+    const where: any = {};
+    if (filters?.nickname) {
+      where.nickname = Like(`%${filters.nickname}%`);
+    }
+    if (filters?.phone) {
+      where.phone = Like(`%${filters.phone}%`);
+    }
     return this.userRepo.findAndCount({
+      where,
       skip: (page - 1) * pageSize,
       take: pageSize,
       order: { createdAt: 'DESC' },

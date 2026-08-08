@@ -18,10 +18,18 @@ export class AdminUserController {
     private readonly userRepo: Repository<User>,
   ) {}
 
-  /** GET /api/admin/users - 用户列表 */
+  /** GET /api/admin/users - 用户列表（支持昵称/手机号模糊搜索） */
   @Get('users')
-  async getUsers(@Query('page') page = 1, @Query('pageSize') pageSize = 10) {
-    const [records, total] = await this.userService.findAll(page, pageSize);
+  async getUsers(
+    @Query('page') page = 1,
+    @Query('pageSize') pageSize = 10,
+    @Query('nickname') nickname?: string,
+    @Query('phone') phone?: string,
+  ) {
+    const [records, total] = await this.userService.findAll(page, pageSize, {
+      nickname,
+      phone,
+    });
     return { records, total, page, pageSize };
   }
 

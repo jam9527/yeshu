@@ -8,6 +8,8 @@ const total = ref(0)
 const page = ref(1)
 const loading = ref(false)
 const toggling = ref<number | null>(null)
+const searchNickname = ref('')
+const searchPhone = ref('')
 
 // 拉黑弹窗
 const blacklistVisible = ref(false)
@@ -32,7 +34,14 @@ function formatDate(iso: string): string {
 async function fetchData() {
   loading.value = true
   try {
-    const res: any = await request.get('/admin/users', { params: { page: page.value, pageSize: 10 } })
+    const res: any = await request.get('/admin/users', {
+      params: {
+        page: page.value,
+        pageSize: 10,
+        nickname: searchNickname.value || undefined,
+        phone: searchPhone.value || undefined,
+      },
+    })
     if (res.data) {
       users.value = res.data.records || []
       total.value = res.data.total || 0
@@ -43,6 +52,18 @@ async function fetchData() {
 }
 
 onMounted(fetchData)
+
+function handleSearch() {
+  page.value = 1
+  fetchData()
+}
+
+function handleReset() {
+  searchNickname.value = ''
+  searchPhone.value = ''
+  page.value = 1
+  fetchData()
+}
 
 async function toggleVerifier(row: any) {
   toggling.value = row.id
@@ -131,6 +152,26 @@ async function removeBlacklist(row: any) {
   <div>
     <div class="page-header"><h3>用户列表</h3></div>
     <el-card>
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <el-input
+          v-model="searchNickname"
+          placeholder="按昵称搜索"
+          clearable
+          style="width:200px"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
+        />
+        <el-input
+          v-model="searchPhone"
+          placeholder="按手机号搜索"
+          clearable
+          style="width:200px"
+          @keyup.enter="handleSearch"
+          @clear="handleSearch"
+        />
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </div>
       <el-table :data="users" v-loading="loading" stripe>
         <el-table-column label="头像" width="60">
           <template #default="{ row }">
