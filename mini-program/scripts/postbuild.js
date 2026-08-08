@@ -36,8 +36,8 @@ function findJsFiles(dir) {
 
 let stripped = 0;
 
-// Process pages/ and pages-verifier/ directories
-for (const dir of ['pages', 'pages-verifier']) {
+// Process pages/, pages-verifier/ and custom-tab-bar/ directories
+for (const dir of ['pages', 'pages-verifier', 'custom-tab-bar']) {
   const fullDir = path.resolve(PROJECT_ROOT, dir);
   for (const filePath of findJsFiles(fullDir)) {
     const content = fs.readFileSync(filePath, 'utf-8');

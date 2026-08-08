@@ -18,6 +18,7 @@
   "include": [
     "pages/**/*.ts",
     "pages-verifier/**/*.ts",
+    "custom-tab-bar/**/*.ts",
     "utils/**/*.ts",
     "app.ts"
   ],

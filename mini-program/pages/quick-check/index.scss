@@ -7,6 +7,8 @@ $ys-blue: #005bac;
 .container {
   min-height: 100vh;
   background: #fff;
+  /* 为自定义 tabBar 预留底部空间（100rpx 内容 + 安全区） */
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 }
 
 /* ===== 品牌标题 ===== */

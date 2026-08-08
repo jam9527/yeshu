@@ -5,7 +5,8 @@ $ys-red: #e60012;
 $ys-blue: #005bac;
 
 .container {
-  padding-bottom: 30px;
+  /* 为自定义 tabBar 预留底部空间（100rpx 内容 + 安全区） */
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 }
 
 /* ===== 用户信息头 ===== */

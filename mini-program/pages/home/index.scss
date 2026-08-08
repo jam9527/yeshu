@@ -10,7 +10,8 @@ $ys-text: #e0e0e0;
 $ys-text-dim: #888;
 
 .container {
-  padding-bottom: 32px;
+  /* 为自定义 tabBar 预留底部空间（100rpx 内容 + 安全区） */
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
   background: $ys-black;
   min-height: 100vh;
   box-sizing: border-box;

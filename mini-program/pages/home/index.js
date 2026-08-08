@@ -71,6 +71,12 @@ Page({
         diyBackgroundStyle: '',
         loading: true,
     },
+    onShow() {
+        // 同步自定义 tabBar 选中态
+        if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+            this.getTabBar().setData({ selected: 0 });
+        }
+    },
     onLoad(options) {
         // 推广追踪：分享卡片用 promoterId，小程序码扫码用 scene（getUnlimited）
         const pid = options.promoterId || options.scene;
