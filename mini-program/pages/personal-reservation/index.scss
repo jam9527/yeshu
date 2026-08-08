@@ -806,6 +806,20 @@ $ys-blue: #005bac;
   padding: 0 4px;
 }
 
+.count-total {
+  font-size: 14px;
+  color: $ys-black;
+  text-align: right;
+  padding: 0 4px;
+  margin-bottom: 16px;
+}
+
+.count-total-num {
+  font-size: 18px;
+  font-weight: bold;
+  color: $ys-red;
+}
+
 /* 邀请码 */
 .promoter-input {
   width: 100%;

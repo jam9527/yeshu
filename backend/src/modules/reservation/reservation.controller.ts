@@ -35,7 +35,7 @@ export class ReservationController {
       dateConfigId: number;
       sessionType: string;
       visitorCount: number;
-      district?: string;
+      district: string;
       visitorType?: string;
       childrenCount?: number;
       promoterCode?: string;

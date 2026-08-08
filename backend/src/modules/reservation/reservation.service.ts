@@ -172,7 +172,7 @@ export class ReservationService implements OnModuleInit {
       dateConfigId: number;
       sessionType: string;
       visitorCount: number;
-      district?: string;
+      district: string;
       visitorType?: string;
       childrenCount?: number;
       promoterCode?: string;
@@ -194,6 +194,11 @@ export class ReservationService implements OnModuleInit {
     // 校验岛内外类型（个人预约必填，用于推广业绩统计）
     if (!visitorType || !['ON_ISLAND', 'OFF_ISLAND'].includes(visitorType)) {
       throw new BadRequestException('请选择游客类型（岛内/岛外）');
+    }
+
+    // 校验居住地（个人预约必填）
+    if (!district || district.trim().length === 0) {
+      throw new BadRequestException('请选择您的居住地（省/市/区）');
     }
 
     // 校验推广邀请码（必填）

@@ -40,8 +40,10 @@ Page({
     selectedDate: null as DateItem | null,
     sessions: [] as SessionItem[],
     selectedSession: null as SessionItem | null,
-    /** 参观总人数（含本人，1-5人） */
-    visitorCount: 1,
+    /** 成人人数（含本人，与儿童合计不超过5人） */
+    adultCount: 1,
+    /** 儿童人数上限 = min(4, 5 - 成人人数) */
+    maxChildren: 4,
     loading: false,
     submitting: false,
     currentStep: 1,
@@ -325,7 +327,9 @@ Page({
       currentStep: 2,
       district: [],
       visitorType: '',
+      adultCount: 1,
       childrenCount: 0,
+      maxChildren: 4,
       promoterCode: '',
     })
   },
@@ -397,14 +401,13 @@ Page({
     }
   },
 
-  onVisitorCountChange(e: any) {
+  onAdultCountChange(e: any) {
     let count = parseInt(e.currentTarget.dataset.value, 10)
     if (isNaN(count) || count < 1) count = 1
-    if (count > 5) count = 5
-    // 如果新总人数 <= 儿童人数，clamp 儿童人数
-    let childrenCount = this.data.childrenCount
-    if (childrenCount >= count) childrenCount = count - 1
-    this.setData({ visitorCount: count, childrenCount })
+    // 成人不能超过 5 - 儿童，保证合计不超过5人
+    const maxAdult = 5 - this.data.childrenCount
+    if (count > maxAdult) count = maxAdult
+    this.setData({ adultCount: count, maxChildren: Math.min(4, 5 - count) })
   },
 
   onDistrictChange(e: any) {
@@ -419,7 +422,7 @@ Page({
   onChildrenCountChange(e: any) {
     let count = parseInt(e.currentTarget.dataset.value, 10)
     if (isNaN(count) || count < 0) count = 0
-    const max = this.data.visitorCount - 1
+    const max = this.data.maxChildren
     if (count > max) count = max
     this.setData({ childrenCount: count })
   },
@@ -451,14 +454,20 @@ Page({
       return
     }
 
-    const { selectedDate, selectedSession, visitorCount } = this.data
+    const { selectedDate, selectedSession, adultCount, childrenCount } = this.data
     if (!selectedDate || !selectedSession) {
       wx.showToast({ title: '请选择日期和场次', icon: 'none' })
       return
     }
 
-    if (visitorCount < 1 || visitorCount > 5) {
-      wx.showToast({ title: '参观人数应在1-5人之间', icon: 'none' })
+    const total = adultCount + childrenCount
+    if (total < 1 || total > 5) {
+      wx.showToast({ title: '参观总人数应在1-5人之间', icon: 'none' })
+      return
+    }
+
+    if (this.data.district.length < 3) {
+      wx.showToast({ title: '请选择您的居住地（省/市/区）', icon: 'none' })
       return
     }
 
@@ -478,7 +487,7 @@ Page({
       const res: any = await api.post('/reservations/personal', {
         dateConfigId: selectedDate.id,
         sessionType: selectedSession.type,
-        visitorCount: this.data.visitorCount,
+        visitorCount: total,
         district: this.data.district.length > 0 ? this.data.district.join('-') : undefined,
         visitorType: this.data.visitorType || undefined,
         childrenCount: this.data.childrenCount,

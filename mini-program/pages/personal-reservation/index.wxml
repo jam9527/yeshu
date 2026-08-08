@@ -144,7 +144,7 @@
     <block wx:if="{{!realNameBlocked}}">
       <!-- 居住地选择 -->
       <view class="form-card">
-        <text class="form-card-title">填写您的居住地</text>
+        <text class="form-card-title">填写您的居住地 <text style="color:#e60012">*</text></text>
         <picker mode="region" value="{{district}}" bindchange="onDistrictChange">
           <view class="picker-display">
             <text class="{{district.length > 0 ? 'has-value' : 'placeholder'}}">{{district.length > 0 ? district[0] + ' ' + district[1] + ' ' + district[2] : '请选择省/市/区'}}</text>
@@ -154,7 +154,7 @@
 
       <!-- 岛内/岛外选择 -->
       <view class="form-card">
-        <text class="form-card-title">游客类型</text>
+        <text class="form-card-title">游客类型 <text style="color:#e60012">*</text></text>
         <view class="radio-group">
           <view class="radio-item {{visitorType === 'ON_ISLAND' ? 'active' : ''}}" data-value="ON_ISLAND" bindtap="onVisitorTypeChange">
             <view class="radio-circle {{visitorType === 'ON_ISLAND' ? 'checked' : ''}}"></view>
@@ -167,20 +167,20 @@
         </view>
       </view>
 
-      <!-- 参观总人数 -->
+      <!-- 成人人数 -->
       <view class="count-section">
-        <text class="count-label">参观总人数（1-5人）</text>
+        <text class="count-label">成人人数</text>
         <view class="count-stepper">
           <view
-            class="stepper-btn {{visitorCount <= 1 ? 'disabled' : ''}}"
-            data-value="{{visitorCount - 1}}"
-            bindtap="onVisitorCountChange"
+            class="stepper-btn {{adultCount <= 1 ? 'disabled' : ''}}"
+            data-value="{{adultCount - 1}}"
+            bindtap="onAdultCountChange"
           >−</view>
-          <text class="stepper-value">{{visitorCount}}</text>
+          <text class="stepper-value">{{adultCount}}</text>
           <view
-            class="stepper-btn {{visitorCount >= 5 ? 'disabled' : ''}}"
-            data-value="{{visitorCount + 1}}"
-            bindtap="onVisitorCountChange"
+            class="stepper-btn {{adultCount >= 5 - childrenCount ? 'disabled' : ''}}"
+            data-value="{{adultCount + 1}}"
+            bindtap="onAdultCountChange"
           >+</view>
         </view>
       </view>
@@ -196,13 +196,16 @@
           >−</view>
           <text class="stepper-value">{{childrenCount}}</text>
           <view
-            class="stepper-btn {{childrenCount >= visitorCount - 1 ? 'disabled' : ''}}"
+            class="stepper-btn {{childrenCount >= maxChildren ? 'disabled' : ''}}"
             data-value="{{childrenCount + 1}}"
             bindtap="onChildrenCountChange"
           >+</view>
         </view>
-        <text class="count-hint">至少保留1名成人陪同</text>
+        <text class="count-hint">每单最多5人，儿童最多4人，需至少1名成人陪同</text>
       </view>
+
+      <!-- 合计人数 -->
+      <view class="count-total">合计：<text class="count-total-num">{{adultCount + childrenCount}}</text> 人</view>
 
       <!-- 推广邀请码 -->
       <view class="form-card">
