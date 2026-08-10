@@ -183,10 +183,10 @@ const sessionSummary = computed(() => {
   if (!sessionStats.value.length) return null
   const sum = (field: string) => sessionStats.value.reduce((acc, s) => acc + (Number(s[field]) || 0), 0)
   return {
-    amReservations: sum('amReservations'), amVisitors: sum('amVisitors'),
-    pmReservations: sum('pmReservations'), pmVisitors: sum('pmVisitors'),
-    evReservations: sum('evReservations'), evVisitors: sum('evVisitors'),
-    totalReservations: sum('totalReservations'), totalVisitors: sum('totalVisitors'),
+    amReservations: sum('amReservations'), amVisitors: sum('amVisitors'), amActual: sum('amActual'),
+    pmReservations: sum('pmReservations'), pmVisitors: sum('pmVisitors'), pmActual: sum('pmActual'),
+    evReservations: sum('evReservations'), evVisitors: sum('evVisitors'), evActual: sum('evActual'),
+    totalReservations: sum('totalReservations'), totalVisitors: sum('totalVisitors'), totalActual: sum('totalActual'),
   }
 })
 
@@ -353,31 +353,35 @@ onMounted(() => {
         <el-table-column label="上午场" align="center">
           <el-table-column prop="amReservations" label="预约" width="70" sortable />
           <el-table-column prop="amVisitors" label="人次" width="70" sortable />
+          <el-table-column prop="amActual" label="实到" width="70" sortable />
         </el-table-column>
 
         <el-table-column label="下午场" align="center">
           <el-table-column prop="pmReservations" label="预约" width="70" sortable />
           <el-table-column prop="pmVisitors" label="人次" width="70" sortable />
+          <el-table-column prop="pmActual" label="实到" width="70" sortable />
         </el-table-column>
 
         <el-table-column label="夜场" align="center">
           <el-table-column prop="evReservations" label="预约" width="70" sortable />
           <el-table-column prop="evVisitors" label="人次" width="70" sortable />
+          <el-table-column prop="evActual" label="实到" width="70" sortable />
         </el-table-column>
 
         <el-table-column label="合计" align="center">
           <el-table-column prop="totalReservations" label="预约" width="70" sortable />
           <el-table-column prop="totalVisitors" label="人次" width="70" sortable />
+          <el-table-column prop="totalActual" label="实到" width="70" sortable />
         </el-table-column>
       </el-table>
 
       <!-- 汇总行 -->
       <div v-if="sessionSummary" style="margin-top:12px;padding:10px 16px;background:#f5f7fa;border-radius:4px;font-size:13px;display:flex;flex-wrap:wrap;gap:4px 20px">
         <span><b>汇总：</b></span>
-        <span>上午 预约{{ sessionSummary.amReservations }} / 人次{{ sessionSummary.amVisitors }}</span>
-        <span>下午 预约{{ sessionSummary.pmReservations }} / 人次{{ sessionSummary.pmVisitors }}</span>
-        <span>夜场 预约{{ sessionSummary.evReservations }} / 人次{{ sessionSummary.evVisitors }}</span>
-        <span>合计 预约{{ sessionSummary.totalReservations }} / 人次{{ sessionSummary.totalVisitors }}</span>
+        <span>上午 预约{{ sessionSummary.amReservations }} / 人次{{ sessionSummary.amVisitors }} / 实到{{ sessionSummary.amActual }}</span>
+        <span>下午 预约{{ sessionSummary.pmReservations }} / 人次{{ sessionSummary.pmVisitors }} / 实到{{ sessionSummary.pmActual }}</span>
+        <span>夜场 预约{{ sessionSummary.evReservations }} / 人次{{ sessionSummary.evVisitors }} / 实到{{ sessionSummary.evActual }}</span>
+        <span>合计 预约{{ sessionSummary.totalReservations }} / 人次{{ sessionSummary.totalVisitors }} / 实到{{ sessionSummary.totalActual }}</span>
       </div>
 
       <el-empty v-if="!sessionStats.length && !sessionLoading" description="暂无数据" />

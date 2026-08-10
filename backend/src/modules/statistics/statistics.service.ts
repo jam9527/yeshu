@@ -77,7 +77,7 @@ export class StatisticsService {
 
     const records = await this.reservationRepo
       .createQueryBuilder('r')
-      .select("DATE(r.reservationDate) as date, COUNT(*) as count")
+      .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where('r.reservationDate >= :monday', { monday: monday.toISOString().split('T')[0] })
       .groupBy('DATE(r.reservationDate)')
       .orderBy('date', 'ASC')
@@ -176,7 +176,7 @@ export class StatisticsService {
 
     const records = await this.reservationRepo
       .createQueryBuilder('r')
-      .select('r.reservationDate as date, COUNT(*) as count')
+      .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where("r.reservationDate LIKE :prefix", { prefix: `${monthStr}%` })
       .groupBy('r.reservationDate')
       .orderBy('count', 'DESC')
@@ -306,21 +306,26 @@ export class StatisticsService {
   }
 
   /**
-   * 按日期范围统计预约 — 每日场次 pivot（上午/下午/夜场 × 预约数/人次）
+   * 按日期范围统计预约 — 每日场次 pivot（上午/下午/夜场 × 预约数/人次/实到）
    * 复用 trafficSource 的 SUM(CASE WHEN) SQL pivot 模式
    */
   async reservationStats(startDate?: string, endDate?: string) {
     const qb = this.reservationRepo
       .createQueryBuilder('r')
-      .select('r.reservationDate', 'date')
+      .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d')", 'date')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'AM\' THEN 1 ELSE 0 END), 0)', 'amReservations')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'AM\' THEN r.visitorCount ELSE 0 END), 0)', 'amVisitors')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'AM\' THEN vr.actualCount ELSE 0 END), 0)', 'amActual')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'PM\' THEN 1 ELSE 0 END), 0)', 'pmReservations')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'PM\' THEN r.visitorCount ELSE 0 END), 0)', 'pmVisitors')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'PM\' THEN vr.actualCount ELSE 0 END), 0)', 'pmActual')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'EV\' THEN 1 ELSE 0 END), 0)', 'evReservations')
       .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'EV\' THEN r.visitorCount ELSE 0 END), 0)', 'evVisitors')
+      .addSelect('COALESCE(SUM(CASE WHEN r.sessionType = \'EV\' THEN vr.actualCount ELSE 0 END), 0)', 'evActual')
       .addSelect('COUNT(*)', 'totalReservations')
       .addSelect('COALESCE(SUM(r.visitorCount), 0)', 'totalVisitors')
+      .addSelect('COALESCE(SUM(vr.actualCount), 0)', 'totalActual')
+      .leftJoin('verification_records', 'vr', 'vr.reservationId = r.id AND vr.verifyResult = \'SUCCESS\'')
       .groupBy('r.reservationDate')
       .orderBy('r.reservationDate', 'ASC');
 
@@ -343,12 +348,16 @@ export class StatisticsService {
         date: dateStr,
         amReservations: Number(r.amReservations),
         amVisitors: Number(r.amVisitors),
+        amActual: Number(r.amActual),
         pmReservations: Number(r.pmReservations),
         pmVisitors: Number(r.pmVisitors),
+        pmActual: Number(r.pmActual),
         evReservations: Number(r.evReservations),
         evVisitors: Number(r.evVisitors),
+        evActual: Number(r.evActual),
         totalReservations: Number(r.totalReservations),
         totalVisitors: Number(r.totalVisitors),
+        totalActual: Number(r.totalActual),
       };
     });
   }
