@@ -157,6 +157,20 @@ export class PromotionService {
     const teamReservations = Number(teamRaw?.count) || 0;
     const teamVerified = Number(teamRaw?.verifiedCount) || 0;
 
+    // 4. 实到人数统计（个人/团队，来自核销记录的 actualCount，仅已核销预约计入）
+    const actualQb = reservationRepo.createQueryBuilder('r')
+      .select("COALESCE(SUM(CASE WHEN r.type = 'PERSONAL' THEN vr.actualCount ELSE 0 END), 0)", 'personalActual')
+      .addSelect("COALESCE(SUM(CASE WHEN r.type = 'TEAM' THEN vr.actualCount ELSE 0 END), 0)", 'teamActual')
+      .innerJoin('verification_records', 'vr', "vr.reservationId = r.id AND vr.verifyResult = 'SUCCESS'")
+      .where('r.promoterId = :promoterId', { promoterId });
+
+    if (startDate) actualQb.andWhere('r.reservationDate >= :startDate', { startDate });
+    if (endDate) actualQb.andWhere('r.reservationDate <= :endDate', { endDate });
+
+    const actualRaw: any = await actualQb.getRawOne();
+    const personalActual = Number(actualRaw?.personalActual) || 0;
+    const teamActual = Number(actualRaw?.teamActual) || 0;
+
     const totalReservations = personalReservations + teamReservations;
     const totalVerified = personalVerified + teamVerified;
 
@@ -175,6 +189,8 @@ export class PromotionService {
       totalReservationsTeam: teamReservations,
       totalVerifiedPersonal: personalVerified,
       totalVerifiedTeam: teamVerified,
+      totalActualPersonal: personalActual,
+      totalActualTeam: teamActual,
     };
   }
 

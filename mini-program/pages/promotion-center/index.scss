@@ -71,12 +71,12 @@
   border-radius: 6px;
 }
 
-/* 推广短码 */
+/* 推广短码（深色底 + 金色文字，保证对比度清晰） */
 .short-code-bar {
-  background: rgba(255, 215, 0, 0.1);
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: $ys-black;
+  border: 1px solid rgba(255, 215, 0, 0.5);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 14px 16px;
   margin-bottom: 16px;
   text-align: center;
   display: flex;
@@ -100,8 +100,8 @@
 
 .short-code-copy {
   font-size: 11px;
-  color: rgba(255, 215, 0, 0.5);
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.5);
   border-radius: 3px;
   padding: 2px 6px;
 }
@@ -173,6 +173,8 @@
 .stat-card:nth-child(4) { background: #52c41a; }
 .stat-card:nth-child(5) { background: #faad14; color: $ys-black; }
 .stat-card:nth-child(6) { background: #faad14; color: $ys-black; }
+.stat-card:nth-child(7) { background: #eb2f96; }
+.stat-card:nth-child(8) { background: #eb2f96; }
 
 .stat-num {
   font-size: 28px;

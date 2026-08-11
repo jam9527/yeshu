@@ -63,6 +63,14 @@
         <text class="stat-num">{{stats.totalVerifiedTeam || 0}}</text>
         <text class="stat-label">团队核销</text>
       </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalActualPersonal || 0}}</text>
+        <text class="stat-label">个人实到</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{stats.totalActualTeam || 0}}</text>
+        <text class="stat-label">团队实到</text>
+      </view>
     </view>
 
     <!-- 推广海报 -->
