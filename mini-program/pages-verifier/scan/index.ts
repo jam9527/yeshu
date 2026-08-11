@@ -12,7 +12,7 @@ Page({
     /** 开发模式：手动输入核销码 */
     devQrCode: '',
     showDevInput: false,
-    /** 个人预约 - 实到人数 */
+    /** 实到人数 */
     actualCount: 0,
   },
 

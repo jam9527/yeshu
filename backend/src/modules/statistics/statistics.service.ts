@@ -24,13 +24,14 @@ export class StatisticsService {
 
   /** 概览数据 */
   async overview() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = this.todayLocal();
 
     const [totalReservations, todayReservations, pendingReview, totalVerified, todayVerified,
            totalActualCountResult, todayActualCountResult] =
       await Promise.all([
-        this.reservationRepo.count(),
-        this.reservationRepo.count({ where: { reservationDate: today } }),
+        // 预约数统一为"有效预约"（占用配额的状态），与实时剩余名额/每日场次口径一致
+        this.reservationRepo.count({ where: { status: In(['PENDING', 'APPROVED', 'VERIFIED']) } }),
+        this.reservationRepo.count({ where: { reservationDate: today, status: In(['PENDING', 'APPROVED', 'VERIFIED']) } }),
         this.reservationRepo.count({ where: { type: 'TEAM', status: 'APPROVING' } }),
         this.reservationRepo.count({ where: { status: 'VERIFIED' } }),
         this.reservationRepo.count({ where: { reservationDate: today, status: 'VERIFIED' } }),
@@ -79,6 +80,7 @@ export class StatisticsService {
       .createQueryBuilder('r')
       .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where('r.reservationDate >= :monday', { monday: monday.toISOString().split('T')[0] })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
       .groupBy('DATE(r.reservationDate)')
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -178,6 +180,7 @@ export class StatisticsService {
       .createQueryBuilder('r')
       .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where("r.reservationDate LIKE :prefix", { prefix: `${monthStr}%` })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
       .groupBy('r.reservationDate')
       .orderBy('count', 'DESC')
       .limit(5)
@@ -194,7 +197,7 @@ export class StatisticsService {
    * @param date 日期 YYYY-MM-DD，默认今天
    */
   async dailyQuota(date?: string) {
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetDate = date || this.todayLocal();
 
     const config = await this.dateConfigRepo.findOne({
       where: { date: targetDate },
@@ -266,22 +269,24 @@ export class StatisticsService {
       .addSelect('COUNT(*) as total')
       .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
       .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
-      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team");
+      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team")
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
 
     if (startDate) allQb.andWhere('r.reservationDate >= :start', { start: startDate });
     if (endDate) allQb.andWhere('r.reservationDate <= :end', { end: endDate });
 
     const allRaw = await allQb.groupBy('period').orderBy('period', 'ASC').getRawMany();
 
-    // 推广预约（在 promotion_records 中有关联的）
+    // 推广预约（与推广业绩页同口径：按 reservations.promoterId 归属判断，而非 promotion_records 点击记录）
     const promoQb = this.reservationRepo
       .createQueryBuilder('r')
-      .innerJoin('promotion_records', 'pr', 'pr.reservationId = r.id')
       .select(`${dateExpr} as period`)
       .addSelect('COUNT(*) as total')
       .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
       .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
-      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team");
+      .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team")
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
+      .andWhere('r.promoterId IS NOT NULL');
 
     if (startDate) promoQb.andWhere('r.reservationDate >= :start', { start: startDate });
     if (endDate) promoQb.andWhere('r.reservationDate <= :end', { end: endDate });
@@ -360,5 +365,14 @@ export class StatisticsService {
         totalActual: Number(r.totalActual),
       };
     });
+  }
+
+  /** 本地时区的今天（YYYY-MM-DD），避免 toISOString() 的 UTC 跨天偏移 */
+  private todayLocal(): string {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }

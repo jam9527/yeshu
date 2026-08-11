@@ -130,7 +130,8 @@ export class PromotionService {
         `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
       ])
       .where('r.promoterId = :promoterId', { promoterId })
-      .andWhere('r.type = :type', { type: 'PERSONAL' });
+      .andWhere('r.type = :type', { type: 'PERSONAL' })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
 
     if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
     if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -139,15 +140,15 @@ export class PromotionService {
     const personalReservations = Number(personalRaw?.count) || 0;
     const personalVerified = Number(personalRaw?.verifiedCount) || 0;
 
-    // 3. 团队预约 & 核销统计（通过 promotion_records 关联，与后台 getDetailedStats 一致）
-    const teamQb = this.recordRepo.createQueryBuilder('pr')
+    // 3. 团队预约 & 核销统计（与个人一致，直接用 reservations.promoterId，与预约统计同口径）
+    const teamQb = reservationRepo.createQueryBuilder('r')
       .select([
-        'COUNT(DISTINCT r.id) AS count',
+        'COUNT(r.id) AS count',
         `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END), 0) AS verifiedCount`,
       ])
-      .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
-      .where('pr.promoterId = :promoterId', { promoterId })
-      .andWhere('r.type = :type', { type: 'TEAM' });
+      .where('r.promoterId = :promoterId', { promoterId })
+      .andWhere('r.type = :type', { type: 'TEAM' })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
 
     if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
     if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -214,7 +215,8 @@ export class PromotionService {
           `COALESCE(SUM(CASE WHEN r.status = 'VERIFIED' THEN r.visitorCount ELSE 0 END), 0) AS verifiedVisitors`,
         ])
         .where('r.promoterId = :promoterId', { promoterId: promoter.id })
-        .andWhere('r.type = :type', { type: 'PERSONAL' });
+        .andWhere('r.type = :type', { type: 'PERSONAL' })
+        .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
 
       if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
       if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -239,8 +241,8 @@ export class PromotionService {
 
       const actualRaw: any = await actualQb.getRawOne();
 
-      // 团队预约统计（通过 promotion_records 关联）
-      const teamQb = this.recordRepo.createQueryBuilder('pr')
+      // 团队预约统计（与个人一致，直接用 reservations.promoterId，与预约统计同口径）
+      const teamQb = reservationRepo.createQueryBuilder('r')
         .select([
           'COUNT(DISTINCT r.id) AS count',
           'COALESCE(SUM(r.visitorCount), 0) AS totalVisitors',
@@ -249,10 +251,10 @@ export class PromotionService {
           `COALESCE(SUM(CASE WHEN r.visitorType = 'ON_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS teamIslandActualCount`,
           `COALESCE(SUM(CASE WHEN r.visitorType = 'OFF_ISLAND' THEN vr.actualCount ELSE 0 END), 0) AS teamOffIslandActualCount`,
         ])
-        .innerJoin('reservations', 'r', 'pr.reservationId = r.id')
         .leftJoin('verification_records', 'vr', "vr.reservationId = r.id AND vr.verifyResult = 'SUCCESS'")
-        .where('pr.promoterId = :promoterId', { promoterId: promoter.id })
-        .andWhere('r.type = :type', { type: 'TEAM' });
+        .where('r.promoterId = :promoterId', { promoterId: promoter.id })
+        .andWhere('r.type = :type', { type: 'TEAM' })
+        .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
 
       if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
       if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });

@@ -34,6 +34,11 @@ export class VerificationService {
       throw new BadRequestException('该预约已核销，不可重复使用');
     }
 
+    // 仅 PENDING(个人)/APPROVED(团队) 可核销，取消/过期/驳回/待审核的预约不可核销
+    if (!['PENDING', 'APPROVED'].includes(reservation.status)) {
+      throw new BadRequestException('该预约当前状态不可核销');
+    }
+
     // 核销码仅限预约当天使用，过期或未到期均不可核销
     if (reservation.qrCodeExpireAt && new Date() > new Date(reservation.qrCodeExpireAt)) {
       throw new BadRequestException('核销码已过期');
@@ -73,19 +78,53 @@ export class VerificationService {
 
   /**
    * 确认核销
+   * - 仅限预约当天（与扫码校验一致）
+   * - 仅 PENDING(个人)/APPROVED(团队) 可核销，防止取消/过期/驳回的预约被核销
+   * - 实到人数必须是 [0, visitorCount] 的整数，未传时默认预约人数（0 明确允许，如实记录无人到场）
+   * - 状态更新用原子 UPDATE + WHERE 条件，防止并发重复核销（实到被重复求和）
    */
   async confirm(reservationId: number, verifierId: number, actualCount?: number) {
     const reservation = await this.reservationRepo.findOne({ where: { id: reservationId } });
     if (!reservation) throw new NotFoundException('预约记录不存在');
 
-    if (reservation.status === 'VERIFIED') {
-      throw new BadRequestException('该预约已被核销');
+    // 核销仅限预约当天
+    const resDate = new Date(reservation.reservationDate);
+    if (resDate.toDateString() !== new Date().toDateString()) {
+      throw new BadRequestException('核销码仅限预约当天使用');
     }
 
-    reservation.status = 'VERIFIED';
-    reservation.verifierId = verifierId;
-    reservation.verifyTime = new Date();
-    await this.reservationRepo.save(reservation);
+    // 实到人数校验：未传则默认预约人数；传入则必须是 [0, visitorCount] 的整数
+    let finalActualCount: number;
+    if (actualCount === undefined || actualCount === null) {
+      finalActualCount = reservation.visitorCount;
+    } else {
+      const n = typeof actualCount === 'number' ? actualCount : Number(actualCount);
+      if (!Number.isInteger(n) || n < 0) {
+        throw new BadRequestException('实到人数必须是非负整数');
+      }
+      if (n > reservation.visitorCount) {
+        throw new BadRequestException('实到人数不能超过预约人数');
+      }
+      finalActualCount = n;
+    }
+
+    // 原子更新状态，仅 PENDING/APPROVED 可流转到 VERIFIED；affected=0 说明已核销或状态不可核销
+    const updateResult = await this.reservationRepo
+      .createQueryBuilder()
+      .update(Reservation)
+      .set({ status: 'VERIFIED', verifierId, verifyTime: new Date() })
+      .where('id = :id', { id: reservationId })
+      .andWhere('status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED'] })
+      .execute();
+
+    if (updateResult.affected === 0) {
+      const current = await this.reservationRepo.findOne({ where: { id: reservationId } });
+      if (!current) throw new NotFoundException('预约记录不存在');
+      if (current.status === 'VERIFIED') {
+        throw new BadRequestException('该预约已被核销');
+      }
+      throw new BadRequestException('当前预约状态不可核销');
+    }
 
     const record = this.recordRepo.create({
       reservationId,
@@ -93,7 +132,7 @@ export class VerificationService {
       qrCode: reservation.qrCode,
       verifyResult: 'SUCCESS',
       verifiedAt: new Date(),
-      actualCount: actualCount || reservation.visitorCount,
+      actualCount: finalActualCount,
     });
     await this.recordRepo.save(record);
 

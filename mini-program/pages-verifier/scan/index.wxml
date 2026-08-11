@@ -91,8 +91,8 @@
         </view>
       </view>
 
-      <!-- 个人预约 - 实到人数 -->
-      <view class="actual-count-section" wx:if="{{result.type === 'PERSONAL' && !result.isVerified}}">
+      <!-- 实到人数（个人/团队均可调整，默认=预约人数） -->
+      <view class="actual-count-section" wx:if="{{!result.isVerified}}">
         <text class="actual-count-label">实到人数</text>
         <view class="actual-count-stepper">
           <view
