@@ -4,6 +4,7 @@ import { Repository, Between } from 'typeorm';
 import { VerificationRecord } from './entities/verification-record.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { TeamReservationInfo } from '../reservation/entities/team-reservation-info.entity';
+import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
 import { PromotionService } from '../promotion/promotion.service';
 
 @Injectable()
@@ -17,6 +18,8 @@ export class VerificationService {
     private readonly reservationRepo: Repository<Reservation>,
     @InjectRepository(TeamReservationInfo)
     private readonly teamInfoRepo: Repository<TeamReservationInfo>,
+    @InjectRepository(ReservationDateConfig)
+    private readonly dateConfigRepo: Repository<ReservationDateConfig>,
     @Inject(forwardRef(() => PromotionService))
     private readonly promotionService: PromotionService,
   ) {}
@@ -48,6 +51,9 @@ export class VerificationService {
     if (resDate.toDateString() !== today.toDateString()) {
       throw new BadRequestException('核销码仅限预约当天使用');
     }
+
+    // 场次时间校验（±30分钟宽容），防跨场次核销
+    await this.assertSessionTime(reservation);
 
     // 个人预约不再逐条存储参观人，仅返回人数
     let visitors: any[] = [];
@@ -92,6 +98,9 @@ export class VerificationService {
     if (resDate.toDateString() !== new Date().toDateString()) {
       throw new BadRequestException('核销码仅限预约当天使用');
     }
+
+    // 场次时间校验（±30分钟宽容），防跨场次核销
+    await this.assertSessionTime(reservation);
 
     // 实到人数校验：未传则默认预约人数；传入则必须是 [0, visitorCount] 的整数
     let finalActualCount: number;
@@ -199,5 +208,47 @@ export class VerificationService {
     ]);
 
     return { todayVerified, totalVerified };
+  }
+
+  /** 时间字符串 "HH:mm[:ss]" → 当天分钟数 */
+  private timeToMinutes(t: string): number {
+    const parts = String(t).split(':').map(Number);
+    return (parts[0] || 0) * 60 + (parts[1] || 0);
+  }
+
+  /** 分钟数 → "HH:mm" */
+  private formatMinutes(min: number): string {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
+  /**
+   * 场次时间校验：仅允许在预约场次窗口 ±30 分钟内核销，防跨场次核销
+   * - 早于"场次开始 - 30分钟"：提示等待（早到可等待，届时再扫）
+   * - 晚于"场次结束 + 30分钟"：拒绝，提示重新预约
+   */
+  private async assertSessionTime(reservation: Reservation) {
+    const config = await this.dateConfigRepo.findOne({ where: { id: reservation.dateConfigId } });
+    const isMorning = reservation.sessionType === 'AM';
+    const isAfternoon = reservation.sessionType === 'PM';
+    if (!isMorning && !isAfternoon && reservation.sessionType !== 'EV') return; // 未知场次跳过
+    if (!config) return; // 无日期配置则跳过，不阻断
+
+    const start = isMorning ? config.morningStart : isAfternoon ? config.afternoonStart : config.eveningStart;
+    const end = isMorning ? config.morningEnd : isAfternoon ? config.afternoonEnd : config.eveningEnd;
+    if (!start || !end) return;
+
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const startMin = this.timeToMinutes(start);
+    const endMin = this.timeToMinutes(end);
+
+    if (nowMin < startMin - 30) {
+      throw new BadRequestException(`尚未到预约场次，请于 ${this.formatMinutes(startMin - 30)} 后入场（早到可等待）`);
+    }
+    if (nowMin > endMin + 30) {
+      throw new BadRequestException('已超过预约场次 30 分钟，无法核销，请重新预约');
+    }
   }
 }
