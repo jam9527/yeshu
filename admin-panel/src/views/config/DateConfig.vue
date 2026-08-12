@@ -7,6 +7,8 @@ interface DateConfigItem {
   id: number
   date: string
   isAvailable: boolean
+  earlyGraceMinutes: number
+  lateGraceMinutes: number
   morningEnabled: boolean
   afternoonEnabled: boolean
   eveningEnabled: boolean
@@ -42,6 +44,8 @@ const batchDates = ref<string[]>([])
 const showBatchDialog = ref(false)
 const batchForm = ref({
   isAvailable: true,
+  earlyGraceMinutes: 30,
+  lateGraceMinutes: 60,
   morningEnabled: true,
   morningStart: '09:00',
   morningEnd: '12:00',
@@ -143,6 +147,8 @@ async function saveConfig() {
   try {
     await request.put(`/admin/config/dates/${editingConfig.value.id}`, {
       isAvailable: editingConfig.value.isAvailable,
+      earlyGraceMinutes: editingConfig.value.earlyGraceMinutes,
+      lateGraceMinutes: editingConfig.value.lateGraceMinutes,
       morningEnabled: editingConfig.value.morningEnabled,
       morningStart: editingConfig.value.morningStart,
       morningEnd: editingConfig.value.morningEnd,
@@ -181,6 +187,8 @@ function openBatchDialog() {
   if (firstExisting) {
     batchForm.value = {
       isAvailable: firstExisting.isAvailable ?? true,
+      earlyGraceMinutes: firstExisting.earlyGraceMinutes ?? 30,
+      lateGraceMinutes: firstExisting.lateGraceMinutes ?? 60,
       morningEnabled: firstExisting.morningEnabled ?? true,
       morningStart: firstExisting.morningStart || '09:00',
       morningEnd: firstExisting.morningEnd || '12:00',
@@ -207,6 +215,8 @@ async function confirmBatch() {
   for (const dateStr of batchDates.value) {
     const existing = configs.value.find(c => c.date === dateStr)
     const payload = {
+      earlyGraceMinutes: f.earlyGraceMinutes,
+      lateGraceMinutes: f.lateGraceMinutes,
       morningEnabled: f.morningEnabled,
       morningStart: f.morningStart,
       morningEnd: f.morningEnd,
@@ -344,6 +354,15 @@ onMounted(fetchData)
         <el-form-item label="是否开放">
           <el-switch v-model="batchForm.isAvailable" />
         </el-form-item>
+        <el-divider>核销宽容时间</el-divider>
+        <el-alert type="info" :closable="false" show-icon class="grace-alert"
+          title="开场前、闭场后各放宽 N 分钟内可核销（上午/下午/夜场全场次生效）。例：09:00 开场宽容 30 分 → 08:30 可核销；11:00 闭场宽容 60 分 → 12:00 前可核销。" />
+        <el-form-item label="开场前宽容">
+          <el-input-number v-model="batchForm.earlyGraceMinutes" :min="0" :max="240" /> 分钟
+        </el-form-item>
+        <el-form-item label="闭场后宽容">
+          <el-input-number v-model="batchForm.lateGraceMinutes" :min="0" :max="240" /> 分钟
+        </el-form-item>
         <el-divider>上午场</el-divider>
         <el-form-item label="是否开放">
           <el-switch v-model="batchForm.morningEnabled" />
@@ -407,6 +426,15 @@ onMounted(fetchData)
         </el-form-item>
         <el-form-item label="是否开放">
           <el-switch v-model="editingConfig.isAvailable" />
+        </el-form-item>
+        <el-divider>核销宽容时间</el-divider>
+        <el-alert type="info" :closable="false" show-icon class="grace-alert"
+          title="开场前、闭场后各放宽 N 分钟内可核销（上午/下午/夜场全场次生效）。例：09:00 开场宽容 30 分 → 08:30 可核销；11:00 闭场宽容 60 分 → 12:00 前可核销。" />
+        <el-form-item label="开场前宽容">
+          <el-input-number v-model="editingConfig.earlyGraceMinutes" :min="0" :max="240" /> 分钟
+        </el-form-item>
+        <el-form-item label="闭场后宽容">
+          <el-input-number v-model="editingConfig.lateGraceMinutes" :min="0" :max="240" /> 分钟
         </el-form-item>
         <el-divider>上午场</el-divider>
         <el-form-item label="是否开放">
@@ -558,5 +586,8 @@ onMounted(fetchData)
 }
 .info-line {
   display: block;
+}
+.grace-alert {
+  margin-bottom: 12px;
 }
 </style>

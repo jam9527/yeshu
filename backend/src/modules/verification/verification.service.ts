@@ -52,7 +52,7 @@ export class VerificationService {
       throw new BadRequestException('核销码仅限预约当天使用');
     }
 
-    // 场次时间校验（±30分钟宽容），防跨场次核销
+    // 场次时间校验（宽容时间取自日期配置），防跨场次核销
     await this.assertSessionTime(reservation);
 
     // 个人预约不再逐条存储参观人，仅返回人数
@@ -99,7 +99,7 @@ export class VerificationService {
       throw new BadRequestException('核销码仅限预约当天使用');
     }
 
-    // 场次时间校验（±30分钟宽容），防跨场次核销
+    // 场次时间校验（宽容时间取自日期配置），防跨场次核销
     await this.assertSessionTime(reservation);
 
     // 实到人数校验：未传则默认预约人数；传入则必须是 [0, visitorCount] 的整数
@@ -223,10 +223,19 @@ export class VerificationService {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
+  /** 分钟数 → 中文时长（30 → "30 分钟"，60 → "1 小时"，90 → "1 小时 30 分钟"） */
+  private formatDuration(min: number): string {
+    if (min < 60) return `${min} 分钟`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m === 0 ? `${h} 小时` : `${h} 小时 ${m} 分钟`;
+  }
+
   /**
-   * 场次时间校验：仅允许在预约场次窗口 ±30 分钟内核销，防跨场次核销
-   * - 早于"场次开始 - 30分钟"：提示等待（早到可等待，届时再扫）
-   * - 晚于"场次结束 + 30分钟"：拒绝，提示重新预约
+   * 场次时间校验：仅允许在"开场前earlyGrace分钟 ~ 闭场后lateGrace分钟"窗口内核销，防跨场次核销
+   * 宽容时间读取日期配置的 earlyGraceMinutes/lateGraceMinutes，缺省 30/60 分钟
+   * - 早于"场次开始 - earlyGrace"：提示等待（早到可等待，届时再扫）
+   * - 晚于"场次结束 + lateGrace"：拒绝，提示重新预约
    */
   private async assertSessionTime(reservation: Reservation) {
     const config = await this.dateConfigRepo.findOne({ where: { id: reservation.dateConfigId } });
@@ -239,16 +248,19 @@ export class VerificationService {
     const end = isMorning ? config.morningEnd : isAfternoon ? config.afternoonEnd : config.eveningEnd;
     if (!start || !end) return;
 
+    const earlyGrace = config.earlyGraceMinutes ?? 30; // 开场前可提前核销分钟数
+    const lateGrace = config.lateGraceMinutes ?? 60;   // 闭场后可延后核销分钟数
+
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
     const startMin = this.timeToMinutes(start);
     const endMin = this.timeToMinutes(end);
 
-    if (nowMin < startMin - 30) {
-      throw new BadRequestException(`尚未到预约场次，请于 ${this.formatMinutes(startMin - 30)} 后入场（早到可等待）`);
+    if (nowMin < startMin - earlyGrace) {
+      throw new BadRequestException(`尚未到预约场次，请于 ${this.formatMinutes(startMin - earlyGrace)} 后入场（早到可等待）`);
     }
-    if (nowMin > endMin + 30) {
-      throw new BadRequestException('已超过预约场次 30 分钟，无法核销，请重新预约');
+    if (nowMin > endMin + lateGrace) {
+      throw new BadRequestException(`已超过预约场次 ${this.formatDuration(lateGrace)}，无法核销，请重新预约`);
     }
   }
 }

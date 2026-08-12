@@ -47,6 +47,12 @@ export class ReservationDateConfig {
   @Column({ type: 'time', default: '21:00:00', comment: '夜场结束时间' })
   eveningEnd: string;
 
+  @Column({ type: 'int', default: 30, comment: '核销宽容时间：开场前可提前核销的分钟数' })
+  earlyGraceMinutes: number;
+
+  @Column({ type: 'int', default: 60, comment: '核销宽容时间：闭场后可延后核销的分钟数' })
+  lateGraceMinutes: number;
+
   @Column({ default: true, comment: '上午场是否开放' })
   morningEnabled: boolean;
 
