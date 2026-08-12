@@ -81,7 +81,7 @@ export class StatisticsService {
       .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where('r.reservationDate >= :monday', { monday: monday.toISOString().split('T')[0] })
       .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
-      .groupBy('DATE(r.reservationDate)')
+      .groupBy("DATE_FORMAT(r.reservationDate, '%Y-%m-%d')")
       .orderBy('date', 'ASC')
       .getRawMany();
 
