@@ -60,6 +60,13 @@ export class AdminReservationController {
       : [];
     const promoterCodeMap = new Map(promoters.map(p => [Number(p.id), p.shortCode || '—']));
 
+    // 团队预约附带团队信息（联系人、单位等）
+    const teamIds = records.filter(r => r.type === 'TEAM').map(r => r.id);
+    const teamInfos = teamIds.length > 0
+      ? await this.teamInfoRepo.find({ where: { reservationId: In(teamIds) } })
+      : [];
+    const teamInfoMap = new Map(teamInfos.map(t => [Number(t.reservationId), t]));
+
     // 个人预约不再逐条存储参观人明细，仅返回预约人数
     const list = records.map(r => ({
       id: r.id,
@@ -81,6 +88,7 @@ export class AdminReservationController {
       updatedAt: r.updatedAt,
       verifierName: verifierMap.get(Number(r.verifierId)) || null,
       promoterShortCode: promoterCodeMap.get(Number(r.promoterId)) || null,
+      teamInfo: r.type === 'TEAM' ? teamInfoMap.get(Number(r.id)) || null : null,
       user: r.user ? {
         id: r.user.id,
         nickname: r.user.nickname,
