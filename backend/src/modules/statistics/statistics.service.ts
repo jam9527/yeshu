@@ -7,6 +7,13 @@ import { ReservationDateConfig } from '../reservation/entities/reservation-date-
 import { RealNameInfo } from '../real-name/entities/real-name.entity';
 import { VerificationRecord } from '../verification/entities/verification-record.entity';
 
+/**
+ * 统计口径：有效预约 = 待核销/已通过/已核销/爽约过期。
+ * 含 EXPIRED 是为了让历史日期的预约数保持稳定（爽约只是没到场，不算取消，应计入预约），
+ * 与"实时剩余名额"（不含过期，过期会回退配额）刻意不同口径。
+ */
+const VALID_RESERVATION_STATUSES = ['PENDING', 'APPROVED', 'VERIFIED', 'EXPIRED'];
+
 @Injectable()
 export class StatisticsService {
   constructor(
@@ -29,9 +36,9 @@ export class StatisticsService {
     const [totalReservations, todayReservations, pendingReview, totalVerified, todayVerified,
            totalActualCountResult, todayActualCountResult] =
       await Promise.all([
-        // 预约数统一为"有效预约"（占用配额的状态），与实时剩余名额/每日场次口径一致
-        this.reservationRepo.count({ where: { status: In(['PENDING', 'APPROVED', 'VERIFIED']) } }),
-        this.reservationRepo.count({ where: { reservationDate: today, status: In(['PENDING', 'APPROVED', 'VERIFIED']) } }),
+        // 预约数统一为"有效预约"（已核销/待核销/爽约过期，不含已取消/已驳回），历史日期数字稳定
+        this.reservationRepo.count({ where: { status: In(VALID_RESERVATION_STATUSES) } }),
+        this.reservationRepo.count({ where: { reservationDate: today, status: In(VALID_RESERVATION_STATUSES) } }),
         this.reservationRepo.count({ where: { type: 'TEAM', status: 'APPROVING' } }),
         this.reservationRepo.count({ where: { status: 'VERIFIED' } }),
         this.reservationRepo.count({ where: { reservationDate: today, status: 'VERIFIED' } }),
@@ -80,7 +87,7 @@ export class StatisticsService {
       .createQueryBuilder('r')
       .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where('r.reservationDate >= :monday', { monday: monday.toISOString().split('T')[0] })
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES })
       .groupBy("DATE_FORMAT(r.reservationDate, '%Y-%m-%d')")
       .orderBy('date', 'ASC')
       .getRawMany();
@@ -180,7 +187,7 @@ export class StatisticsService {
       .createQueryBuilder('r')
       .select("DATE_FORMAT(r.reservationDate, '%Y-%m-%d') as date, COUNT(*) as count")
       .where("r.reservationDate LIKE :prefix", { prefix: `${monthStr}%` })
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES })
       .groupBy('r.reservationDate')
       .orderBy('count', 'DESC')
       .limit(5)
@@ -270,7 +277,7 @@ export class StatisticsService {
       .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
       .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
       .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team")
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES });
 
     if (startDate) allQb.andWhere('r.reservationDate >= :start', { start: startDate });
     if (endDate) allQb.andWhere('r.reservationDate <= :end', { end: endDate });
@@ -285,7 +292,7 @@ export class StatisticsService {
       .addSelect("SUM(CASE WHEN r.status = 'VERIFIED' THEN 1 ELSE 0 END) as verified")
       .addSelect("SUM(CASE WHEN r.type = 'PERSONAL' THEN 1 ELSE 0 END) as personal")
       .addSelect("SUM(CASE WHEN r.type = 'TEAM' THEN 1 ELSE 0 END) as team")
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] })
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES })
       .andWhere('r.promoterId IS NOT NULL');
 
     if (startDate) promoQb.andWhere('r.reservationDate >= :start', { start: startDate });
@@ -334,10 +341,10 @@ export class StatisticsService {
       .groupBy('r.reservationDate')
       .orderBy('r.reservationDate', 'ASC');
 
-    // 只统计占用配额的有效预约（待核销/已通过/已核销），
-    // 排除已取消/已过期/已驳回/待审核，与"实时剩余名额"口径保持一致
+    // 统计有效预约（已核销/待核销/爽约过期），排除已取消/已驳回/待审核（团队 APPROVING）。
+    // 含 EXPIRED：爽约只是没到场，仍计入该日期预约数；与"实时剩余名额"（过期回退配额）刻意不同口径
     qb.andWhere('r.status IN (:...validStatuses)', {
-      validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'],
+      validStatuses: VALID_RESERVATION_STATUSES,
     });
 
     if (startDate) qb.andWhere('r.reservationDate >= :start', { start: startDate });
