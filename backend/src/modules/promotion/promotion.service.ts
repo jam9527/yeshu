@@ -13,6 +13,98 @@ import { User } from '../user/entities/user.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { WechatService } from '../wechat/wechat.service';
 import { CosService } from '../file/cos.service';
+import { createZipBuffer } from '../../common/utils/zip.util';
+import { VALID_RESERVATION_STATUSES } from '../../common/constants/enums';
+
+/** 按天导出最多支持的天数：需逐日查询，天数过多会拖长响应（nginx 默认 60s 超时） */
+const MAX_DAILY_EXPORT_DAYS = 31;
+
+/** CSV 字段转义：含逗号、引号或换行时用引号包裹 */
+function escapeCsvField(v: any): string {
+  const s = String(v ?? '');
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+/** 把业绩统计行拼成 CSV 文本（带 BOM，Excel 才能正确识别 UTF-8） */
+function buildStatsCsv(stats: any[]): string {
+  // BOM for Excel UTF-8 compatibility
+  const BOM = '﻿';
+  const headers = [
+    '推广员姓名', '短码', '手机号',
+    '个人预约数', '团队预约数', '预约总数',
+    '个人预约人次', '团队预约人次', '预约总人次',
+    '个人实到人数', '团队实到人数', '实到总人数',
+    '个人核销单数', '团队核销单数', '核销总单数',
+    '核销率(%)',
+    '成人数', '儿童数',
+    '岛内人数', '岛外人数',
+  ];
+
+  const rows = stats.map((s: any) => [
+    s.promoterName, s.shortCode, s.promoterPhone,
+    s.personalReservations, s.teamReservations, s.totalReservations,
+    s.personalVisitors, s.teamVisitors, s.totalVisitors,
+    s.personalActualVisitors, s.teamActualVisitors, s.totalActualVisitors,
+    s.personalVerified, s.teamVerified, s.totalVerified,
+    s.verificationRate,
+    s.adultVisitors, s.childrenVisitors,
+    s.islandCount, s.offIslandCount,
+  ].map(escapeCsvField).join(','));
+
+  // 合计行
+  const sum = (field: string) => stats.reduce((acc: number, s: any) => acc + (Number(s[field]) || 0), 0);
+  const totalRow = [
+    '合计', '', '',
+    sum('personalReservations'), sum('teamReservations'), sum('totalReservations'),
+    sum('personalVisitors'), sum('teamVisitors'), sum('totalVisitors'),
+    sum('personalActualVisitors'), sum('teamActualVisitors'), sum('totalActualVisitors'),
+    sum('personalVerified'), sum('teamVerified'), sum('totalVerified'),
+    '',
+    sum('adultVisitors'), sum('childrenVisitors'),
+    sum('islandCount'), sum('offIslandCount'),
+  ].map(escapeCsvField).join(',');
+
+  return BOM + [headers.join(','), ...rows, totalRow].join('\n');
+}
+
+/**
+ * 展开 [startDate, endDate] 为本地日期字符串数组（含两端）
+ *
+ * 必须用本地时间做日期算术：new Date('2026-08-01') 按 UTC 解析，而连接时区是 +08:00，
+ * 用 toISOString() 会整体错一天。
+ */
+function enumerateLocalDates(startDate?: string, endDate?: string): string[] {
+  if (!startDate || !endDate) {
+    throw new BadRequestException('按天导出需要同时指定开始日期和结束日期');
+  }
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  if (!DATE_RE.test(startDate) || !DATE_RE.test(endDate)) {
+    throw new BadRequestException('日期格式应为 YYYY-MM-DD');
+  }
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const [sy, sm, sd] = startDate.split('-').map(Number);
+  const [ey, em, ed] = endDate.split('-').map(Number);
+  const cur = new Date(sy, sm - 1, sd);
+  const last = new Date(ey, em - 1, ed);
+
+  if (cur > last) {
+    throw new BadRequestException('开始日期不能晚于结束日期');
+  }
+
+  const dates: string[] = [];
+  while (cur <= last) {
+    if (dates.length >= MAX_DAILY_EXPORT_DAYS) {
+      throw new BadRequestException(`按天导出最多支持 ${MAX_DAILY_EXPORT_DAYS} 天，请缩短日期范围`);
+    }
+    dates.push(`${cur.getFullYear()}-${pad(cur.getMonth() + 1)}-${pad(cur.getDate())}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
 
 @Injectable()
 export class PromotionService {
@@ -131,7 +223,7 @@ export class PromotionService {
       ])
       .where('r.promoterId = :promoterId', { promoterId })
       .andWhere('r.type = :type', { type: 'PERSONAL' })
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES });
 
     if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
     if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -148,7 +240,7 @@ export class PromotionService {
       ])
       .where('r.promoterId = :promoterId', { promoterId })
       .andWhere('r.type = :type', { type: 'TEAM' })
-      .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
+      .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES });
 
     if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
     if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -232,7 +324,7 @@ export class PromotionService {
         ])
         .where('r.promoterId = :promoterId', { promoterId: promoter.id })
         .andWhere('r.type = :type', { type: 'PERSONAL' })
-        .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
+        .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES });
 
       if (startDate) personalQb.andWhere('r.reservationDate >= :startDate', { startDate });
       if (endDate) personalQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -270,7 +362,7 @@ export class PromotionService {
         .leftJoin('verification_records', 'vr', "vr.reservationId = r.id AND vr.verifyResult = 'SUCCESS'")
         .where('r.promoterId = :promoterId', { promoterId: promoter.id })
         .andWhere('r.type = :type', { type: 'TEAM' })
-        .andWhere('r.status IN (:...validStatuses)', { validStatuses: ['PENDING', 'APPROVED', 'VERIFIED'] });
+        .andWhere('r.status IN (:...validStatuses)', { validStatuses: VALID_RESERVATION_STATUSES });
 
       if (startDate) teamQb.andWhere('r.reservationDate >= :startDate', { startDate });
       if (endDate) teamQb.andWhere('r.reservationDate <= :endDate', { endDate });
@@ -336,57 +428,46 @@ export class PromotionService {
     return results;
   }
 
-  /** 导出推广员业绩 CSV */
-  async exportStatsCsv(startDate?: string, endDate?: string): Promise<string> {
-    const stats = await this.getDetailedStats(startDate, endDate);
+  /** 导出推广员业绩 CSV（筛选条件与页面一致） */
+  async exportStatsCsv(
+    startDate?: string,
+    endDate?: string,
+    promoterId?: number,
+    searchType?: string,
+    keyword?: string,
+  ): Promise<string> {
+    return buildStatsCsv(
+      await this.getDetailedStats(startDate, endDate, promoterId, searchType, keyword),
+    );
+  }
 
-    // BOM for Excel UTF-8 compatibility
-    const BOM = '﻿';
-    const headers = [
-      '推广员姓名', '短码', '手机号',
-      '个人预约数', '团队预约数', '预约总数',
-      '个人预约人次', '团队预约人次', '预约总人次',
-      '个人实到人数', '团队实到人数', '实到总人数',
-      '个人核销单数', '团队核销单数', '核销总单数',
-      '核销率(%)',
-      '成人数', '儿童数',
-      '岛内人数', '岛外人数',
-    ];
+  /**
+   * 按天导出推广员业绩：压缩包内每天一个 CSV，文件名为 YYYY-MM-DD.csv
+   *
+   * 逐日调用 getDetailedStats，SQL 量为「天数 × 推广员数 × 3」。默认最多 31 天，
+   * 实测耗时过长时再改成按 promoterId + reservationDate 分组的单次查询
+   * （注意不要为此改动 getDetailedStats 本身，那是统计主页在用的路径）。
+   */
+  async exportDailyStatsZip(
+    startDate?: string,
+    endDate?: string,
+    promoterId?: number,
+    searchType?: string,
+    keyword?: string,
+  ): Promise<Buffer> {
+    const dates = enumerateLocalDates(startDate, endDate);
 
-    const escapeField = (v: any) => {
-      const s = String(v ?? '');
-      // 包含逗号、引号或换行时需要用引号包裹
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return `"${s.replace(/"/g, '""')}"`;
-      }
-      return s;
-    };
+    const entries: Array<{ name: string; buffer: Buffer }> = [];
+    for (const day of dates) {
+      // 单日无数据也会输出全部推广员的 0 值行 + 合计行，保证「选 N 天就得到 N 个文件」
+      const rows = await this.getDetailedStats(day, day, promoterId, searchType, keyword);
+      entries.push({
+        name: `${day}.csv`,
+        buffer: Buffer.from(buildStatsCsv(rows), 'utf-8'),
+      });
+    }
 
-    const rows = stats.map((s: any) => [
-      s.promoterName, s.shortCode, s.promoterPhone,
-      s.personalReservations, s.teamReservations, s.totalReservations,
-      s.personalVisitors, s.teamVisitors, s.totalVisitors,
-      s.personalActualVisitors, s.teamActualVisitors, s.totalActualVisitors,
-      s.personalVerified, s.teamVerified, s.totalVerified,
-      s.verificationRate,
-      s.adultVisitors, s.childrenVisitors,
-      s.islandCount, s.offIslandCount,
-    ].map(escapeField).join(','));
-
-    // 合计行
-    const sum = (field: string) => stats.reduce((acc: number, s: any) => acc + (Number(s[field]) || 0), 0);
-    const totalRow = [
-      '合计', '', '',
-      sum('personalReservations'), sum('teamReservations'), sum('totalReservations'),
-      sum('personalVisitors'), sum('teamVisitors'), sum('totalVisitors'),
-      sum('personalActualVisitors'), sum('teamActualVisitors'), sum('totalActualVisitors'),
-      sum('personalVerified'), sum('teamVerified'), sum('totalVerified'),
-      '',
-      sum('adultVisitors'), sum('childrenVisitors'),
-      sum('islandCount'), sum('offIslandCount'),
-    ].map(escapeField).join(',');
-
-    return BOM + [headers.join(','), ...rows, totalRow].join('\n');
+    return createZipBuffer(entries);
   }
 
   /** 获取推广记录明细（按时间筛选） */

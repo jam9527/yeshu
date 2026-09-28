@@ -6,13 +6,7 @@ import { ReservationQuota } from '../reservation/entities/reservation-quota.enti
 import { ReservationDateConfig } from '../reservation/entities/reservation-date-config.entity';
 import { RealNameInfo } from '../real-name/entities/real-name.entity';
 import { VerificationRecord } from '../verification/entities/verification-record.entity';
-
-/**
- * 统计口径：有效预约 = 待核销/已通过/已核销/爽约过期。
- * 含 EXPIRED 是为了让历史日期的预约数保持稳定（爽约只是没到场，不算取消，应计入预约），
- * 与"实时剩余名额"（不含过期，过期会回退配额）刻意不同口径。
- */
-const VALID_RESERVATION_STATUSES = ['PENDING', 'APPROVED', 'VERIFIED', 'EXPIRED'];
+import { VALID_RESERVATION_STATUSES } from '../../common/constants/enums';
 
 @Injectable()
 export class StatisticsService {

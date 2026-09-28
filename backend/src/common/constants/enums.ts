@@ -58,3 +58,16 @@ export const FEEDBACK_STATUS = {
   PENDING: 'PENDING',   // 待处理
   RESOLVED: 'RESOLVED', // 已处理
 } as const;
+
+/**
+ * 统计口径：有效预约 = 待核销 / 已通过 / 已核销 / 爽约过期
+ *
+ * 含 EXPIRED 是为了让历史日期的预约数保持稳定：爽约只是没到场，不算取消，应计入预约。
+ * 每天凌晨的过期任务会把"日期已过且未核销"的预约从 PENDING/APPROVED 改成 EXPIRED
+ * （见 queue/tasks.processor.ts），若此处不含 EXPIRED，历史区间的分母就只剩已核销的预约，
+ * 核销率会恒等于 100%。
+ *
+ * 与"实时剩余名额"（不含过期，过期会回退配额）刻意不同口径。
+ * 注意：团队 APPROVING（待审核）不在内，单独作为"待审核"指标。
+ */
+export const VALID_RESERVATION_STATUSES: string[] = ['PENDING', 'APPROVED', 'VERIFIED', 'EXPIRED'];

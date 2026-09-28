@@ -62,35 +62,103 @@ async function fetchStats() {
   } finally { loading.value = false }
 }
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const MAX_DAILY_EXPORT_DAYS = 31
+
+/** 导出参数，与页面上的查询条件保持一致 */
+function exportParams() {
+  const params: Record<string, string> = {}
+  if (startDate.value) params.startDate = startDate.value
+  if (endDate.value) params.endDate = endDate.value
+  if (keyword.value.trim()) {
+    params.searchType = searchType.value
+    params.keyword = keyword.value.trim()
+  }
+  return params
+}
+
+async function downloadBlob(path: string, params: Record<string, string>, filename: string) {
+  const response = await fetch(
+    `${API_BASE}${path}?` + new URLSearchParams(params).toString(),
+    {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+      },
+    }
+  )
+  if (!response.ok) {
+    // 透出后端的中文报错（如「按天导出最多支持 31 天」）
+    const data = await response.json().catch(() => null)
+    throw new Error(data?.message || '下载失败')
+  }
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  // 立即 revoke 在压缩包这类较大的文件上可能中断下载，延后释放
+  setTimeout(() => {
+    URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }, 1000)
+}
+
 async function exportCsv() {
   exporting.value = true
   try {
-    const params: any = {}
-    if (startDate.value) params.startDate = startDate.value
-    if (endDate.value) params.endDate = endDate.value
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/admin/promoters/stats/export?` +
-      new URLSearchParams(params).toString(),
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
-        },
-      }
+    await downloadBlob(
+      '/admin/promoters/stats/export',
+      exportParams(),
+      `推广员业绩_${startDate.value || '全部'}_${endDate.value || '全部'}.csv`
     )
-    if (!response.ok) throw new Error('下载失败')
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `推广员业绩_${startDate.value || '全部'}_${endDate.value || '全部'}.csv`
-    document.body.appendChild(a)
-    a.click()
-    URL.revokeObjectURL(url)
-    document.body.removeChild(a)
     ElMessage.success('导出成功')
-  } catch {
-    ElMessage.error('导出失败')
+  } catch (e: any) {
+    ElMessage.error(e?.message || '导出失败')
   } finally { exporting.value = false }
+}
+
+/** 日期区间的天数（本地日期，含两端），与后端 enumerateLocalDates 同口径 */
+function countDays(start: string, end: string) {
+  const [sy, sm, sd] = start.split('-').map(Number)
+  const [ey, em, ed] = end.split('-').map(Number)
+  const from = new Date(sy, sm - 1, sd)
+  const to = new Date(ey, em - 1, ed)
+  return Math.round((to.getTime() - from.getTime()) / 86400000) + 1
+}
+
+async function exportDailyZip() {
+  if (!startDate.value || !endDate.value) {
+    ElMessage.warning('按天导出需要同时选择开始日期和结束日期')
+    return
+  }
+  const days = countDays(startDate.value, endDate.value)
+  if (days <= 0) {
+    ElMessage.warning('开始日期不能晚于结束日期')
+    return
+  }
+  if (days > MAX_DAILY_EXPORT_DAYS) {
+    ElMessage.warning(`按天导出最多支持 ${MAX_DAILY_EXPORT_DAYS} 天，当前选中 ${days} 天`)
+    return
+  }
+  exporting.value = true
+  try {
+    ElMessage.info('正在生成压缩包，请稍候…')
+    await downloadBlob(
+      '/admin/promoters/stats/export-daily',
+      exportParams(),
+      `推广员业绩按天_${startDate.value}_${endDate.value}.zip`
+    )
+    ElMessage.success('导出成功')
+  } catch (e: any) {
+    ElMessage.error(e?.message || '导出失败')
+  } finally { exporting.value = false }
+}
+
+function onExportCommand(cmd: string) {
+  if (cmd === 'summary') exportCsv()
+  else if (cmd === 'daily') exportDailyZip()
 }
 
 // 汇总行
@@ -165,7 +233,22 @@ onMounted(() => {
           @keyup.enter="fetchStats"
         />
         <el-button type="primary" size="small" @click="fetchStats">查询</el-button>
-        <el-button type="success" size="small" :loading="exporting" @click="exportCsv">导出 CSV</el-button>
+        <el-dropdown
+          split-button
+          type="success"
+          size="small"
+          :disabled="exporting"
+          @click="exportCsv"
+          @command="onExportCommand"
+        >
+          <span>{{ exporting ? '导出中…' : '导出' }}</span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="summary" :disabled="exporting">导出汇总 CSV</el-dropdown-item>
+              <el-dropdown-item command="daily" :disabled="exporting">按天导出 ZIP（每天一个表）</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
 

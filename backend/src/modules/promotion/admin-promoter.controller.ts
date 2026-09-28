@@ -57,18 +57,46 @@ export class AdminPromoterController {
     );
   }
 
-  /** GET /api/admin/promoters/stats/export - 导出推广员业绩 CSV */
+  /** GET /api/admin/promoters/stats/export - 导出推广员业绩 CSV（筛选条件与页面一致） */
   @Get('stats/export')
   async exportStats(
     @Res() res: Response,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('promoterId') promoterId?: string,
+    @Query('searchType') searchType?: string,
+    @Query('keyword') keyword?: string,
   ) {
-    const csv = await this.promotionService.exportStatsCsv(startDate, endDate);
+    const csv = await this.promotionService.exportStatsCsv(
+      startDate, endDate,
+      promoterId ? parseInt(promoterId, 10) : undefined,
+      searchType, keyword,
+    );
     const filename = `推广员业绩_${startDate || '全部'}_${endDate || '全部'}.csv`;
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
     res.send(Buffer.from(csv, 'utf-8'));
+  }
+
+  /** GET /api/admin/promoters/stats/export-daily - 按天导出推广员业绩 ZIP（包内每天一个 CSV） */
+  @Get('stats/export-daily')
+  async exportDailyStats(
+    @Res() res: Response,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('promoterId') promoterId?: string,
+    @Query('searchType') searchType?: string,
+    @Query('keyword') keyword?: string,
+  ) {
+    const zip = await this.promotionService.exportDailyStatsZip(
+      startDate, endDate,
+      promoterId ? parseInt(promoterId, 10) : undefined,
+      searchType, keyword,
+    );
+    const filename = `推广员业绩按天_${startDate}_${endDate}.zip`;
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.send(zip);
   }
 
   /** POST /api/admin/promoters/applications - 后台直接添加推广员 */
