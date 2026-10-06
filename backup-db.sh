@@ -1,7 +1,9 @@
 #!/bin/bash
 # 椰树参观预约系统 - 数据库每日备份
-# 由服务器 crontab 每日调用，见 install-cron 说明
-# 产物: /home/ubuntu/db-backups/<库名>-<时间戳>.sql.gz（本地保留 14 天）
+# 由服务器 crontab 每日调用（23 3 * * *）
+# 本地产物: /home/ubuntu/db-backups/<库名>-<时间戳>.sql.gz（保留 14 天）
+# 异地产物: COS db-backups/<库名>/<同名>（private，保留 45 天）
+#           上传失败会让本脚本以非 0 退出，便于从日志里发现异地链路断了
 
 set -e
 
@@ -36,4 +38,13 @@ fi
 # 清理超期备份
 find "$BACKUP_DIR" -name '*.sql.gz' -type f -mtime +$KEEP_DAYS -delete
 
-echo "$(date '+%F %T') 备份完成: $(basename "$OUT") ($(du -h "$OUT" | cut -f1))"
+echo "$(date '+%F %T') 本地备份完成: $(basename "$OUT") ($(du -h "$OUT" | cut -f1))"
+
+# 异地上传（COS）：本机磁盘故障/误删时的兜底
+COS_KEY="db-backups/${DB_DATABASE}/$(basename "$OUT")"
+if node "$BACKEND_DIR/scripts/cos-backup-upload.js" "$OUT" "$COS_KEY"; then
+  echo "$(date '+%F %T') 异地备份完成"
+else
+  echo "$(date '+%F %T') ❌ 异地备份失败（本地备份完好，见上一行）"
+  exit 1
+fi
