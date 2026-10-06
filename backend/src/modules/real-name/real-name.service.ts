@@ -37,7 +37,7 @@ export class RealNameService {
     let idVerified = false;
     let verifyTime: Date | undefined = undefined;
 
-    if ((data.idCardType || 'ID_CARD') === 'ID_CARD' && data.name && data.idCard) {
+    if (data.name && data.idCard) {
       // 去重：检查该姓名+证件号是否已被任何用户核验过
       const existing = await this.repo.findOne({
         where: { name: data.name, idCard: data.idCard, idVerified: true, isDeleted: false },
@@ -46,7 +46,7 @@ export class RealNameService {
         idVerified = true;
         verifyTime = existing.verifyTime;
       } else {
-        const result = await this.verificationService.verify(data.name, data.idCard);
+        const result = await this.verificationService.verify(data.name, data.idCard, data.idCardType);
         idVerified = result.verified;
         verifyTime = idVerified ? new Date() : undefined;
       }
@@ -65,7 +65,7 @@ export class RealNameService {
     const newIdCard = data.idCard ?? info.idCard;
     const newIdCardType = data.idCardType ?? info.idCardType;
 
-    if ((newIdCardType === 'ID_CARD') && (data.name || data.idCard)) {
+    if (data.name || data.idCard) {
       // 去重：检查该姓名+证件号是否已被任何用户核验过（含当前记录自身）
       const existing = await this.repo.findOne({
         where: { name: newName, idCard: newIdCard, idVerified: true, isDeleted: false },
@@ -74,7 +74,7 @@ export class RealNameService {
         data.idVerified = true;
         data.verifyTime = existing.verifyTime;
       } else {
-        const result = await this.verificationService.verify(newName, newIdCard);
+        const result = await this.verificationService.verify(newName, newIdCard, newIdCardType);
         data.idVerified = result.verified;
         data.verifyTime = result.verified ? new Date() : undefined;
       }

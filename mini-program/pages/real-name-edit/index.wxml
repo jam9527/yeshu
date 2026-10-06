@@ -42,7 +42,7 @@
       <text class="form-label">证件号码</text>
       <input
         class="form-input"
-        placeholder="{{idCardType === 'ID_CARD' ? '请输入18位身份证号' : '请输入证件号码'}}"
+        placeholder="{{idCardType === 'ID_CARD' ? '请输入18位身份证号' : (idCardType === 'HK_MO_TW' ? '请输入回乡证/台胞证号码' : '请输入护照号码')}}"
         value="{{idCard}}"
         bindinput="onIdCardInput"
         maxlength="{{idCardType === 'ID_CARD' ? 18 : 30}}"
@@ -56,7 +56,7 @@
       disabled="{{verifying || !name.trim() || !idCard.trim()}}"
       bindtap="idCardVerify"
     >
-      {{verifying ? '核验中...' : '姓名+身份证核验'}}
+      {{verifying ? '核验中...' : '姓名+证件核验'}}
     </button>
 
     <!-- 核验结果提示 -->

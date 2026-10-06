@@ -25,9 +25,9 @@ export class RealNameController {
    */
   @Post('verify')
   async verify(
-    @Body() data: { name: string; idCard: string },
+    @Body() data: { name: string; idCard: string; idCardType?: string },
   ) {
-    const result = await this.verificationService.verify(data.name, data.idCard);
+    const result = await this.verificationService.verify(data.name, data.idCard, data.idCardType);
     return result;
   }
 

@@ -62,35 +62,55 @@ Page({
     this.setData({ idCardType: this.data.idCardTypes[index].value, idCardTypeIndex: index })
   },
 
-  /** 姓名+身份证号格式校验（本地校验，不调用付费API，保存时自动核验） */
+  /** 姓名+证件号格式校验（本地校验，不调用付费API，保存时自动核验） */
   async idCardVerify() {
-    const { name, idCard } = this.data
+    const { name, idCard, idCardType } = this.data
     if (!name.trim() || !idCard.trim()) {
-      wx.showToast({ title: '请先填写姓名和身份证号', icon: 'none' })
+      wx.showToast({ title: '请先填写姓名和证件号', icon: 'none' })
       return
     }
 
     this.setData({ verifying: true, verifyMsg: '' })
 
-    // 本地格式校验（免费）：18位 + 校验位 + 出生日期
+    // 本地格式校验（免费）
     const cleanId = idCard.trim().toUpperCase()
-    if (cleanId.length !== 18 || !/^\d{17}[\dX]$/.test(cleanId)) {
-      this.setData({ verifyMsg: '身份证号格式不正确（需18位）', verifyPass: false })
-      wx.showToast({ title: '格式不正确', icon: 'none' })
-      this.setData({ verifying: false })
-      return
-    }
 
-    // GB 11643-1999 校验位
-    const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
-    const checkCodes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
-    let sum = 0
-    for (let i = 0; i < 17; i++) sum += parseInt(cleanId[i]) * weights[i]
-    if (cleanId[17] !== checkCodes[sum % 11]) {
-      this.setData({ verifyMsg: '身份证号校验位不正确，请检查', verifyPass: false })
-      wx.showToast({ title: '校验位不正确', icon: 'none' })
-      this.setData({ verifying: false })
-      return
+    if (idCardType === 'ID_CARD') {
+      // 身份证：18位 + 校验位 + 出生日期
+      if (cleanId.length !== 18 || !/^\d{17}[\dX]$/.test(cleanId)) {
+        this.setData({ verifyMsg: '身份证号格式不正确（需18位）', verifyPass: false })
+        wx.showToast({ title: '格式不正确', icon: 'none' })
+        this.setData({ verifying: false })
+        return
+      }
+
+      // GB 11643-1999 校验位
+      const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
+      const checkCodes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2']
+      let sum = 0
+      for (let i = 0; i < 17; i++) sum += parseInt(cleanId[i]) * weights[i]
+      if (cleanId[17] !== checkCodes[sum % 11]) {
+        this.setData({ verifyMsg: '身份证号校验位不正确，请检查', verifyPass: false })
+        wx.showToast({ title: '校验位不正确', icon: 'none' })
+        this.setData({ verifying: false })
+        return
+      }
+    } else if (idCardType === 'HK_MO_TW') {
+      // 回乡证 H/M+8位数字，或台胞证 8位数字
+      if (!/^(?:[HM]\d{8}|\d{8})$/.test(cleanId)) {
+        this.setData({ verifyMsg: '通行证号码格式不正确（回乡证H/M+8位数字，台胞证8位数字）', verifyPass: false })
+        wx.showToast({ title: '格式不正确', icon: 'none' })
+        this.setData({ verifying: false })
+        return
+      }
+    } else if (idCardType === 'PASSPORT') {
+      // 护照：字母+数字 5-17位（各国格式不一，宽松校验）
+      if (!/^[A-Z0-9]{5,17}$/.test(cleanId)) {
+        this.setData({ verifyMsg: '护照号码格式不正确', verifyPass: false })
+        wx.showToast({ title: '格式不正确', icon: 'none' })
+        this.setData({ verifying: false })
+        return
+      }
     }
 
     if (name.trim().length < 2) {
@@ -100,7 +120,7 @@ Page({
       return
     }
 
-    this.setData({ verifyMsg: '格式校验通过（姓名与证件号匹配将在保存时核验）', verifyPass: true })
+    this.setData({ verifyMsg: '格式校验通过（保存后自动完成核验）', verifyPass: true })
     wx.showToast({ title: '格式校验通过', icon: 'success' })
     this.setData({ verifying: false })
   },
@@ -118,8 +138,17 @@ Page({
       wx.showToast({ title: '请输入证件号码', icon: 'none' })
       return
     }
-    if (idCardType === 'ID_CARD' && !/^\d{17}[\dXx]$/.test(idCard.trim())) {
+    const cleanId = idCard.trim().toUpperCase()
+    if (idCardType === 'ID_CARD' && !/^\d{17}[\dX]$/.test(cleanId)) {
       wx.showToast({ title: '请输入正确的18位身份证号', icon: 'none' })
+      return
+    }
+    if (idCardType === 'HK_MO_TW' && !/^(?:[HM]\d{8}|\d{8})$/.test(cleanId)) {
+      wx.showToast({ title: '通行证号码格式不正确', icon: 'none' })
+      return
+    }
+    if (idCardType === 'PASSPORT' && !/^[A-Z0-9]{5,17}$/.test(cleanId)) {
+      wx.showToast({ title: '护照号码格式不正确', icon: 'none' })
       return
     }
 
@@ -146,7 +175,7 @@ Page({
       } else if (res && res.idVerified === false) {
         wx.showModal({
           title: '核验提示',
-          content: '实名信息已保存，但身份证核验未通过（证件号码格式异常），你可以在需要时重新编辑。',
+          content: '实名信息已保存，但证件核验未通过（证件号码格式异常），你可以在需要时重新编辑。',
           showCancel: false,
           success: () => setTimeout(() => wx.navigateBack(), 500),
         })
