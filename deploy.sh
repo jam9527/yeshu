@@ -14,6 +14,26 @@ PROJECT_DIR="/home/ubuntu/yeshu"
 BACKEND_DIR="$PROJECT_DIR/backend"
 ADMIN_DIR="$PROJECT_DIR/admin-panel"
 
+# 部署前快照：把当前正在运行的构建产物存档，供 rollback.sh 秒级回滚
+BACKUP_DIR="$HOME/deploy-backups"
+echo "=== 0. 部署前快照 ==="
+cd "$PROJECT_DIR"
+PREV_SHA=$(git rev-parse --short HEAD)
+mkdir -p "$BACKUP_DIR"
+SNAP_PATHS=""
+if [ -d backend/dist ]; then SNAP_PATHS="backend/dist"; fi
+if [ -d admin-panel/dist ]; then SNAP_PATHS="$SNAP_PATHS admin-panel/dist"; fi
+if [ -n "$SNAP_PATHS" ]; then
+  SNAP="$BACKUP_DIR/dist-${PREV_SHA}-$(date +%Y%m%d-%H%M%S).tar.gz"
+  tar czf "$SNAP" $SNAP_PATHS
+  echo "$SNAP" > "$BACKUP_DIR/rollback-target.txt"
+  git tag -f "deploy-${PREV_SHA}-$(date +%Y%m%d)" >/dev/null 2>&1 || true
+  ls -1t "$BACKUP_DIR"/dist-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f  # 只留最近 10 份
+  echo "  快照: $(basename "$SNAP")   (回滚: bash rollback.sh)"
+else
+  echo "  无可快照的构建产物（首次部署），跳过"
+fi
+
 echo "=== 1. 拉取最新代码 ==="
 cd "$PROJECT_DIR"
 git pull origin master
@@ -84,6 +104,12 @@ fi
 echo "=== 4. 重启 Nginx ==="
 sudo nginx -t && sudo systemctl reload nginx
 echo "  ✅ Nginx 已重载"
+
+# 给本次上线的 commit 打 tag，便于事后定位版本 / git reset 回退
+cd "$PROJECT_DIR"
+NEW_SHA=$(git rev-parse --short HEAD)
+git tag -f "deploy-${NEW_SHA}-$(date +%Y%m%d)" >/dev/null 2>&1 || true
+echo "  ✅ 已打 tag: deploy-${NEW_SHA}-$(date +%Y%m%d)"
 
 echo ""
 echo "=========== 部署完成 ==========="
