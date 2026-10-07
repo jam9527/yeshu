@@ -237,6 +237,22 @@ export class ReservationService implements OnModuleInit {
     // 检查频率限制（从数据库读取配置）
     await this.checkFrequencyLimit(userId, 'PERSONAL');
 
+    // 同一微信号同一参观日只能有一张个人预约：与核销口的每日一次限制对齐，
+    // 避免用户约得上却到现场被拒（超过5人须换用其他微信号）
+    const sameDate = await this.reservationRepo.findOne({
+      where: {
+        userId,
+        reservationDate: dateConfig.date,
+        type: 'PERSONAL',
+        status: In(['PENDING', 'APPROVED', 'VERIFIED']),
+      },
+    });
+    if (sameDate) {
+      throw new BadRequestException(
+        `该微信号已预约过 ${dateConfig.date}，同一微信号每个参观日限约一次；超过5人请换用其他微信号预约`,
+      );
+    }
+
     // 乐观锁扣减配额
     const quota = await this.quotaRepo.findOne({
       where: { dateConfigId, sessionType },
