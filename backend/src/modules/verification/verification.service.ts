@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, Not } from 'typeorm';
 import { VerificationRecord } from './entities/verification-record.entity';
 import { Reservation } from '../reservation/entities/reservation.entity';
 import { TeamReservationInfo } from '../reservation/entities/team-reservation-info.entity';
@@ -55,6 +55,9 @@ export class VerificationService {
     // 场次时间校验（宽容时间取自日期配置），防跨场次核销
     await this.assertSessionTime(reservation);
 
+    // 每日限额校验：同一微信号当天只能核销一次个人预约
+    await this.assertPersonalDailyLimit(reservation);
+
     // 个人预约不再逐条存储参观人，仅返回人数
     let visitors: any[] = [];
     let teamInfo: any = null;
@@ -86,6 +89,7 @@ export class VerificationService {
    * 确认核销
    * - 仅限预约当天（与扫码校验一致）
    * - 仅 PENDING(个人)/APPROVED(团队) 可核销，防止取消/过期/驳回的预约被核销
+   * - 同一微信号当天只能核销一次个人预约（团队预约不限）
    * - 实到人数必须是 [0, visitorCount] 的整数，未传时默认预约人数（0 明确允许，如实记录无人到场）
    * - 状态更新用原子 UPDATE + WHERE 条件，防止并发重复核销（实到被重复求和）
    */
@@ -101,6 +105,9 @@ export class VerificationService {
 
     // 场次时间校验（宽容时间取自日期配置），防跨场次核销
     await this.assertSessionTime(reservation);
+
+    // 每日限额校验：同一微信号当天只能核销一次个人预约
+    await this.assertPersonalDailyLimit(reservation);
 
     // 实到人数校验：未传则默认预约人数；传入则必须是 [0, visitorCount] 的整数
     let finalActualCount: number;
@@ -261,6 +268,31 @@ export class VerificationService {
     }
     if (nowMin > endMin + lateGrace) {
       throw new BadRequestException(`已超过预约场次 ${this.formatDuration(lateGrace)}，无法核销，请重新预约`);
+    }
+  }
+
+  /**
+   * 每日限额校验：同一微信号（预约人）当天只能核销一次个人预约
+   * - 团队预约不占用额度，也不受此限制
+   * - 只比对已 VERIFIED 的个人预约，取消/过期的不算
+   * - 排除当前这条：否则重复提交同一张码会被误报为"今日已核销过其他预约"，
+   *   该情形应交给 confirm 里的原子 UPDATE 报"该预约已被核销"
+   */
+  private async assertPersonalDailyLimit(reservation: Reservation) {
+    if (reservation.type !== 'PERSONAL') return;
+
+    const verified = await this.reservationRepo.findOne({
+      where: {
+        id: Not(reservation.id),
+        userId: reservation.userId,
+        reservationDate: reservation.reservationDate,
+        type: 'PERSONAL',
+        status: 'VERIFIED',
+      },
+    });
+
+    if (verified) {
+      throw new BadRequestException('该微信号今日已核销过，每天只能核销一次');
     }
   }
 }
